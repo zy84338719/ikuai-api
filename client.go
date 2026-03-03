@@ -1,59 +1,47 @@
 package ikuaisdk
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"net/http/cookiejar"
 	"time"
 
+	"github.com/imroc/req/v3"
 	"github.com/zy84338719/ikuai-api/internal"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type Client struct {
-	httpClient *http.Client
-	baseURL    string
-	username   string
-	password   string
-	version    Version
-	loggedIn   bool
+	client   *req.Client
+	baseURL  string
+	username string
+	password string
+	version  Version
+	loggedIn bool
 }
 
 type ClientOption func(*Client)
 
 func WithTimeout(timeout time.Duration) ClientOption {
 	return func(c *Client) {
-		c.httpClient.Timeout = timeout
+		c.client.SetTimeout(timeout)
 	}
 }
 
 func WithInsecureSkipVerify(skip bool) ClientOption {
 	return func(c *Client) {
 		if skip {
-			if transport, ok := c.httpClient.Transport.(*http.Transport); ok {
-				transport.TLSClientConfig.InsecureSkipVerify = true
-			}
+			c.client.EnableInsecureSkipVerify()
 		}
 	}
 }
 
-func WithHTTPClient(httpClient *http.Client) ClientOption {
+func WithHTTPClient(httpClient *req.Client) ClientOption {
 	return func(c *Client) {
-		c.httpClient = httpClient
+		c.client = httpClient
 	}
 }
 
 func NewClient(baseURL, username, password string, opts ...ClientOption) *Client {
 	baseURL = internal.NormalizeAddr(baseURL)
-
-	cookieJar, _ := cookiejar.New(nil)
-	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-	}
 
 	c := &Client{
 		baseURL:  baseURL,
@@ -61,11 +49,9 @@ func NewClient(baseURL, username, password string, opts ...ClientOption) *Client
 		password: password,
 		version:  VersionUnknown,
 		loggedIn: false,
-		httpClient: &http.Client{
-			Transport: transport,
-			Jar:       cookieJar,
-			Timeout:   30 * time.Second,
-		},
+		client: req.C().
+			SetBaseURL(baseURL).
+			SetTimeout(30 * time.Second),
 	}
 
 	for _, opt := range opts {
@@ -83,32 +69,19 @@ func (c *Client) IsLoggedIn() bool {
 	return c.loggedIn
 }
 
-func (c *Client) doRequest(ctx context.Context, path string, req interface{}) (*http.Response, error) {
-	body, err := json.Marshal(req)
+func (c *Client) doRequest(ctx context.Context, path string, reqBody interface{}, result interface{}) error {
+	resp, err := c.client.R().
+		SetContext(ctx).
+		SetBody(reqBody).
+		SetSuccessResult(result).
+		Post(path)
+
 	if err != nil {
-		return nil, NewSDKError(ErrCodeRequestFailed, "failed to marshal request", err)
+		return NewSDKError(ErrCodeRequestFailed, "failed to send request", err)
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(body))
-	if err != nil {
-		return nil, NewSDKError(ErrCodeRequestFailed, "failed to create request", err)
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	return c.httpClient.Do(httpReq)
-}
-
-func (c *Client) parseResponse(resp *http.Response, result interface{}) error {
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return NewSDKError(ErrCodeInvalidResponse, "failed to read response body", err)
-	}
-
-	if err := json.Unmarshal(body, result); err != nil {
-		return NewSDKError(ErrCodeInvalidResponse, fmt.Sprintf("failed to unmarshal response: %s", string(body)), err)
+	if resp.Err != nil {
+		return NewSDKError(ErrCodeRequestFailed, "request error", resp.Err)
 	}
 
 	return nil
@@ -125,18 +98,9 @@ func (c *Client) Call(ctx context.Context, funcName, action string, param interf
 		Param:    param,
 	}
 
-	resp, err := c.doRequest(ctx, "/Action/call", req)
-	if err != nil {
-		return err
-	}
-
-	if err := c.parseResponse(resp, result); err != nil {
-		return err
-	}
-
-	return nil
+	return c.doRequest(ctx, "/Action/call", req, result)
 }
 
 func (c *Client) Close() {
-	c.httpClient.CloseIdleConnections()
+	c.client.CloseIdleConnections()
 }

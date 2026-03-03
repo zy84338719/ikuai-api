@@ -14,13 +14,8 @@ func (c *Client) Login(ctx context.Context) error {
 		Pass:     internal.Base64Password(c.password),
 	}
 
-	resp, err := c.doRequest(ctx, "/Action/login", req)
-	if err != nil {
-		return err
-	}
-
 	var loginResp types.BaseResponse
-	if err := c.parseResponse(resp, &loginResp); err != nil {
+	if err := c.doRequest(ctx, "/Action/login", req, &loginResp); err != nil {
 		return err
 	}
 
@@ -44,13 +39,8 @@ func (c *Client) Logout(ctx context.Context) error {
 		Action:   "logout",
 	}
 
-	resp, err := c.doRequest(ctx, "/Action/logout", req)
-	if err != nil {
-		return err
-	}
-
 	var baseResp types.BaseResponse
-	if err := c.parseResponse(resp, &baseResp); err != nil {
+	if err := c.doRequest(ctx, "/Action/logout", req, &baseResp); err != nil {
 		return err
 	}
 
@@ -64,13 +54,8 @@ func (c *Client) CheckLogin(ctx context.Context) (bool, error) {
 		Action:   "show",
 	}
 
-	resp, err := c.doRequest(ctx, "/Action/call", req)
-	if err != nil {
-		return false, err
-	}
-
 	var baseResp types.BaseResponse
-	if err := c.parseResponse(resp, &baseResp); err != nil {
+	if err := c.doRequest(ctx, "/Action/call", req, &baseResp); err != nil {
 		return false, err
 	}
 
