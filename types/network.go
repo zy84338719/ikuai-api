@@ -222,3 +222,275 @@ func (r *DDNSShowResponse) GetData() []DDNSItem {
 	}
 	return r.Data.Data
 }
+
+// DNSForwardShowResponse - DNS转发响应
+type DNSForwardShowResponse struct {
+	BaseResponse
+	Data struct {
+		Data []DNSForwardItem `json:"data"`
+	} `json:"Data"`
+	Results *struct {
+		Data []DNSForwardItem `json:"data"`
+	} `json:"results,omitempty"`
+}
+
+func (r *DNSForwardShowResponse) GetData() []DNSForwardItem {
+	if r.Results != nil {
+		return r.Results.Data
+	}
+	return r.Data.Data
+}
+
+// DNSForwardItem - DNS转发项
+type DNSForwardItem struct {
+	ID        int    `json:"id"`
+	TagName   string `json:"tagname"`
+	Enabled   string `json:"enabled"`
+	Comment   string `json:"comment"`
+	Interface string `json:"interface"`
+	Domain    string `json:"domain"`
+	ForwardIP string `json:"forward_ip"`
+}
+
+// DNSStaticShowResponse - DNS静态解析响应
+type DNSStaticShowResponse struct {
+	BaseResponse
+	Data struct {
+		Data []DNSStaticItem `json:"data"`
+	} `json:"Data"`
+	Results *struct {
+		Data []DNSStaticItem `json:"data"`
+	} `json:"results,omitempty"`
+}
+
+func (r *DNSStaticShowResponse) GetData() []DNSStaticItem {
+	if r.Results != nil {
+		return r.Results.Data
+	}
+	return r.Data.Data
+}
+
+// DNSStaticItem - DNS静态解析项
+type DNSStaticItem struct {
+	ID      int    `json:"id"`
+	TagName string `json:"tagname"`
+	Enabled string `json:"enabled"`
+	Comment string `json:"comment"`
+	Domain  string `json:"domain"`
+	IPAddr  string `json:"ip_addr"`
+}
+
+// RouteStaticShowResponse - 静态路由响应
+type RouteStaticShowResponse struct {
+	BaseResponse
+	Data struct {
+		Data []RouteStaticItem `json:"data"`
+	} `json:"Data"`
+	Results *struct {
+		Data []RouteStaticItem `json:"data"`
+	} `json:"results,omitempty"`
+}
+
+func (r *RouteStaticShowResponse) GetData() []RouteStaticItem {
+	if r.Results != nil {
+		return r.Results.Data
+	}
+	return r.Data.Data
+}
+
+// RouteStaticItem - 静态路由项
+type RouteStaticItem struct {
+	ID        int    `json:"id"`
+	TagName   string `json:"tagname"`
+	Enabled   string `json:"enabled"`
+	Comment   string `json:"comment"`
+	DstAddr   string `json:"dst_addr"`
+	Gateway   string `json:"gateway"`
+	Interface string `json:"interface"`
+	Metric    int    `json:"metric"`
+}
+
+// RoutePolicyShowResponse - 策略路由响应
+type RoutePolicyShowResponse struct {
+	BaseResponse
+	Data struct {
+		Data []RoutePolicyItem `json:"data"`
+	} `json:"Data"`
+	Results *struct {
+		Data []RoutePolicyItem `json:"data"`
+	} `json:"results,omitempty"`
+}
+
+func (r *RoutePolicyShowResponse) GetData() []RoutePolicyItem {
+	if r.Results != nil {
+		return r.Results.Data
+	}
+	return r.Data.Data
+}
+
+// RoutePolicyItem - 策略路由项
+type RoutePolicyItem struct {
+	ID          int    `json:"id"`
+	TagName     string `json:"tagname"`
+	Enabled     string `json:"enabled"`
+	Comment     string `json:"comment"`
+	SrcAddr     string `json:"src_addr"`
+	DstAddr     string `json:"dst_addr"`
+	Interface   string `json:"interface"`
+	Gateway     string `json:"gateway"`
+	Description string `json:"description"`
+}
+
+// FlowControlShowResponse - 流控响应
+type FlowControlShowResponse struct {
+	BaseResponse
+	Data struct {
+		Data []FlowControlItem `json:"data"`
+	} `json:"Data"`
+	Results *struct {
+		Data []FlowControlItem `json:"data"`
+	} `json:"results,omitempty"`
+}
+
+func (r *FlowControlShowResponse) GetData() []FlowControlItem {
+	if r.Results != nil {
+		return r.Results.Data
+	}
+	return r.Data.Data
+}
+
+// FlowControlItem - 流控项
+type FlowControlItem struct {
+	ID       int    `json:"id"`
+	TagName  string `json:"tagname"`
+	Enabled  string `json:"enabled"`
+	Comment  string `json:"comment"`
+	SrcAddr  string `json:"src_addr"`
+	DstAddr  string `json:"dst_addr"`
+	Protocol string `json:"protocol"`
+	SrcPort  string `json:"src_port"`
+	DstPort  string `json:"dst_port"`
+	Upload   int64  `json:"upload"`
+	Download int64  `json:"download"`
+	Priority int    `json:"priority"`
+}
+
+// BandwidthShowResponse - 带宽控制响应
+type BandwidthShowResponse struct {
+	BaseResponse
+	Data struct {
+		Data []BandwidthItem `json:"data"`
+	} `json:"Data"`
+	Results *struct {
+		Data []BandwidthItem `json:"data"`
+	} `json:"results,omitempty"`
+}
+
+func (r *BandwidthShowResponse) GetData() []BandwidthItem {
+	if r.Results != nil {
+		return r.Results.Data
+	}
+	return r.Data.Data
+}
+
+// BandwidthItem - 带宽控制项
+type BandwidthItem struct {
+	ID          int    `json:"id"`
+	TagName     string `json:"tagname"`
+	Enabled     string `json:"enabled"`
+	Comment     string `json:"comment"`
+	SrcAddr     string `json:"src_addr"`
+	DstAddr     string `json:"dst_addr"`
+	MinUpload   int64  `json:"min_upload"`
+	MaxUpload   int64  `json:"max_upload"`
+	MinDownload int64  `json:"min_download"`
+	MaxDownload int64  `json:"max_download"`
+}
+
+// QoSShowResponse - QoS响应
+type QoSShowResponse struct {
+	BaseResponse
+	Data struct {
+		Data []QoSItem `json:"data"`
+	} `json:"Data"`
+	Results *struct {
+		Data []QoSItem `json:"data"`
+	} `json:"results,omitempty"`
+}
+
+func (r *QoSShowResponse) GetData() []QoSItem {
+	if r.Results != nil {
+		return r.Results.Data
+	}
+	return r.Data.Data
+}
+
+// QoSItem - QoS项
+type QoSItem struct {
+	ID       int    `json:"id"`
+	TagName  string `json:"tagname"`
+	Enabled  string `json:"enabled"`
+	Comment  string `json:"comment"`
+	SrcAddr  string `json:"src_addr"`
+	DstAddr  string `json:"dst_addr"`
+	Protocol string `json:"protocol"`
+	SrcPort  string `json:"src_port"`
+	DstPort  string `json:"dst_port"`
+	Priority int    `json:"priority"`
+	DSCP     int    `json:"dscp"`
+}
+
+type DNSStaticAddRequest struct {
+	TagName string `json:"tagname"`
+	Enabled string `json:"enabled"`
+	Comment string `json:"comment"`
+	Domain  string `json:"domain"`
+	IPAddr  string `json:"ip_addr"`
+}
+
+type DNSStaticEditRequest struct {
+	ID      int    `json:"id"`
+	TagName string `json:"tagname"`
+	Enabled string `json:"enabled"`
+	Comment string `json:"comment"`
+	Domain  string `json:"domain"`
+	IPAddr  string `json:"ip_addr"`
+}
+
+type RouteStaticAddRequest struct {
+	TagName   string `json:"tagname"`
+	Enabled   string `json:"enabled"`
+	Comment   string `json:"comment"`
+	DstAddr   string `json:"dst_addr"`
+	Gateway   string `json:"gateway"`
+	Interface string `json:"interface"`
+	Metric    int    `json:"metric"`
+}
+
+type RouteStaticEditRequest struct {
+	ID        int    `json:"id"`
+	TagName   string `json:"tagname"`
+	Enabled   string `json:"enabled"`
+	Comment   string `json:"comment"`
+	DstAddr   string `json:"dst_addr"`
+	Gateway   string `json:"gateway"`
+	Interface string `json:"interface"`
+	Metric    int    `json:"metric"`
+}
+
+type DHCPStaticAddRequest struct {
+	TagName string `json:"tagname"`
+	Comment string `json:"comment"`
+	Mac     string `json:"mac"`
+	IPAddr  string `json:"ip_addr"`
+	Enabled string `json:"enabled"`
+}
+
+type DHCPStaticEditRequest struct {
+	ID      int    `json:"id"`
+	TagName string `json:"tagname"`
+	Comment string `json:"comment"`
+	Mac     string `json:"mac"`
+	IPAddr  string `json:"ip_addr"`
+	Enabled string `json:"enabled"`
+}
