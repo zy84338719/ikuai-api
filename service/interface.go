@@ -31,6 +31,18 @@ type NetworkService interface {
 	GetDHCPD(ctx context.Context) ([]types.DHCPDItem, error)
 	GetStaticBindings(ctx context.Context) ([]types.DHCPStaticItem, error)
 	GetLeases(ctx context.Context) ([]types.DHCPLeaseItem, error)
+	// DNS related
+	GetDNSForward(ctx context.Context) ([]types.DNSForwardItem, error)
+	GetDNSStatic(ctx context.Context) ([]types.DNSStaticItem, error)
+	// Routing related
+	GetRouteStatic(ctx context.Context) ([]types.RouteStaticItem, error)
+	GetRoutePolicy(ctx context.Context) ([]types.RoutePolicyItem, error)
+	// Flow control related
+	GetFlowControl(ctx context.Context) ([]types.FlowControlItem, error)
+	// Bandwidth control
+	GetBandwidth(ctx context.Context) ([]types.BandwidthItem, error)
+	// QoS
+	GetQoS(ctx context.Context) ([]types.QoSItem, error)
 }
 
 type FirewallService interface {
