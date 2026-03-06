@@ -11,6 +11,12 @@ const (
 	ErrCodeRequestFailed
 	ErrCodeInvalidResponse
 	ErrCodeVersionNotSupported
+	ErrCodeValidationFailed
+	ErrCodeRateLimited
+	ErrCodeTimeout
+	ErrCodeConnectionLost
+	ErrCodeUnauthorized
+	ErrCodeForbidden
 )
 
 type SDKError struct {

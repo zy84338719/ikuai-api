@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	ikuaisdk "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
@@ -28,9 +29,22 @@ func (s *vmService) Add(ctx context.Context, req *types.QemuAddRequest) (int, er
 		types.BaseResponse
 		ID int `json:"id"`
 	}
+
+	if req.Name == "" {
+		return 0, fmt.Errorf("VM name cannot be empty")
+	}
+	if req.CPUCores < 1 {
+		return 0, fmt.Errorf("VM must have at least 1 CPU core, got %d", req.CPUCores)
+	}
+
 	if err := s.client.Call(ctx, "qemu", "add", req, &result); err != nil {
 		return 0, err
 	}
+
+	if !result.IsSuccess() {
+		return 0, fmt.Errorf("failed to add VM: %s", result.GetErrorMessage())
+	}
+
 	return result.ID, nil
 }
 
