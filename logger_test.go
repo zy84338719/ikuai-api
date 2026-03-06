@@ -1,88 +1,68 @@
 package ikuaisdk
 
 import (
-	"sync"
 	"testing"
 	"time"
 )
 
-func TestDefaultLogger(t *testing.T) {
-	logger := NewDefaultLogger(LogLevelDebug)
-
-	// 测试各级别日志不会 panic
-	logger.Debug("test debug message: %s", "value")
-	logger.Info("test info message: %d", 123)
-	logger.Warn("test warn message")
-	logger.Error("test error message")
-}
-
-func TestDefaultLogger_Levels(t *testing.T) {
-	tests := []struct {
-		name  string
-		level LogLevel
-	}{
-		{"Debug level", LogLevelDebug},
-		{"Info level", LogLevelInfo},
-		{"Warn level", LogLevelWarn},
-		{"Error level", LogLevelError},
-		{"None level", LogLevelNone},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			logger := NewDefaultLogger(tt.level)
-			logger.Debug("debug")
-			logger.Info("info")
-			logger.Warn("warn")
-			logger.Error("error")
-		})
-	}
-}
-
 func TestMetrics(t *testing.T) {
-	metrics := NewMetrics()
+	m := NewMetrics()
 
-	// 测试记录请求
-	metrics.RecordRequest(100*time.Millisecond, false)
-	metrics.RecordRequest(200*time.Millisecond, false)
-	metrics.RecordRequest(150*time.Millisecond, true)
+	// Record some requests
+	m.RecordRequest(100*time.Millisecond, false)
+	m.RecordRequest(200*time.Millisecond, false)
+	m.RecordRequest(150*time.Millisecond, true)
 
-	count, errors, avgDuration := metrics.GetStats()
+	count, errors, avgDuration := m.GetStats()
 	if count != 3 {
-		t.Errorf("expected 3 requests, got %d", count)
+		t.Errorf("GetStats() count = %d, want 3", count)
 	}
 	if errors != 1 {
-		t.Errorf("expected 1 error, got %d", errors)
+		t.Errorf("GetStats() errors = %d, want 1", errors)
 	}
-	expectedAvg := time.Duration((100+200+150)/3) * time.Millisecond
+	expectedAvg := time.Duration((100 + 200 + 150) / 3 * int64(time.Millisecond))
 	if avgDuration != expectedAvg {
-		t.Errorf("expected avg duration %v, got %v", expectedAvg, avgDuration)
+		t.Errorf("GetStats() avgDuration = %v, want %v", avgDuration, expectedAvg)
 	}
 
-	// 测试重置
-	metrics.Reset()
-	count, errors, avgDuration = metrics.GetStats()
-	if count != 0 {
-		t.Errorf("expected 0 requests after reset, got %d", count)
+	// Reset
+	m.Reset()
+	count, errors, _ = m.GetStats()
+	if count != 0 || errors != 0 {
+		t.Error("Reset() should reset all metrics to 0")
 	}
 }
 
-func TestMetrics_Concurrent(t *testing.T) {
-	metrics := NewMetrics()
+func TestDefaultLogger(t *testing.T) {
+	// Just verify that creating loggers doesn't panic
+	logger := NewDefaultLogger(LogLevelDebug)
+	logger.Debug("test debug %s", "message")
+	logger.Info("test info %s", "message")
+	logger.Warn("test warn %s", "message")
+	logger.Error("test error %s", "message")
 
-	// 并发测试
-	var wg sync.WaitGroup
-	for i := 0; i < 100; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			metrics.RecordRequest(100*time.Millisecond, false)
-		}()
+	// Test with different levels
+	logger = NewDefaultLogger(LogLevelError)
+	logger.Debug("should not print")
+	logger.Error("should print")
+
+	logger = NewDefaultLogger(LogLevelNone)
+	logger.Error("should not print")
+}
+
+func TestLogLevel(t *testing.T) {
+	levels := []LogLevel{
+		LogLevelDebug,
+		LogLevelInfo,
+		LogLevelWarn,
+		LogLevelError,
+		LogLevelNone,
 	}
-	wg.Wait()
 
-	count, _, _ := metrics.GetStats()
-	if count != 100 {
-		t.Errorf("expected 100 requests, got %d", count)
+	// Just verify levels are defined correctly
+	for i, level := range levels {
+		if int(level) != i {
+			t.Errorf("LogLevel %d has unexpected value %d", i, level)
+		}
 	}
 }

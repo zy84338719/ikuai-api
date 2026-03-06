@@ -5,89 +5,91 @@ import (
 	"time"
 )
 
-func TestResponseCache_GetSet(t *testing.T) {
-	cache := NewResponseCache(1 * time.Minute)
+func TestResponseCache(t *testing.T) {
+	cache := NewResponseCache(1 * time.Second)
 
-	key := "test_key"
-	data := map[string]string{"test": "data"}
-
-	cache.Set(key, data)
-
-	retrieved, exists := cache.Get(key)
-	if !exists {
-		t.Error("Expected item to exist in cache")
+	// Test Set and Get
+	cache.Set("key1", "value1")
+	val, ok := cache.Get("key1")
+	if !ok || val != "value1" {
+		t.Errorf("Get() = %v, %v; want value1, true", val, ok)
 	}
 
-	if retrieved == nil {
-		t.Error("Expected non-nil data")
+	// Test non-existent key
+	_, ok = cache.Get("nonexistent")
+	if ok {
+		t.Error("Get() should return false for non-existent key")
 	}
 }
 
-func TestResponseCache_GetExpired(t *testing.T) {
+func TestResponseCacheExpiration(t *testing.T) {
 	cache := NewResponseCache(100 * time.Millisecond)
 
-	key := "test_key"
-	data := "test_data"
+	cache.Set("expire_key", "value")
 
-	cache.Set(key, data)
+	// Should exist immediately
+	_, ok := cache.Get("expire_key")
+	if !ok {
+		t.Error("Key should exist immediately after Set")
+	}
 
+	// Wait for expiration
 	time.Sleep(150 * time.Millisecond)
 
-	_, exists := cache.Get(key)
-	if exists {
-		t.Error("Expected expired item to not exist")
+	// Should be expired
+	_, ok = cache.Get("expire_key")
+	if ok {
+		t.Error("Key should be expired")
 	}
 }
 
-func TestResponseCache_Clear(t *testing.T) {
-	cache := NewResponseCache(1 * time.Minute)
+func TestResponseCacheDelete(t *testing.T) {
+	cache := NewResponseCache(1 * time.Second)
 
-	cache.Set("key1", "data1")
-	cache.Set("key2", "data2")
+	cache.Set("delete_key", "value")
+	cache.Delete("delete_key")
+
+	_, ok := cache.Get("delete_key")
+	if ok {
+		t.Error("Key should be deleted")
+	}
+}
+
+func TestResponseCacheClear(t *testing.T) {
+	cache := NewResponseCache(1 * time.Second)
+
+	cache.Set("key1", "value1")
+	cache.Set("key2", "value2")
 	cache.Clear()
 
-	if len(cache.items) != 0 {
-		t.Errorf("Expected cache to be cleared, got %d items", len(cache.items))
+	_, ok1 := cache.Get("key1")
+	_, ok2 := cache.Get("key2")
+	if ok1 || ok2 {
+		t.Error("All keys should be cleared")
 	}
 }
 
-func TestClient_ResponseCache(t *testing.T) {
+func TestClientCacheMethods(t *testing.T) {
 	client := NewClient("http://192.168.1.1", "admin", "password")
 
-	if client.cache != nil {
-		t.Error("Expected client cache to be nil by default")
+	// Test cache disabled by default
+	_, ok := client.GetCachedResponse("key")
+	if ok {
+		t.Error("Cache should be disabled by default")
 	}
 
-	client.EnableCache(5 * time.Minute)
-
-	if client.cache == nil {
-		t.Error("Expected client cache to be initialized")
+	// Enable cache
+	client.EnableCache(1 * time.Second)
+	client.SetCachedResponse("key", "value")
+	val, ok := client.GetCachedResponse("key")
+	if !ok || val != "value" {
+		t.Errorf("GetCachedResponse() = %v, %v; want value, true", val, ok)
 	}
 
-	key := "test_key"
-	data := map[string]string{"test": "data"}
-
-	client.SetCachedResponse(key, data)
-
-	retrieved, exists := client.GetCachedResponse(key)
-	if !exists {
-		t.Error("Expected cached response to exist")
-	}
-
-	if retrieved == nil {
-		t.Error("Expected non-nil cached response")
-	}
-
-	client.ClearResponseCache()
-
-	_, exists = client.GetCachedResponse(key)
-	if exists {
-		t.Error("Expected cache to be cleared")
-	}
-
+	// Disable cache
 	client.DisableCache()
-
-	if client.cache != nil {
-		t.Error("Expected cache to be disabled")
+	_, ok = client.GetCachedResponse("key")
+	if ok {
+		t.Error("Cache should be disabled after DisableCache()")
 	}
 }

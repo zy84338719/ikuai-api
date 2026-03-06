@@ -123,18 +123,21 @@ type TrafficService interface {
 	GetRealtime(ctx context.Context) ([]types.TrafficRealtimeItem, error)
 	GetHistory(ctx context.Context, hours int64) ([]types.TrafficHistoryItem, error)
 }
+
 type AppControlService interface {
 	GetAppControl(ctx context.Context) ([]types.AppControlItem, error)
 	AddAppControl(ctx context.Context, req *types.AppControlAddRequest) (int, error)
 	EditAppControl(ctx context.Context, req *types.AppControlEditRequest) error
 	DelAppControl(ctx context.Context, id int) error
 }
+
 type UserManageService interface {
 	GetUsers(ctx context.Context) ([]types.UserManageItem, error)
 	AddUser(ctx context.Context, req *types.UserManageAddRequest) (int, error)
 	EditUser(ctx context.Context, req *types.UserManageEditRequest) error
 	DelUser(ctx context.Context, id int) error
 }
+
 type OnlineMonitorService interface {
 	GetOnlineUsers(ctx context.Context) ([]types.OnlineMonitorItem, error)
 }

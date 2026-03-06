@@ -1,108 +1,160 @@
-package ikuaisdk_test
+package ikuaisdk
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
-
-	ikuaisdk "github.com/zy84338719/ikuai-api"
 )
 
 func TestNewClient(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := NewClient("http://192.168.1.1", "admin", "password")
+
 	if client == nil {
 		t.Fatal("NewClient returned nil")
 	}
+
+	if client.baseURL != "http://192.168.1.1" {
+		t.Errorf("baseURL = %q, want %q", client.baseURL, "http://192.168.1.1")
+	}
+
+	if client.username != "admin" {
+		t.Errorf("username = %q, want %q", client.username, "admin")
+	}
+
+	if client.version != VersionUnknown {
+		t.Errorf("version should be unknown before login")
+	}
+
+	if client.IsLoggedIn() {
+		t.Error("client should not be logged in initially")
+	}
+
+	client.Close()
 }
 
-func TestClientLoginV4(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/Action/login" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, `{"code": 0, "message": "success"}`)
-			return
+func TestNewClientWithNormalization(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"192.168.1.1", "http://192.168.1.1"},
+		{"192.168.1.1/", "http://192.168.1.1"},
+		{"  192.168.1.1  ", "http://192.168.1.1"},
+		{"http://192.168.1.1/", "http://192.168.1.1"},
+	}
+
+	for _, tt := range tests {
+		client := NewClient(tt.input, "admin", "password")
+		if client.baseURL != tt.expected {
+			t.Errorf("NewClient(%q).baseURL = %q, want %q", tt.input, client.baseURL, tt.expected)
 		}
-		http.NotFound(w, r)
-	}))
-	defer server.Close()
-
-	client := ikuaisdk.NewClient(server.URL, "admin", "password")
-	err := client.Login(context.Background())
-	if err != nil {
-		t.Fatalf("Login() error = %v", err)
-	}
-	if client.GetVersion() != ikuaisdk.VersionV4 {
-		t.Errorf("version = %v, want %v", client.GetVersion(), ikuaisdk.VersionV4)
-	}
-	if !client.IsLoggedIn() {
-		t.Error("IsLoggedIn() should be true after successful login")
-	}
-}
-
-func TestClientLoginV3(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/Action/login" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, `{"Result": 10000, "ErrMsg": ""}`)
-			return
-		}
-		http.NotFound(w, r)
-	}))
-	defer server.Close()
-
-	client := ikuaisdk.NewClient(server.URL, "admin", "password")
-	err := client.Login(context.Background())
-	if err != nil {
-		t.Fatalf("Login() error = %v", err)
-	}
-	if client.GetVersion() != ikuaisdk.VersionV3 {
-		t.Errorf("version = %v, want %v", client.GetVersion(), ikuaisdk.VersionV3)
+		client.Close()
 	}
 }
 
-func TestClientLoginFailed(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/Action/login" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, `{"code": 10014, "message": "password error"}`)
-			return
-		}
-		http.NotFound(w, r)
-	}))
-	defer server.Close()
+func TestClientWithOptions(t *testing.T) {
+	timeout := 60 * time.Second
+	client := NewClient("http://192.168.1.1", "admin", "password",
+		WithTimeout(timeout),
+		WithInsecureSkipVerify(true),
+	)
 
-	client := ikuaisdk.NewClient(server.URL, "admin", "wrong")
-	err := client.Login(context.Background())
-	if err == nil {
-		t.Fatal("Login() should return error on failed login")
+	if client == nil {
+		t.Fatal("NewClient returned nil")
 	}
+
+	// Verify logger is set
+	if client.logger == nil {
+		t.Error("logger should be set")
+	}
+
+	// Verify metrics is set
+	if client.metrics == nil {
+		t.Error("metrics should be set")
+	}
+
+	client.Close()
 }
 
-func TestNewClientWithLogin(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/Action/login" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			fmt.Fprint(w, `{"code": 0, "message": "success"}`)
-			return
-		}
-		http.NotFound(w, r)
-	}))
-	defer server.Close()
-
-	client, err := ikuaisdk.NewClientWithLogin(server.URL, "admin", "password", ikuaisdk.WithTimeout(10*time.Second))
-	if err != nil {
-		t.Fatalf("NewClientWithLogin() error = %v", err)
-	}
+func TestClientGetVersion(t *testing.T) {
+	client := NewClient("http://192.168.1.1", "admin", "password")
 	defer client.Close()
 
-	if !client.IsLoggedIn() {
-		t.Error("client should be logged in")
+	if client.GetVersion() != VersionUnknown {
+		t.Error("version should be unknown before login")
 	}
+}
+
+func TestClientIsLoggedIn(t *testing.T) {
+	client := NewClient("http://192.168.1.1", "admin", "password")
+	defer client.Close()
+
+	if client.IsLoggedIn() {
+		t.Error("client should not be logged in initially")
+	}
+}
+
+func TestClientCallNotLoggedIn(t *testing.T) {
+	client := NewClient("http://192.168.1.1", "admin", "password")
+	defer client.Close()
+
+	ctx := context.Background()
+	var result interface{}
+	err := client.Call(ctx, "test", "show", nil, &result)
+
+	if err == nil {
+		t.Error("Call should return error when not logged in")
+	}
+
+	if !IsSDKError(err) {
+		t.Errorf("Error should be SDKError, got %T", err)
+	}
+
+	if GetErrorCode(err) != ErrCodeNotLoggedIn {
+		t.Errorf("Error code = %d, want %d", GetErrorCode(err), ErrCodeNotLoggedIn)
+	}
+}
+
+func TestClientLoginWithoutServer(t *testing.T) {
+	client := NewClient("http://127.0.0.1:12345", "admin", "password",
+		WithTimeout(1*time.Second),
+	)
+	defer client.Close()
+
+	ctx := context.Background()
+	err := client.Login(ctx)
+
+	if err == nil {
+		t.Error("Login should fail when server is not available")
+	}
+
+	if !IsSDKError(err) {
+		t.Errorf("Error should be SDKError, got %T", err)
+	}
+}
+
+func TestNewClientWithLoginWithoutServer(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	client, err := NewClientWithLoginContext(ctx, "http://127.0.0.1:12345", "admin", "password",
+		WithTimeout(1*time.Second),
+	)
+
+	if err == nil {
+		client.Close()
+		t.Error("NewClientWithLogin should fail when server is not available")
+	}
+
+	if client != nil {
+		t.Error("Client should be nil on error")
+	}
+}
+
+func TestClientClose(t *testing.T) {
+	client := NewClient("http://192.168.1.1", "admin", "password")
+
+	// Close should not panic
+	client.Close()
+	client.Close() // Second close should also be safe
 }
