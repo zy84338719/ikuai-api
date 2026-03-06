@@ -119,6 +119,10 @@ type UPnPService interface {
 	Del(ctx context.Context, id int) error
 }
 
+type TrafficService interface {
+	GetRealtime(ctx context.Context) ([]types.TrafficRealtimeItem, error)
+	GetHistory(ctx context.Context, hours int64) ([]types.TrafficHistoryItem, error)
+}
 type APIClient interface {
 	Monitor() MonitorService
 	System() SystemService
@@ -129,4 +133,5 @@ type APIClient interface {
 	Docker() DockerService
 	VM() VMService
 	UPnP() UPnPService
+	Traffic() TrafficService
 }
