@@ -20,7 +20,7 @@ func TestMD5Hash(t *testing.T) {
 		},
 		{
 			name:     "password with special chars",
-			input:    "REDACTED",
+			input:    "Test@123!",
 			expected: "5e64dafa36473f590c6d1234567890ab",
 		},
 	}
@@ -53,7 +53,7 @@ func TestBase64Password(t *testing.T) {
 		},
 		{
 			name:     "complex password",
-			password: "REDACTED",
+			password: "Test@123!",
 		},
 	}
 

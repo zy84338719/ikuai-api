@@ -15,15 +15,15 @@ import (
 func getTestConfig() (string, string, string) {
 	addr := os.Getenv("IKUAI_TEST_ADDR")
 	if addr == "" {
-		addr = "10.10.30.254"
+		addr = "192.168.1.1"
 	}
 	username := os.Getenv("IKUAI_TEST_USERNAME")
 	if username == "" {
-		username = "zhangyi"
+		username = "admin"
 	}
 	password := os.Getenv("IKUAI_TEST_PASSWORD")
 	if password == "" {
-		password = "REDACTED"
+		panic("IKUAI_TEST_PASSWORD environment variable must be set")
 	}
 	return addr, username, password
 }

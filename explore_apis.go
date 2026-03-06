@@ -6,6 +6,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	ikuaisdk "github.com/zy84338719/ikuai-api"
@@ -17,11 +18,24 @@ func main() {
 	fmt.Println("=== 探索 iKuai API 接口 ===")
 	fmt.Println()
 
-	// 创建客户端并登录
+	addr := os.Getenv("IKUAI_TEST_ADDR")
+	if addr == "" {
+		addr = "192.168.1.1"
+	}
+	username := os.Getenv("IKUAI_TEST_USERNAME")
+	if username == "" {
+		username = "admin"
+	}
+	password := os.Getenv("IKUAI_TEST_PASSWORD")
+	if password == "" {
+		fmt.Println("❌ 请设置环境变量 IKUAI_TEST_PASSWORD")
+		return
+	}
+
 	client, err := ikuaisdk.NewClientWithLogin(
-		"http://10.10.30.254",
-		"zhangyi",
-		"REDACTED",
+		addr,
+		username,
+		password,
 		ikuaisdk.WithTimeout(30*time.Second),
 	)
 	if err != nil {
