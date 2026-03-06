@@ -34,6 +34,9 @@ type Client struct {
 	password string
 	version  Version
 	loggedIn bool
+	cache    *ResponseCache
+	logger   Logger
+	metrics  *Metrics
 }
 
 type ClientOption func(*Client)
@@ -67,6 +70,8 @@ func NewClient(baseURL, username, password string, opts ...ClientOption) *Client
 		password: password,
 		version:  VersionUnknown,
 		loggedIn: false,
+		logger:   NewDefaultLogger(LogLevelInfo),
+		metrics:  NewMetrics(),
 		client: req.C().
 			SetBaseURL(baseURL).
 			SetTimeout(30 * time.Second),
