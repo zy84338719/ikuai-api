@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Traffic Monitoring Service**
+  - Real-time traffic monitoring (upload/download speeds per interface)
+  - Historical traffic data query (up to 7 days)
+  - TrafficService interface and implementation
+  - TrafficRealtimeItem and TrafficHistoryItem type definitions
+  - Input validation for query parameters
 - **CRUD Operations for Firewall Service**
   - Add/Edit/Delete ACL rules
   - Add/Edit/Delete DNAT (port forwarding) rules
