@@ -166,3 +166,76 @@ func (r *StreamDomainShowResponse) GetData() []StreamDomainItem {
 	}
 	return r.Data.Data
 }
+
+type ACLAddRequest struct {
+	TagName  string `json:"tagname"`
+	Enabled  string `json:"enabled"`
+	Comment  string `json:"comment"`
+	SrcAddr  string `json:"src_addr"`
+	DstAddr  string `json:"dst_addr"`
+	SrcPort  string `json:"src_port"`
+	DstPort  string `json:"dst_port"`
+	Protocol string `json:"protocol"`
+	Action   string `json:"action"`
+	Week     string `json:"week"`
+	Time     string `json:"time"`
+}
+
+type ACLEditRequest struct {
+	ID       int    `json:"id"`
+	TagName  string `json:"tagname"`
+	Enabled  string `json:"enabled"`
+	Comment  string `json:"comment"`
+	SrcAddr  string `json:"src_addr"`
+	DstAddr  string `json:"dst_addr"`
+	SrcPort  string `json:"src_port"`
+	DstPort  string `json:"dst_port"`
+	Protocol string `json:"protocol"`
+	Action   string `json:"action"`
+	Week     string `json:"week"`
+	Time     string `json:"time"`
+}
+
+type DNATAddRequest struct {
+	TagName   string                 `json:"tagname"`
+	Enabled   string                 `json:"enabled"`
+	Interface string                 `json:"interface"`
+	Protocol  string                 `json:"protocol"`
+	WanPort   string                 `json:"wan_port"`
+	LanAddr   string                 `json:"lan_addr"`
+	LanPort   string                 `json:"lan_port"`
+	Comment   string                 `json:"comment"`
+	SrcAddr   map[string]interface{} `json:"src_addr,omitempty"`
+}
+
+type DNATEditRequest struct {
+	ID        int                    `json:"id"`
+	TagName   string                 `json:"tagname"`
+	Enabled   string                 `json:"enabled"`
+	Interface string                 `json:"interface"`
+	Protocol  string                 `json:"protocol"`
+	WanPort   string                 `json:"wan_port"`
+	LanAddr   string                 `json:"lan_addr"`
+	LanPort   string                 `json:"lan_port"`
+	Comment   string                 `json:"comment"`
+	SrcAddr   map[string]interface{} `json:"src_addr,omitempty"`
+}
+
+type ConnLimitAddRequest struct {
+	TagName string `json:"tagname"`
+	Enabled string `json:"enabled"`
+	Comment string `json:"comment"`
+	SrcAddr string `json:"src_addr"`
+	ConnNum int    `json:"conn_num"`
+	NewConn int    `json:"new_conn"`
+}
+
+type ConnLimitEditRequest struct {
+	ID      int    `json:"id"`
+	TagName string `json:"tagname"`
+	Enabled string `json:"enabled"`
+	Comment string `json:"comment"`
+	SrcAddr string `json:"src_addr"`
+	ConnNum int    `json:"conn_num"`
+	NewConn int    `json:"new_conn"`
+}

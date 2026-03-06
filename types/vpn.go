@@ -56,3 +56,47 @@ func (r *L2TPClientShowResponse) GetData() []L2TPClientItem {
 	}
 	return r.Data.Data
 }
+
+type PPTPClientAddRequest struct {
+	TagName   string `json:"tagname"`
+	Enabled   string `json:"enabled"`
+	Comment   string `json:"comment"`
+	Server    string `json:"server"`
+	Username  string `json:"username"`
+	Passwd    string `json:"passwd"`
+	Interface string `json:"interface"`
+}
+
+type PPTPClientEditRequest struct {
+	ID        int    `json:"id"`
+	TagName   string `json:"tagname"`
+	Enabled   string `json:"enabled"`
+	Comment   string `json:"comment"`
+	Server    string `json:"server"`
+	Username  string `json:"username"`
+	Passwd    string `json:"passwd"`
+	Interface string `json:"interface"`
+}
+
+type L2TPClientAddRequest struct {
+	TagName   string `json:"tagname"`
+	Enabled   string `json:"enabled"`
+	Comment   string `json:"comment"`
+	Server    string `json:"server"`
+	Username  string `json:"username"`
+	Passwd    string `json:"passwd"`
+	Interface string `json:"interface"`
+	Secret    string `json:"secret"`
+}
+
+type L2TPClientEditRequest struct {
+	ID        int    `json:"id"`
+	TagName   string `json:"tagname"`
+	Enabled   string `json:"enabled"`
+	Comment   string `json:"comment"`
+	Server    string `json:"server"`
+	Username  string `json:"username"`
+	Passwd    string `json:"passwd"`
+	Interface string `json:"interface"`
+	Secret    string `json:"secret"`
+}

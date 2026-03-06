@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	ikuaisdk "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
@@ -86,6 +87,7 @@ func (s *networkService) GetLeases(ctx context.Context) ([]types.DHCPLeaseItem, 
 	}
 	return resp.GetData(), nil
 }
+
 // 新增方法实现
 func (s *networkService) GetDNSForward(ctx context.Context) ([]types.DNSForwardItem, error) {
 	var resp types.DNSForwardShowResponse
@@ -136,4 +138,112 @@ func (s *networkService) GetQoS(ctx context.Context) ([]types.QoSItem, error) {
 		return nil, err
 	}
 	return resp.GetData(), nil
+}
+
+func (s *networkService) AddStaticBinding(ctx context.Context, req *types.DHCPStaticAddRequest) (int, error) {
+	var result struct {
+		types.BaseResponse
+		ID int `json:"id"`
+	}
+	if err := s.client.Call(ctx, "dhcp_static", "add", req, &result); err != nil {
+		return 0, err
+	}
+	if !result.IsSuccess() {
+		return 0, fmt.Errorf("failed to add static binding: %s", result.GetErrorMessage())
+	}
+	return result.ID, nil
+}
+
+func (s *networkService) EditStaticBinding(ctx context.Context, req *types.DHCPStaticEditRequest) error {
+	var result types.BaseResponse
+	if err := s.client.Call(ctx, "dhcp_static", "edit", req, &result); err != nil {
+		return err
+	}
+	if !result.IsSuccess() {
+		return fmt.Errorf("failed to edit static binding: %s", result.GetErrorMessage())
+	}
+	return nil
+}
+
+func (s *networkService) DelStaticBinding(ctx context.Context, id int) error {
+	var result types.BaseResponse
+	if err := s.client.Call(ctx, "dhcp_static", "del", map[string]int{"id": id}, &result); err != nil {
+		return err
+	}
+	if !result.IsSuccess() {
+		return fmt.Errorf("failed to delete static binding: %s", result.GetErrorMessage())
+	}
+	return nil
+}
+
+func (s *networkService) AddDNSStatic(ctx context.Context, req *types.DNSStaticAddRequest) (int, error) {
+	var result struct {
+		types.BaseResponse
+		ID int `json:"id"`
+	}
+	if err := s.client.Call(ctx, "dns_static", "add", req, &result); err != nil {
+		return 0, err
+	}
+	if !result.IsSuccess() {
+		return 0, fmt.Errorf("failed to add DNS static: %s", result.GetErrorMessage())
+	}
+	return result.ID, nil
+}
+
+func (s *networkService) EditDNSStatic(ctx context.Context, req *types.DNSStaticEditRequest) error {
+	var result types.BaseResponse
+	if err := s.client.Call(ctx, "dns_static", "edit", req, &result); err != nil {
+		return err
+	}
+	if !result.IsSuccess() {
+		return fmt.Errorf("failed to edit DNS static: %s", result.GetErrorMessage())
+	}
+	return nil
+}
+
+func (s *networkService) DelDNSStatic(ctx context.Context, id int) error {
+	var result types.BaseResponse
+	if err := s.client.Call(ctx, "dns_static", "del", map[string]int{"id": id}, &result); err != nil {
+		return err
+	}
+	if !result.IsSuccess() {
+		return fmt.Errorf("failed to delete DNS static: %s", result.GetErrorMessage())
+	}
+	return nil
+}
+
+func (s *networkService) AddRouteStatic(ctx context.Context, req *types.RouteStaticAddRequest) (int, error) {
+	var result struct {
+		types.BaseResponse
+		ID int `json:"id"`
+	}
+	if err := s.client.Call(ctx, "route_static", "add", req, &result); err != nil {
+		return 0, err
+	}
+	if !result.IsSuccess() {
+		return 0, fmt.Errorf("failed to add static route: %s", result.GetErrorMessage())
+	}
+	return result.ID, nil
+}
+
+func (s *networkService) EditRouteStatic(ctx context.Context, req *types.RouteStaticEditRequest) error {
+	var result types.BaseResponse
+	if err := s.client.Call(ctx, "route_static", "edit", req, &result); err != nil {
+		return err
+	}
+	if !result.IsSuccess() {
+		return fmt.Errorf("failed to edit static route: %s", result.GetErrorMessage())
+	}
+	return nil
+}
+
+func (s *networkService) DelRouteStatic(ctx context.Context, id int) error {
+	var result types.BaseResponse
+	if err := s.client.Call(ctx, "route_static", "del", map[string]int{"id": id}, &result); err != nil {
+		return err
+	}
+	if !result.IsSuccess() {
+		return fmt.Errorf("failed to delete static route: %s", result.GetErrorMessage())
+	}
+	return nil
 }
