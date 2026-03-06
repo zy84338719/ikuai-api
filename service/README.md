@@ -26,7 +26,11 @@ service/
 ├── log.go          # 日志服务实现
 ├── docker.go       # Docker 服务实现
 ├── vm.go           # 虚拟机服务实现
-└── upnp.go         # UPnP 服务实现
+├── upnp.go         # UPnP 服务实现
+├── traffic.go      # 流量统计服务实现
+├── appcontrol.go   # 应用管控服务实现
+├── usermanage.go   # 用户管理服务实现
+└── onlinemonitor.go # 在线监控服务实现
 ```
 
 ## 快速开始
@@ -101,6 +105,10 @@ type APIClient interface {
     Docker() DockerService
     VM() VMService
     UPnP() UPnPService
+    Traffic() TrafficService
+    AppControl() AppControlService
+    UserManage() UserManageService
+    OnlineMonitor() OnlineMonitorService
 }
 ```
 
@@ -230,6 +238,53 @@ type UPnPService interface {
     Add(ctx context.Context, req *types.UPnPAddRequest) (int, error)
     Edit(ctx context.Context, req *types.UPnPEditRequest) error
     Del(ctx context.Context, id int) error
+}
+```
+
+### TrafficService
+
+流量统计服务：
+
+```go
+type TrafficService interface {
+    GetRealtime(ctx context.Context) ([]types.TrafficRealtimeItem, error)
+    GetHistory(ctx context.Context, hours int64) ([]types.TrafficHistoryItem, error)
+}
+```
+
+### AppControlService
+
+应用管控服务：
+
+```go
+type AppControlService interface {
+    GetAppControl(ctx context.Context) ([]types.AppControlItem, error)
+    AddAppControl(ctx context.Context, req *types.AppControlAddRequest) (int, error)
+    EditAppControl(ctx context.Context, req *types.AppControlEditRequest) error
+    DelAppControl(ctx context.Context, id int) error
+}
+```
+
+### UserManageService
+
+用户管理服务：
+
+```go
+type UserManageService interface {
+    GetUsers(ctx context.Context) ([]types.UserManageItem, error)
+    AddUser(ctx context.Context, req *types.UserManageAddRequest) (int, error)
+    EditUser(ctx context.Context, req *types.UserManageEditRequest) error
+    DelUser(ctx context.Context, id int) error
+}
+```
+
+### OnlineMonitorService
+
+在线监控服务：
+
+```go
+type OnlineMonitorService interface {
+    GetOnlineUsers(ctx context.Context) ([]types.OnlineMonitorItem, error)
 }
 ```
 

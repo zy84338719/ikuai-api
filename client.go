@@ -36,7 +36,7 @@ type Client struct {
 	loggedIn bool
 	cache    *ResponseCache
 	logger   Logger
-	metrics  *Metrics
+	metrics *Metrics
 }
 
 type ClientOption func(*Client)
