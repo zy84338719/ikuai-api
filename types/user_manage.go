@@ -42,30 +42,3 @@ type UserManageEditRequest struct {
 	Enabled  string `json:"enabled"`
 	Comment  string `json:"comment"`
 }
-
-type OnlineMonitorShowResponse struct {
-	BaseResponse
-	Data struct {
-		Data []OnlineMonitorItem `json:"data"`
-	} `json:"Data"`
-	Results *struct {
-		Data []OnlineMonitorItem `json:"data"`
-	} `json:"results,omitempty"`
-}
-
-type OnlineMonitorItem struct {
-	ID           int    `json:"id"`
-	Username     string `json:"username"`
-	IPAddr       string `json:"ip_addr"`
-	MacAddr      string `json:"mac_addr"`
-	OnlineTime   int64  `json:"online_time"`
-	TotalTraffic int64  `json:"total_traffic"`
-	SourceType   string `json:"source_type"`
-}
-
-func (r *OnlineMonitorShowResponse) GetData() []OnlineMonitorItem {
-	if r.Results != nil {
-		return r.Results.Data
-	}
-	return r.Data.Data
-}

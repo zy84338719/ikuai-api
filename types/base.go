@@ -12,6 +12,16 @@ type LoginRequest struct {
 	Pass     string `json:"pass"`
 }
 
+type V3BaseResponse struct {
+	Result int    `json:"Result"`
+	ErrMsg string `json:"ErrMsg"`
+}
+
+type V4BaseResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 type BaseResponse struct {
 	Result  int    `json:"Result"`
 	ErrMsg  string `json:"ErrMsg"`
@@ -21,6 +31,10 @@ type BaseResponse struct {
 
 func (r *BaseResponse) IsV4() bool {
 	return r.Message != ""
+}
+
+func (r *BaseResponse) IsV3() bool {
+	return !r.IsV4()
 }
 
 func (r *BaseResponse) IsSuccess() bool {

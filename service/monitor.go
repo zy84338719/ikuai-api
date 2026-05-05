@@ -32,10 +32,27 @@ func (s *monitorService) GetLanIPv6(ctx context.Context) ([]types.MonitorLanIPv6
 }
 
 func (s *monitorService) GetInterfaces(ctx context.Context) (*types.MonitorIFaceShowResponse, error) {
-	var resp types.MonitorIFaceShowResponse
-	if err := s.client.Call(ctx, "monitor_iface", "show", nil, &resp); err != nil {
+	var checkResp types.MonitorIFaceShowResponse
+	if err := s.client.Call(ctx, "monitor_iface", "show", map[string]string{"TYPE": "iface_check"}, &checkResp); err != nil {
 		return nil, err
 	}
+	if !checkResp.IsSuccess() {
+		return nil, ikuaisdk.NewSDKError(ikuaisdk.ErrCodeRequestFailed, checkResp.GetErrorMessage(), nil)
+	}
+
+	var streamResp types.MonitorIFaceShowResponse
+	if err := s.client.Call(ctx, "monitor_iface", "show", map[string]string{"TYPE": "iface_stream"}, &streamResp); err != nil {
+		return nil, err
+	}
+	if !streamResp.IsSuccess() {
+		return nil, ikuaisdk.NewSDKError(ikuaisdk.ErrCodeRequestFailed, streamResp.GetErrorMessage(), nil)
+	}
+
+	var resp types.MonitorIFaceShowResponse
+	resp.Result = checkResp.Result
+	resp.ErrMsg = checkResp.ErrMsg
+	resp.Data.IFaceCheck = checkResp.GetIFaceCheck()
+	resp.Data.IFaceStream = streamResp.GetIFaceStream()
 	return &resp, nil
 }
 

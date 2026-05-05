@@ -8,6 +8,11 @@ import (
 )
 
 func (c *Client) Login(ctx context.Context) error {
+	loginPath := "/Action/login"
+	if c.protocol != nil {
+		loginPath = c.protocol.LoginPath()
+	}
+
 	req := &types.LoginRequest{
 		Username: c.username,
 		Password: internal.MD5Hash(c.password),
@@ -15,18 +20,17 @@ func (c *Client) Login(ctx context.Context) error {
 	}
 
 	var loginResp types.BaseResponse
-	if err := c.doRequest(ctx, "/Action/login", req, &loginResp); err != nil {
+	if err := c.doRequest(ctx, loginPath, req, &loginResp); err != nil {
 		return err
 	}
 
-	if !loginResp.IsSuccess() {
-		return NewSDKError(ErrCodeLoginFailed, loginResp.GetErrorMessage(), nil)
+	if c.protocol == nil {
+		c.protocol = detectProtocol(&loginResp)
 	}
+	c.version = c.protocol.Version()
 
-	if loginResp.IsV4() {
-		c.version = VersionV4
-	} else {
-		c.version = VersionV3
+	if !c.protocol.IsSuccess(&loginResp) {
+		return NewSDKError(ErrCodeLoginFailed, c.protocol.ErrorMessage(&loginResp), nil)
 	}
 
 	c.loggedIn = true
@@ -40,7 +44,11 @@ func (c *Client) Logout(ctx context.Context) error {
 	}
 
 	var baseResp types.BaseResponse
-	if err := c.doRequest(ctx, "/Action/logout", req, &baseResp); err != nil {
+	logoutPath := "/Action/logout"
+	if c.protocol != nil {
+		logoutPath = c.protocol.LogoutPath()
+	}
+	if err := c.doRequest(ctx, logoutPath, req, &baseResp); err != nil {
 		return err
 	}
 
@@ -55,10 +63,17 @@ func (c *Client) CheckLogin(ctx context.Context) (bool, error) {
 	}
 
 	var baseResp types.BaseResponse
-	if err := c.doRequest(ctx, "/Action/call", req, &baseResp); err != nil {
+	callPath := "/Action/call"
+	if c.protocol != nil {
+		callPath = c.protocol.CallPath()
+	}
+	if err := c.doRequest(ctx, callPath, req, &baseResp); err != nil {
 		return false, err
 	}
 
+	if c.protocol != nil {
+		return c.protocol.IsSuccess(&baseResp), nil
+	}
 	return baseResp.IsSuccess(), nil
 }
 
@@ -73,4 +88,22 @@ func NewClientWithLoginContext(ctx context.Context, baseURL, username, password 
 		return nil, err
 	}
 	return client, nil
+}
+
+func NewV3ClientWithLogin(baseURL, username, password string, opts ...ClientOption) (*Client, error) {
+	return NewV3ClientWithLoginContext(context.Background(), baseURL, username, password, opts...)
+}
+
+func NewV3ClientWithLoginContext(ctx context.Context, baseURL, username, password string, opts ...ClientOption) (*Client, error) {
+	opts = append([]ClientOption{WithVersion(VersionV3)}, opts...)
+	return NewClientWithLoginContext(ctx, baseURL, username, password, opts...)
+}
+
+func NewV4ClientWithLogin(baseURL, username, password string, opts ...ClientOption) (*Client, error) {
+	return NewV4ClientWithLoginContext(context.Background(), baseURL, username, password, opts...)
+}
+
+func NewV4ClientWithLoginContext(ctx context.Context, baseURL, username, password string, opts ...ClientOption) (*Client, error) {
+	opts = append([]ClientOption{WithVersion(VersionV4)}, opts...)
+	return NewClientWithLoginContext(ctx, baseURL, username, password, opts...)
 }

@@ -106,6 +106,99 @@ func main() {
 }
 ```
 
+### 认证模型：v3 账号密码，v4 API Token
+
+iKuai v3 和 v4 的认证模型不同，建议在代码里明确区分：
+
+- **v3**：使用 Web 管理账号和密码登录，走 `/Action/login` + `/Action/call`。
+- **v4**：使用路由器生成的 API Token，走 `/api/v4.0/...` REST API，HTTP Header 为 `Authorization: Bearer <token>`。
+
+#### v3：账号密码登录
+
+```go
+ctx := context.Background()
+
+client, err := ikuaisdk.NewV3ClientWithLogin(
+    "http://10.10.10.254",
+    "zhangyi",
+    "your-password",
+)
+if err != nil {
+    panic(err)
+}
+defer client.Close()
+
+api := service.NewAPIClient(client)
+homepage, err := api.System().GetHomepage(ctx)
+```
+
+如果要调用 v3 的通用能力层：
+
+```go
+v3 := client.V3Action()
+
+var clients []map[string]interface{}
+err = v3.Show(ctx, "clients-online", nil, &clients)
+```
+
+#### v4：API Token
+
+v4 不需要账号密码登录。先在路由器后台生成 API Token，然后直接创建 REST Client：
+
+```go
+ctx := context.Background()
+
+v4 := ikuaisdk.NewV4RESTClient(
+    "https://10.10.30.254",
+    "your-api-token",
+)
+
+var system map[string]interface{}
+err := v4.Get(ctx, "/monitoring/system", nil, &system)
+
+raw, err := v4.PostRaw(ctx, "/network/dhcp/services:restart", map[string]string{})
+```
+
+也可以把 token 放进基础客户端，再派生 v4 REST Client：
+
+```go
+client := ikuaisdk.NewClient(
+    "https://10.10.30.254",
+    "",
+    "",
+    ikuaisdk.WithToken("your-api-token"),
+)
+v4 := client.V4REST()
+```
+
+> 注意：`NewV4RESTClient` 是 v4 推荐入口。`NewV4Client` / `NewV4ClientWithLogin` 只用于锁定旧 `/Action/*` 协议版本，不适合 `ikuai-cli` 使用的 v4 REST Token 模式。
+
+`V4EndpointCatalog` 内置了从 `ikuaidev/ikuai-cli` 对齐过来的 endpoint 清单，后续 `ikuai-cli` 更新时同步这份 catalog 即可。
+
+### v3 兼容 v4 风格能力
+
+v3 固件没有 `/api/v4.0` REST API，但可以通过 `/Action/call` 的 `func_name/action/param` 模型实现同类能力。SDK 提供了 `V3ActionClient` 和 `V3EndpointCatalog`，把 v4 风格资源名映射到 v3 的 `func_name`：
+
+```go
+client, err := ikuaisdk.NewV3ClientWithLogin("http://10.10.10.254", "zhangyi", "password")
+if err != nil {
+    panic(err)
+}
+defer client.Close()
+
+v3 := client.V3Action()
+
+var clients []map[string]interface{}
+err = v3.Show(ctx, "clients-online", nil, &clients) // monitor_lanip/show
+
+raw, err := v3.AddRaw(ctx, "dhcp-static", map[string]interface{}{
+    "ip_addr": "192.168.1.50",
+    "mac":     "AA:BB:CC:DD:EE:FF",
+})
+```
+
+`V3EndpointCatalog` 会明确标记 v3 已支持和 v3 固件未暴露的能力。例如 `pptp-clients`、`l2tp-clients`、`acl-rules`、`dhcp-static` 可映射；`wireguard`、`openvpn-clients` 等 v4 新能力在当前 v3 Action/call 清单里标记为 unsupported。
+
 ### 使用服务层 API（推荐）
 
 ```go

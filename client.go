@@ -32,11 +32,13 @@ type Client struct {
 	baseURL  string
 	username string
 	password string
+	token    string
 	version  Version
+	protocol apiProtocol
 	loggedIn bool
 	cache    *ResponseCache
 	logger   Logger
-	metrics *Metrics
+	metrics  *Metrics
 }
 
 type ClientOption func(*Client)
@@ -61,6 +63,19 @@ func WithHTTPClient(httpClient *req.Client) ClientOption {
 	}
 }
 
+func WithVersion(version Version) ClientOption {
+	return func(c *Client) {
+		c.version = version
+		c.protocol = protocolForVersion(version)
+	}
+}
+
+func WithToken(token string) ClientOption {
+	return func(c *Client) {
+		c.token = token
+	}
+}
+
 func NewClient(baseURL, username, password string, opts ...ClientOption) *Client {
 	baseURL = internal.NormalizeAddr(baseURL)
 
@@ -82,6 +97,16 @@ func NewClient(baseURL, username, password string, opts ...ClientOption) *Client
 	}
 
 	return c
+}
+
+func NewV3Client(baseURL, username, password string, opts ...ClientOption) *Client {
+	opts = append([]ClientOption{WithVersion(VersionV3)}, opts...)
+	return NewClient(baseURL, username, password, opts...)
+}
+
+func NewV4Client(baseURL, username, password string, opts ...ClientOption) *Client {
+	opts = append([]ClientOption{WithVersion(VersionV4)}, opts...)
+	return NewClient(baseURL, username, password, opts...)
 }
 
 func (c *Client) GetVersion() Version {
@@ -114,6 +139,9 @@ func (c *Client) Call(ctx context.Context, funcName, action string, param interf
 	if !c.loggedIn {
 		return NewSDKError(ErrCodeNotLoggedIn, "client not logged in", nil)
 	}
+	if c.protocol == nil {
+		return NewSDKError(ErrCodeVersionNotSupported, "iKuai API version is not selected", nil)
+	}
 
 	req := &types.BaseRequest{
 		FuncName: funcName,
@@ -121,7 +149,7 @@ func (c *Client) Call(ctx context.Context, funcName, action string, param interf
 		Param:    param,
 	}
 
-	return c.doRequest(ctx, "/Action/call", req, result)
+	return c.doRequest(ctx, c.protocol.CallPath(), req, result)
 }
 
 func (c *Client) Close() {

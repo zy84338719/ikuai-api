@@ -85,6 +85,22 @@ func TestClientGetVersion(t *testing.T) {
 	}
 }
 
+func TestNewVersionedClients(t *testing.T) {
+	v3Client := NewV3Client("http://192.168.1.1", "admin", "password")
+	defer v3Client.Close()
+
+	if v3Client.GetVersion() != VersionV3 {
+		t.Errorf("NewV3Client version = %v, want %v", v3Client.GetVersion(), VersionV3)
+	}
+
+	v4Client := NewV4Client("http://192.168.1.1", "admin", "password")
+	defer v4Client.Close()
+
+	if v4Client.GetVersion() != VersionV4 {
+		t.Errorf("NewV4Client version = %v, want %v", v4Client.GetVersion(), VersionV4)
+	}
+}
+
 func TestClientIsLoggedIn(t *testing.T) {
 	client := NewClient("http://192.168.1.1", "admin", "password")
 	defer client.Close()
