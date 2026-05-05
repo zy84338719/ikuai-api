@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
@@ -168,6 +170,126 @@ func (s *firewallService) DelConnLimit(ctx context.Context, id int) error {
 	}
 	if !result.IsSuccess() {
 		return fmt.Errorf("failed to delete conn_limit: %s", result.GetErrorMessage())
+	}
+	return nil
+}
+
+func (s *firewallService) AddCustomISP(ctx context.Context, name string, ipGroups []string, comment string) (int, error) {
+	if comment == "" {
+		comment = "ikuai-aio"
+	}
+	// deduplicate
+	seen := make(map[string]struct{}, len(ipGroups))
+	unique := ipGroups[:0]
+	for _, ip := range ipGroups {
+		if _, ok := seen[ip]; !ok {
+			seen[ip] = struct{}{}
+			unique = append(unique, ip)
+		}
+	}
+
+	const chunkSize = 5000
+	total := 0
+	for i := 0; i < len(unique); i += chunkSize {
+		end := i + chunkSize
+		if end > len(unique) {
+			end = len(unique)
+		}
+		chunk := unique[i:end]
+		req := &types.CustomISPAddRequest{
+			Name:    name,
+			IPGroup: strings.Join(chunk, ","),
+			Comment: comment,
+		}
+		var result types.BaseResponse
+		if err := s.client.Call(ctx, "custom_isp", "add", req, &result); err != nil {
+			return total, err
+		}
+		if !result.IsSuccess() {
+			return total, fmt.Errorf("failed to add custom_isp: %s", result.GetErrorMessage())
+		}
+		total += len(chunk)
+	}
+	return total, nil
+}
+
+func (s *firewallService) DelCustomISP(ctx context.Context, ids []int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	strs := make([]string, len(ids))
+	for i, id := range ids {
+		strs[i] = strconv.Itoa(id)
+	}
+	req := &types.CustomISPDelRequest{ID: strings.Join(strs, ",")}
+	var result types.BaseResponse
+	if err := s.client.Call(ctx, "custom_isp", "del", req, &result); err != nil {
+		return err
+	}
+	if !result.IsSuccess() {
+		return fmt.Errorf("failed to delete custom_isp: %s", result.GetErrorMessage())
+	}
+	return nil
+}
+
+func (s *firewallService) AddStreamDomain(ctx context.Context, interfaces []string, domains []string, srcAddr, comment string) (int, error) {
+	if comment == "" {
+		comment = "ikuai-aio"
+	}
+	// deduplicate
+	seen := make(map[string]struct{}, len(domains))
+	unique := domains[:0]
+	for _, d := range domains {
+		if _, ok := seen[d]; !ok {
+			seen[d] = struct{}{}
+			unique = append(unique, d)
+		}
+	}
+
+	const chunkSize = 1000
+	total := 0
+	for i := 0; i < len(unique); i += chunkSize {
+		end := i + chunkSize
+		if end > len(unique) {
+			end = len(unique)
+		}
+		chunk := unique[i:end]
+		req := &types.StreamDomainAddRequest{
+			Interface: strings.Join(interfaces, ","),
+			SrcAddr:   srcAddr,
+			Domain:    strings.Join(chunk, ","),
+			Comment:   comment,
+			Week:      "1234567",
+			Time:      "00:00-23:59",
+			Enabled:   "yes",
+		}
+		var result types.BaseResponse
+		if err := s.client.Call(ctx, "stream_domain", "add", req, &result); err != nil {
+			return total, err
+		}
+		if !result.IsSuccess() {
+			return total, fmt.Errorf("failed to add stream_domain: %s", result.GetErrorMessage())
+		}
+		total += len(chunk)
+	}
+	return total, nil
+}
+
+func (s *firewallService) DelStreamDomain(ctx context.Context, ids []int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	strs := make([]string, len(ids))
+	for i, id := range ids {
+		strs[i] = strconv.Itoa(id)
+	}
+	req := &types.StreamDomainDelRequest{ID: strings.Join(strs, ",")}
+	var result types.BaseResponse
+	if err := s.client.Call(ctx, "stream_domain", "del", req, &result); err != nil {
+		return err
+	}
+	if !result.IsSuccess() {
+		return fmt.Errorf("failed to delete stream_domain: %s", result.GetErrorMessage())
 	}
 	return nil
 }
