@@ -70,7 +70,11 @@ type FirewallService interface {
 
 	GetDomainGroups(ctx context.Context) ([]types.DomainGroupItem, error)
 	GetCustomISP(ctx context.Context) ([]types.CustomISPItem, error)
+	AddCustomISP(ctx context.Context, name string, ipGroups []string, comment string) (int, error)
+	DelCustomISP(ctx context.Context, ids []int) error
 	GetStreamDomain(ctx context.Context) ([]types.StreamDomainItem, error)
+	AddStreamDomain(ctx context.Context, interfaces []string, domains []string, srcAddr, comment string) (int, error)
+	DelStreamDomain(ctx context.Context, ids []int) error
 }
 
 type VPNService interface {

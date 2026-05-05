@@ -167,6 +167,30 @@ func (r *StreamDomainShowResponse) GetData() []StreamDomainItem {
 	return r.Data.Data
 }
 
+type CustomISPAddRequest struct {
+	Name    string `json:"name"`
+	IPGroup string `json:"ipgroup"`
+	Comment string `json:"comment"`
+}
+
+type CustomISPDelRequest struct {
+	ID string `json:"id"`
+}
+
+type StreamDomainAddRequest struct {
+	Interface string `json:"interface"`
+	SrcAddr   string `json:"src_addr"`
+	Domain    string `json:"domain"`
+	Comment   string `json:"comment"`
+	Week      string `json:"week"`
+	Time      string `json:"time"`
+	Enabled   string `json:"enabled"`
+}
+
+type StreamDomainDelRequest struct {
+	ID string `json:"id"`
+}
+
 type ACLAddRequest struct {
 	TagName  string `json:"tagname"`
 	Enabled  string `json:"enabled"`
