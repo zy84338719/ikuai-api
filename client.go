@@ -104,11 +104,6 @@ func NewV3Client(baseURL, username, password string, opts ...ClientOption) *Clie
 	return NewClient(baseURL, username, password, opts...)
 }
 
-func NewV4Client(baseURL, username, password string, opts ...ClientOption) *Client {
-	opts = append([]ClientOption{WithVersion(VersionV4)}, opts...)
-	return NewClient(baseURL, username, password, opts...)
-}
-
 func (c *Client) GetVersion() Version {
 	return c.version
 }
