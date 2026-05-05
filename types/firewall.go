@@ -43,17 +43,17 @@ type DNATShowResponse struct {
 }
 
 type DNATItem struct {
-	ID         int                    `json:"id"`
-	TagName    string                 `json:"tagname"`
-	Enabled    string                 `json:"enabled"`
-	Interface  string                 `json:"interface"`
-	Protocol   string                 `json:"protocol"`
-	WanPort    string                 `json:"wan_port"`
-	LanAddr    string                 `json:"lan_addr"`
-	LanPort    string                 `json:"lan_port"`
-	Comment    string                 `json:"comment"`
-	LanAddrInt int                    `json:"lan_addr_int"`
-	SrcAddr    map[string]interface{} `json:"src_addr"`
+	ID         int         `json:"id"`
+	TagName    string      `json:"tagname"`
+	Enabled    string      `json:"enabled"`
+	Interface  string      `json:"interface"`
+	Protocol   string      `json:"protocol"`
+	WanPort    string      `json:"wan_port"`
+	LanAddr    string      `json:"lan_addr"`
+	LanPort    string      `json:"lan_port"`
+	Comment    string      `json:"comment"`
+	LanAddrInt int         `json:"lan_addr_int"`
+	SrcAddr    interface{} `json:"src_addr"`
 }
 
 func (r *DNATShowResponse) GetData() []DNATItem {

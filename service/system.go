@@ -17,8 +17,11 @@ func NewSystemService(client *ikuaisdk.Client) SystemService {
 
 func (s *systemService) GetHomepage(ctx context.Context) (*types.HomepageSysStat, error) {
 	var resp types.HomepageShowResponse
-	if err := s.client.Call(ctx, "homepage", "show", nil, &resp); err != nil {
+	if err := s.client.Call(ctx, "homepage", "show", map[string]string{"TYPE": "sysstat"}, &resp); err != nil {
 		return nil, err
+	}
+	if !resp.IsSuccess() {
+		return nil, ikuaisdk.NewSDKError(ikuaisdk.ErrCodeRequestFailed, resp.GetErrorMessage(), nil)
 	}
 	return resp.GetData(), nil
 }
