@@ -3,15 +3,15 @@ package service
 import (
 	"context"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type dockerService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewDockerService(client *ikuaisdk.Client) DockerService {
+func NewDockerService(client *ikuaiapi.Client) DockerService {
 	return &dockerService{client: client}
 }
 

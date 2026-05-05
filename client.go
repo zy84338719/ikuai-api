@@ -1,4 +1,4 @@
-// Package ikuaisdk provides a Go SDK for interacting with iKuai routers.
+// Package ikuaiapi provides a Go SDK for interacting with iKuai routers.
 // It supports both v3 and v4 versions of iKuai OS with automatic version detection.
 //
 // The SDK uses reqv3 HTTP client for better performance, debugging, retry, and HTTP2/3 support.
@@ -6,7 +6,7 @@
 //
 // Basic usage:
 //
-//	client, err := ikuaisdk.NewClientWithLogin("http://192.168.1.1", "admin", "password")
+//	client, err := ikuaiapi.NewClientWithLogin("http://192.168.1.1", "admin", "password")
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
@@ -14,7 +14,7 @@
 //
 //	api := service.NewAPIClient(client)
 //	homepage, err := api.System().GetHomepage(context.Background())
-package ikuaisdk
+package ikuaiapi
 
 import (
 	"context"

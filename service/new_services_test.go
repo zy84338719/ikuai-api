@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
@@ -44,7 +44,7 @@ func TestTrafficService_GetHistory(t *testing.T) {
 }
 
 func TestAppControlService_GetAppControl(t *testing.T) {
-	mockClient := &ikuaisdk.Client{}
+	mockClient := &ikuaiapi.Client{}
 	svc := NewAppControlService(mockClient)
 
 	_, err := svc.GetAppControl(context.Background())
@@ -54,7 +54,7 @@ func TestAppControlService_GetAppControl(t *testing.T) {
 }
 
 func TestAppControlService_AddAppControl(t *testing.T) {
-	mockClient := &ikuaisdk.Client{}
+	mockClient := &ikuaiapi.Client{}
 	svc := NewAppControlService(mockClient)
 
 	req := &types.AppControlAddRequest{
@@ -70,7 +70,7 @@ func TestAppControlService_AddAppControl(t *testing.T) {
 }
 
 func TestUserManageService_GetUsers(t *testing.T) {
-	mockClient := &ikuaisdk.Client{}
+	mockClient := &ikuaiapi.Client{}
 	svc := NewUserManageService(mockClient)
 
 	_, err := svc.GetUsers(context.Background())
@@ -80,7 +80,7 @@ func TestUserManageService_GetUsers(t *testing.T) {
 }
 
 func TestUserManageService_AddUser(t *testing.T) {
-	mockClient := &ikuaisdk.Client{}
+	mockClient := &ikuaiapi.Client{}
 	svc := NewUserManageService(mockClient)
 
 	req := &types.UserManageAddRequest{
@@ -97,7 +97,7 @@ func TestUserManageService_AddUser(t *testing.T) {
 }
 
 func TestOnlineMonitorService_GetOnlineUsers(t *testing.T) {
-	mockClient := &ikuaisdk.Client{}
+	mockClient := &ikuaiapi.Client{}
 	svc := NewOnlineMonitorService(mockClient)
 
 	_, err := svc.GetOnlineUsers(context.Background())
