@@ -1,4 +1,4 @@
-package ikuaisdk
+package ikuaiapi
 
 import "github.com/zy84338719/ikuai-api/types"
 

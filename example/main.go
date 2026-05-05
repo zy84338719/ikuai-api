@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/service"
 )
 
@@ -31,11 +31,11 @@ func main() {
 
 func manualLoginExample() {
 	// Replace with your router's address and credentials
-	client := ikuaisdk.NewClient(
+	client := ikuaiapi.NewClient(
 		"http://10.10.40.254",
 		"admin",
 		"password",
-		ikuaisdk.WithTimeout(30*time.Second),
+		ikuaiapi.WithTimeout(30*time.Second),
 	)
 	defer client.Close()
 
@@ -59,12 +59,12 @@ func autoLoginExample() {
 	defer cancel()
 
 	// Create client with auto login
-	client, err := ikuaisdk.NewClientWithLoginContext(
+	client, err := ikuaiapi.NewClientWithLoginContext(
 		ctx,
 		"http://10.10.40.254",
 		"admin",
 		"password",
-		ikuaisdk.WithTimeout(30*time.Second),
+		ikuaiapi.WithTimeout(30*time.Second),
 	)
 	if err != nil {
 		log.Printf("Failed to create client: %v\n", err)
@@ -80,7 +80,7 @@ func servicesExample() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	client, err := ikuaisdk.NewClientWithLoginContext(
+	client, err := ikuaiapi.NewClientWithLoginContext(
 		ctx,
 		"http://10.10.40.254",
 		"admin",
@@ -162,18 +162,18 @@ customReqClient := req.C().
     EnableInsecureSkipVerify().
     EnableDumpEachRequest()  // Enable request/response dump for debugging
 
-client := ikuaisdk.NewClient(
+client := ikuaiapi.NewClient(
     "http://192.168.1.1",
     "admin",
     "password",
-    ikuaisdk.WithHTTPClient(customReqClient),
+    ikuaiapi.WithHTTPClient(customReqClient),
 )
 	`)
 
 	// Example with cache enabled
 	fmt.Println("\nExample with cache enabled:")
 	fmt.Println(`
-client, _ := ikuaisdk.NewClientWithLogin("http://192.168.1.1", "admin", "password")
+client, _ := ikuaiapi.NewClientWithLogin("http://192.168.1.1", "admin", "password")
 client.EnableCache(5 * time.Minute)  // Cache responses for 5 minutes
 defer client.DisableCache()
 	`)

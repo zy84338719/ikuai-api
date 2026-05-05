@@ -1,7 +1,7 @@
 package service
 
 import (
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 type apiClient struct {
@@ -20,7 +20,7 @@ type apiClient struct {
 	onlineMonitor OnlineMonitorService
 }
 
-func NewAPIClient(client *ikuaisdk.Client) APIClient {
+func NewAPIClient(client *ikuaiapi.Client) APIClient {
 	return &apiClient{
 		monitor:       NewMonitorService(client),
 		system:        NewSystemService(client),

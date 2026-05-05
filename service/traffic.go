@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type trafficService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewTrafficService(client *ikuaisdk.Client) TrafficService {
+func NewTrafficService(client *ikuaiapi.Client) TrafficService {
 	return &trafficService{client: client}
 }
 

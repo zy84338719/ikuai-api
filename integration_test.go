@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package ikuaisdk_test
+package ikuaiapi_test
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/service"
 )
 
@@ -38,9 +38,9 @@ func getTestConfig() (string, string, string) {
 func TestIntegration_Login(t *testing.T) {
 	addr, username, password := getTestConfig()
 
-	client := ikuaisdk.NewClient(addr, username, password,
-		ikuaisdk.WithTimeout(30*time.Second),
-		ikuaisdk.WithInsecureSkipVerify(true),
+	client := ikuaiapi.NewClient(addr, username, password,
+		ikuaiapi.WithTimeout(30*time.Second),
+		ikuaiapi.WithInsecureSkipVerify(true),
 	)
 	defer client.Close()
 
@@ -55,7 +55,7 @@ func TestIntegration_Login(t *testing.T) {
 		t.Error("Client should be logged in after successful login")
 	}
 
-	if client.GetVersion() == ikuaisdk.VersionUnknown {
+	if client.GetVersion() == ikuaiapi.VersionUnknown {
 		t.Error("Version should be detected after login")
 	}
 
@@ -68,9 +68,9 @@ func TestIntegration_NewClientWithLogin(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	client, err := ikuaisdk.NewClientWithLoginContext(ctx, addr, username, password,
-		ikuaisdk.WithTimeout(30*time.Second),
-		ikuaisdk.WithInsecureSkipVerify(true),
+	client, err := ikuaiapi.NewClientWithLoginContext(ctx, addr, username, password,
+		ikuaiapi.WithTimeout(30*time.Second),
+		ikuaiapi.WithInsecureSkipVerify(true),
 	)
 	if err != nil {
 		t.Fatalf("NewClientWithLogin failed: %v", err)
@@ -88,9 +88,9 @@ func TestIntegration_SystemService(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	client, err := ikuaisdk.NewClientWithLoginContext(ctx, addr, username, password,
-		ikuaisdk.WithTimeout(30*time.Second),
-		ikuaisdk.WithInsecureSkipVerify(true),
+	client, err := ikuaiapi.NewClientWithLoginContext(ctx, addr, username, password,
+		ikuaiapi.WithTimeout(30*time.Second),
+		ikuaiapi.WithInsecureSkipVerify(true),
 	)
 	if err != nil {
 		t.Fatalf("NewClientWithLogin failed: %v", err)
@@ -128,9 +128,9 @@ func TestIntegration_MonitorService(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	client, err := ikuaisdk.NewClientWithLoginContext(ctx, addr, username, password,
-		ikuaisdk.WithTimeout(30*time.Second),
-		ikuaisdk.WithInsecureSkipVerify(true),
+	client, err := ikuaiapi.NewClientWithLoginContext(ctx, addr, username, password,
+		ikuaiapi.WithTimeout(30*time.Second),
+		ikuaiapi.WithInsecureSkipVerify(true),
 	)
 	if err != nil {
 		t.Fatalf("NewClientWithLogin failed: %v", err)
@@ -179,9 +179,9 @@ func TestIntegration_NetworkService(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	client, err := ikuaisdk.NewClientWithLoginContext(ctx, addr, username, password,
-		ikuaisdk.WithTimeout(30*time.Second),
-		ikuaisdk.WithInsecureSkipVerify(true),
+	client, err := ikuaiapi.NewClientWithLoginContext(ctx, addr, username, password,
+		ikuaiapi.WithTimeout(30*time.Second),
+		ikuaiapi.WithInsecureSkipVerify(true),
 	)
 	if err != nil {
 		t.Fatalf("NewClientWithLogin failed: %v", err)
@@ -232,9 +232,9 @@ func TestIntegration_FirewallService(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	client, err := ikuaisdk.NewClientWithLoginContext(ctx, addr, username, password,
-		ikuaisdk.WithTimeout(30*time.Second),
-		ikuaisdk.WithInsecureSkipVerify(true),
+	client, err := ikuaiapi.NewClientWithLoginContext(ctx, addr, username, password,
+		ikuaiapi.WithTimeout(30*time.Second),
+		ikuaiapi.WithInsecureSkipVerify(true),
 	)
 	if err != nil {
 		t.Fatalf("NewClientWithLogin failed: %v", err)
@@ -266,9 +266,9 @@ func TestIntegration_LogService(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	client, err := ikuaisdk.NewClientWithLoginContext(ctx, addr, username, password,
-		ikuaisdk.WithTimeout(30*time.Second),
-		ikuaisdk.WithInsecureSkipVerify(true),
+	client, err := ikuaiapi.NewClientWithLoginContext(ctx, addr, username, password,
+		ikuaiapi.WithTimeout(30*time.Second),
+		ikuaiapi.WithInsecureSkipVerify(true),
 	)
 	if err != nil {
 		t.Fatalf("NewClientWithLogin failed: %v", err)
@@ -300,9 +300,9 @@ func TestIntegration_TrafficService(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	client, err := ikuaisdk.NewClientWithLoginContext(ctx, addr, username, password,
-		ikuaisdk.WithTimeout(30*time.Second),
-		ikuaisdk.WithInsecureSkipVerify(true),
+	client, err := ikuaiapi.NewClientWithLoginContext(ctx, addr, username, password,
+		ikuaiapi.WithTimeout(30*time.Second),
+		ikuaiapi.WithInsecureSkipVerify(true),
 	)
 	if err != nil {
 		t.Fatalf("NewClientWithLogin failed: %v", err)

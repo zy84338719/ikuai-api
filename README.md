@@ -80,14 +80,14 @@ import (
     "fmt"
     "time"
 
-    ikuaisdk "github.com/zy84338719/ikuai-api"
+    ikuaiapi "github.com/zy84338719/ikuai-api"
     "github.com/zy84338719/ikuai-api/service"
 )
 
 func main() {
     // 方式1: 创建客户端后手动登录
-    client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password",
-        ikuaisdk.WithTimeout(30*time.Second),
+    client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password",
+        ikuaiapi.WithTimeout(30*time.Second),
     )
     defer client.Close()
 
@@ -96,7 +96,7 @@ func main() {
     }
 
     // 方式2: 创建客户端并自动登录（推荐）
-    client, err := ikuaisdk.NewClientWithLogin("http://192.168.1.1", "admin", "password")
+    client, err := ikuaiapi.NewClientWithLogin("http://192.168.1.1", "admin", "password")
     if err != nil {
         panic(err)
     }
@@ -118,7 +118,7 @@ iKuai v3 和 v4 的认证模型不同，建议在代码里明确区分：
 ```go
 ctx := context.Background()
 
-client, err := ikuaisdk.NewV3ClientWithLogin(
+client, err := ikuaiapi.NewV3ClientWithLogin(
     "http://10.10.10.254",
     "zhangyi",
     "your-password",
@@ -148,7 +148,7 @@ v4 不需要账号密码登录。先在路由器后台生成 API Token，然后�
 ```go
 ctx := context.Background()
 
-v4 := ikuaisdk.NewV4RESTClient(
+v4 := ikuaiapi.NewV4RESTClient(
     "https://10.10.x.x",
     "your-api-token",
 )
@@ -162,11 +162,11 @@ raw, err := v4.PostRaw(ctx, "/network/dhcp/services:restart", map[string]string{
 也可以把 token 放进基础客户端，再派生 v4 REST Client：
 
 ```go
-client := ikuaisdk.NewClient(
+client := ikuaiapi.NewClient(
     "https://10.10.x.x",
     "",
     "",
-    ikuaisdk.WithToken("your-api-token"),
+    ikuaiapi.WithToken("your-api-token"),
 )
 v4 := client.V4REST()
 ```
@@ -178,7 +178,7 @@ v4 := client.V4REST()
 v3 固件没有 `/api/v4.0` REST API，但可以通过 `/Action/call` 的 `func_name/action/param` 模型实现同类能力。SDK 提供了 `V3ActionClient` 和 `V3EndpointCatalog`，把 v4 风格资源名映射到 v3 的 `func_name`：
 
 ```go
-client, err := ikuaisdk.NewV3ClientWithLogin("http://10.10.10.254", "zhangyi", "password")
+client, err := ikuaiapi.NewV3ClientWithLogin("http://10.10.10.254", "zhangyi", "password")
 if err != nil {
     panic(err)
 }
@@ -260,9 +260,9 @@ SDK 使用 [reqv3](https://github.com/imroc/req) 作为 HTTP 客户端，提供�
 ### 配置选项
 
 ```go
-client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password",
-    ikuaisdk.WithTimeout(60*time.Second),              // 设置超时时间
-    ikuaisdk.WithInsecureSkipVerify(true),             // 跳过 SSL 验证
+client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password",
+    ikuaiapi.WithTimeout(60*time.Second),              // 设置超时时间
+    ikuaiapi.WithInsecureSkipVerify(true),             // 跳过 SSL 验证
 )
 
 // 如果需要更高级的配置，可以传入自定义的 req.Client
@@ -271,8 +271,8 @@ customReqClient := req.C().
     EnableInsecureSkipVerify().
     EnableDumpEachRequest()  // 启用请求/响应 dump，便于调试
 
-client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password",
-    ikuaisdk.WithHTTPClient(customReqClient),
+client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password",
+    ikuaiapi.WithHTTPClient(customReqClient),
 )
 ```
 
@@ -410,16 +410,16 @@ SDK 提供了统一的错误处理机制：
 ```go
 err := client.Login(ctx)
 if err != nil {
-    if ikuaisdk.IsSDKError(err) {
-        code := ikuaisdk.GetErrorCode(err)
+    if ikuaiapi.IsSDKError(err) {
+        code := ikuaiapi.GetErrorCode(err)
         switch code {
-        case ikuaisdk.ErrCodeLoginFailed:
+        case ikuaiapi.ErrCodeLoginFailed:
             fmt.Println("登录失败")
-        case ikuaisdk.ErrCodeNotLoggedIn:
+        case ikuaiapi.ErrCodeNotLoggedIn:
             fmt.Println("未登录")
-        case ikuaisdk.ErrCodeRequestFailed:
+        case ikuaiapi.ErrCodeRequestFailed:
             fmt.Println("请求失败")
-        case ikuaisdk.ErrCodeInvalidResponse:
+        case ikuaiapi.ErrCodeInvalidResponse:
             fmt.Println("响应格式错误")
         default:
             fmt.Printf("SDK错误: %v\n", err)

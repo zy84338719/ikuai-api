@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/service"
 )
 
@@ -31,7 +31,7 @@ func getTestConfig() (string, string, string) {
 func TestIntegrationAllAPIs(t *testing.T) {
 	addr, username, password := getTestConfig()
 
-	client, err := ikuaisdk.NewClientWithLogin(addr, username, password, ikuaisdk.WithTimeout(10*time.Second))
+	client, err := ikuaiapi.NewClientWithLogin(addr, username, password, ikuaiapi.WithTimeout(10*time.Second))
 	if err != nil {
 		t.Fatalf("Failed to login: %v", err)
 	}

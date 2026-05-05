@@ -1,4 +1,4 @@
-package ikuaisdk
+package ikuaiapi
 
 type V3Endpoint struct {
 	Group        string

@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type firewallService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewFirewallService(client *ikuaisdk.Client) FirewallService {
+func NewFirewallService(client *ikuaiapi.Client) FirewallService {
 	return &firewallService{client: client}
 }
 
