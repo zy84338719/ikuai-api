@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type appControlService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewAppControlService(client *ikuaisdk.Client) AppControlService {
+func NewAppControlService(client *ikuaiapi.Client) AppControlService {
 	return &appControlService{client: client}
 }
 

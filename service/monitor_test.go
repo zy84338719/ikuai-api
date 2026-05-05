@@ -7,12 +7,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
-func setupTestClient(handler http.HandlerFunc) (*ikuaisdk.Client, *httptest.Server) {
+func setupTestClient(handler http.HandlerFunc) (*ikuaiapi.Client, *httptest.Server) {
 	server := httptest.NewServer(handler)
-	client := ikuaisdk.NewClient(server.URL, "admin", "password")
+	client := ikuaiapi.NewClient(server.URL, "admin", "password")
 	client.Login(context.Background())
 	return client, server
 }

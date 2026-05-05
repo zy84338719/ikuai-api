@@ -1,4 +1,4 @@
-package ikuaisdk
+package ikuaiapi
 
 import (
 	"errors"
@@ -82,18 +82,18 @@ func TestGetErrorCode(t *testing.T) {
 func TestErrorCodeValues(t *testing.T) {
 	// Test that error codes have expected values
 	codes := map[ErrorCode]string{
-		ErrCodeUnknown:            "Unknown",
-		ErrCodeLoginFailed:        "LoginFailed",
-		ErrCodeNotLoggedIn:        "NotLoggedIn",
-		ErrCodeRequestFailed:      "RequestFailed",
-		ErrCodeInvalidResponse:    "InvalidResponse",
+		ErrCodeUnknown:             "Unknown",
+		ErrCodeLoginFailed:         "LoginFailed",
+		ErrCodeNotLoggedIn:         "NotLoggedIn",
+		ErrCodeRequestFailed:       "RequestFailed",
+		ErrCodeInvalidResponse:     "InvalidResponse",
 		ErrCodeVersionNotSupported: "VersionNotSupported",
-		ErrCodeValidationFailed:   "ValidationFailed",
-		ErrCodeRateLimited:        "RateLimited",
-		ErrCodeTimeout:            "Timeout",
-		ErrCodeConnectionLost:     "ConnectionLost",
-		ErrCodeUnauthorized:       "Unauthorized",
-		ErrCodeForbidden:          "Forbidden",
+		ErrCodeValidationFailed:    "ValidationFailed",
+		ErrCodeRateLimited:         "RateLimited",
+		ErrCodeTimeout:             "Timeout",
+		ErrCodeConnectionLost:      "ConnectionLost",
+		ErrCodeUnauthorized:        "Unauthorized",
+		ErrCodeForbidden:           "Forbidden",
 	}
 
 	for code := range codes {

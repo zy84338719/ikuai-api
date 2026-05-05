@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type userManageService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewUserManageService(client *ikuaisdk.Client) UserManageService {
+func NewUserManageService(client *ikuaiapi.Client) UserManageService {
 	return &userManageService{client: client}
 }
 
@@ -61,10 +61,10 @@ func (s *userManageService) DelUser(ctx context.Context, id int) error {
 }
 
 type onlineMonitorService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewOnlineMonitorService(client *ikuaisdk.Client) OnlineMonitorService {
+func NewOnlineMonitorService(client *ikuaiapi.Client) OnlineMonitorService {
 	return &onlineMonitorService{client: client}
 }
 

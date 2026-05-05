@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // mockClient is a mock implementation for testing service creation
@@ -14,7 +14,7 @@ type mockClient struct {
 
 func TestNewAPIClient(t *testing.T) {
 	// Create a real client (but don't connect)
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 
 	api := NewAPIClient(client)
 
@@ -78,7 +78,7 @@ func TestServiceInterfaces(t *testing.T) {
 }
 
 func TestNewMonitorService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewMonitorService(client)
 
 	if svc == nil {
@@ -95,7 +95,7 @@ func TestNewMonitorService(t *testing.T) {
 }
 
 func TestNewSystemService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewSystemService(client)
 
 	if svc == nil {
@@ -104,7 +104,7 @@ func TestNewSystemService(t *testing.T) {
 }
 
 func TestNewNetworkService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewNetworkService(client)
 
 	if svc == nil {
@@ -113,7 +113,7 @@ func TestNewNetworkService(t *testing.T) {
 }
 
 func TestNewFirewallService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewFirewallService(client)
 
 	if svc == nil {
@@ -122,7 +122,7 @@ func TestNewFirewallService(t *testing.T) {
 }
 
 func TestNewVPNService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewVPNService(client)
 
 	if svc == nil {
@@ -131,7 +131,7 @@ func TestNewVPNService(t *testing.T) {
 }
 
 func TestNewLogService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewLogService(client)
 
 	if svc == nil {
@@ -140,7 +140,7 @@ func TestNewLogService(t *testing.T) {
 }
 
 func TestNewDockerService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewDockerService(client)
 
 	if svc == nil {
@@ -149,7 +149,7 @@ func TestNewDockerService(t *testing.T) {
 }
 
 func TestNewVMService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewVMService(client)
 
 	if svc == nil {
@@ -158,7 +158,7 @@ func TestNewVMService(t *testing.T) {
 }
 
 func TestNewUPnPService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewUPnPService(client)
 
 	if svc == nil {
@@ -167,7 +167,7 @@ func TestNewUPnPService(t *testing.T) {
 }
 
 func TestNewTrafficService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewTrafficService(client)
 
 	if svc == nil {
@@ -176,7 +176,7 @@ func TestNewTrafficService(t *testing.T) {
 }
 
 func TestNewAppControlService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewAppControlService(client)
 
 	if svc == nil {
@@ -185,7 +185,7 @@ func TestNewAppControlService(t *testing.T) {
 }
 
 func TestNewUserManageService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewUserManageService(client)
 
 	if svc == nil {
@@ -194,7 +194,7 @@ func TestNewUserManageService(t *testing.T) {
 }
 
 func TestNewOnlineMonitorService(t *testing.T) {
-	client := ikuaisdk.NewClient("http://192.168.1.1", "admin", "password")
+	client := ikuaiapi.NewClient("http://192.168.1.1", "admin", "password")
 	svc := NewOnlineMonitorService(client)
 
 	if svc == nil {
