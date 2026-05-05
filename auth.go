@@ -98,12 +98,3 @@ func NewV3ClientWithLoginContext(ctx context.Context, baseURL, username, passwor
 	opts = append([]ClientOption{WithVersion(VersionV3)}, opts...)
 	return NewClientWithLoginContext(ctx, baseURL, username, password, opts...)
 }
-
-func NewV4ClientWithLogin(baseURL, username, password string, opts ...ClientOption) (*Client, error) {
-	return NewV4ClientWithLoginContext(context.Background(), baseURL, username, password, opts...)
-}
-
-func NewV4ClientWithLoginContext(ctx context.Context, baseURL, username, password string, opts ...ClientOption) (*Client, error) {
-	opts = append([]ClientOption{WithVersion(VersionV4)}, opts...)
-	return NewClientWithLoginContext(ctx, baseURL, username, password, opts...)
-}

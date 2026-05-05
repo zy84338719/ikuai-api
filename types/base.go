@@ -12,16 +12,6 @@ type LoginRequest struct {
 	Pass     string `json:"pass"`
 }
 
-type V3BaseResponse struct {
-	Result int    `json:"Result"`
-	ErrMsg string `json:"ErrMsg"`
-}
-
-type V4BaseResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
-
 type BaseResponse struct {
 	Result  int    `json:"Result"`
 	ErrMsg  string `json:"ErrMsg"`

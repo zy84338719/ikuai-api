@@ -171,8 +171,6 @@ client := ikuaisdk.NewClient(
 v4 := client.V4REST()
 ```
 
-> 注意：`NewV4RESTClient` 是 v4 推荐入口。`NewV4Client` / `NewV4ClientWithLogin` 只用于锁定旧 `/Action/*` 协议版本，不适合 `ikuai-cli` 使用的 v4 REST Token 模式。
-
 `V4EndpointCatalog` 内置了从 `ikuaidev/ikuai-cli` 对齐过来的 endpoint 清单，后续 `ikuai-cli` 更新时同步这份 catalog 即可。
 
 ### v3 兼容 v4 风格能力
