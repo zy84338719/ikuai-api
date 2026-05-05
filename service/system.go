@@ -3,15 +3,15 @@ package service
 import (
 	"context"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type systemService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewSystemService(client *ikuaisdk.Client) SystemService {
+func NewSystemService(client *ikuaiapi.Client) SystemService {
 	return &systemService{client: client}
 }
 
@@ -21,7 +21,7 @@ func (s *systemService) GetHomepage(ctx context.Context) (*types.HomepageSysStat
 		return nil, err
 	}
 	if !resp.IsSuccess() {
-		return nil, ikuaisdk.NewSDKError(ikuaisdk.ErrCodeRequestFailed, resp.GetErrorMessage(), nil)
+		return nil, ikuaiapi.NewSDKError(ikuaiapi.ErrCodeRequestFailed, resp.GetErrorMessage(), nil)
 	}
 	return resp.GetData(), nil
 }

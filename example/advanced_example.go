@@ -9,7 +9,7 @@ import (
 	"log"
 	"time"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/service"
 	"github.com/zy84338719/ikuai-api/utils"
 )
@@ -285,8 +285,8 @@ func demoErrorHandling(ctx context.Context) {
 	fmt.Println("SDK 错误处理示例:")
 	err = client.Call(ctx, "invalid_api", "show", nil, nil)
 	if err != nil {
-		if ikuaisdk.IsSDKError(err) {
-			code := ikuaisdk.GetErrorCode(err)
+		if ikuaiapi.IsSDKError(err) {
+			code := ikuaiapi.GetErrorCode(err)
 			fmt.Printf("  SDK 错误码: %d\n", code)
 			fmt.Printf("  错误信息: %v\n", err)
 		} else {
@@ -295,16 +295,16 @@ func demoErrorHandling(ctx context.Context) {
 	}
 }
 
-func createClient() (*ikuaisdk.Client, error) {
+func createClient() (*ikuaiapi.Client, error) {
 	// 注意: 实际使用时请从环境变量或配置文件读取
 	addr := "192.168.1.1"
 	username := "admin"
 	password := "your-password"
 
-	return ikuaisdk.NewClientWithLogin(
+	return ikuaiapi.NewClientWithLogin(
 		addr,
 		username,
 		password,
-		ikuaisdk.WithTimeout(30*time.Second),
+		ikuaiapi.WithTimeout(30*time.Second),
 	)
 }

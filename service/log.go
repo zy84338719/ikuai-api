@@ -3,15 +3,15 @@ package service
 import (
 	"context"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type logService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewLogService(client *ikuaisdk.Client) LogService {
+func NewLogService(client *ikuaiapi.Client) LogService {
 	return &logService{client: client}
 }
 

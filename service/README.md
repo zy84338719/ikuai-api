@@ -44,13 +44,13 @@ import (
     "context"
     "fmt"
 
-    ikuaisdk "github.com/zy84338719/ikuai-api"
+    ikuaiapi "github.com/zy84338719/ikuai-api"
     "github.com/zy84338719/ikuai-api/service"
 )
 
 func main() {
     // 创建客户端并登录
-    client, err := ikuaisdk.NewClientWithLogin("http://192.168.1.1", "admin", "admin123")
+    client, err := ikuaiapi.NewClientWithLogin("http://192.168.1.1", "admin", "admin123")
     if err != nil {
         panic(err)
     }
@@ -80,7 +80,7 @@ func main() {
 如果只需要使用某个特定的服务，可以单独创建：
 
 ```go
-client, _ := ikuaisdk.NewClientWithLogin("http://192.168.1.1", "admin", "admin123")
+client, _ := ikuaiapi.NewClientWithLogin("http://192.168.1.1", "admin", "admin123")
 defer client.Close()
 
 // 只创建监控服务

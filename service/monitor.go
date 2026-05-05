@@ -3,15 +3,15 @@ package service
 import (
 	"context"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type monitorService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewMonitorService(client *ikuaisdk.Client) MonitorService {
+func NewMonitorService(client *ikuaiapi.Client) MonitorService {
 	return &monitorService{client: client}
 }
 
@@ -37,7 +37,7 @@ func (s *monitorService) GetInterfaces(ctx context.Context) (*types.MonitorIFace
 		return nil, err
 	}
 	if !checkResp.IsSuccess() {
-		return nil, ikuaisdk.NewSDKError(ikuaisdk.ErrCodeRequestFailed, checkResp.GetErrorMessage(), nil)
+		return nil, ikuaiapi.NewSDKError(ikuaiapi.ErrCodeRequestFailed, checkResp.GetErrorMessage(), nil)
 	}
 
 	var streamResp types.MonitorIFaceShowResponse
@@ -45,7 +45,7 @@ func (s *monitorService) GetInterfaces(ctx context.Context) (*types.MonitorIFace
 		return nil, err
 	}
 	if !streamResp.IsSuccess() {
-		return nil, ikuaisdk.NewSDKError(ikuaisdk.ErrCodeRequestFailed, streamResp.GetErrorMessage(), nil)
+		return nil, ikuaiapi.NewSDKError(ikuaiapi.ErrCodeRequestFailed, streamResp.GetErrorMessage(), nil)
 	}
 
 	var resp types.MonitorIFaceShowResponse

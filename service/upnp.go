@@ -3,15 +3,15 @@ package service
 import (
 	"context"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type upnpService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewUPnPService(client *ikuaisdk.Client) UPnPService {
+func NewUPnPService(client *ikuaiapi.Client) UPnPService {
 	return &upnpService{client: client}
 }
 

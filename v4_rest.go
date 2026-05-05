@@ -1,4 +1,4 @@
-package ikuaisdk
+package ikuaiapi
 
 import (
 	"bytes"

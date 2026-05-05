@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	ikuaisdk "github.com/zy84338719/ikuai-api"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/types"
 )
 
 type vpnService struct {
-	client *ikuaisdk.Client
+	client *ikuaiapi.Client
 }
 
-func NewVPNService(client *ikuaisdk.Client) VPNService {
+func NewVPNService(client *ikuaiapi.Client) VPNService {
 	return &vpnService{client: client}
 }
 
