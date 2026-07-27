@@ -1,5 +1,68 @@
 # Changelog
 
+## v1.0.1 — 2026-07-27
+
+Brings the SDK to parity with `ikuai-cli` for the bits that v1.0.0
+shipped as the generic `Do<Name>` / `Get<Name>` shape. The catalog
+gains two optional fields that the codegen now understands.
+
+### Added
+
+- `V4Endpoint.Load` — marks monitoring load-style endpoints. The
+  codegen now emits a typed `<Name>LoadOptions` struct plus a
+  `Load<Name>` method that validates `DataType ∈ {hour, day, week,
+  month}`, `Math ∈ {avg, max}`, `StartTime > 0`, `EndTime > 0` and
+  `StartTime < EndTime`. Validation errors come back as
+  `*ikuaiapi.APIError`. Covers `monitoring/cpu`, `memory`, `disk`,
+  `cputemp`, `terminals`.
+- `V4Endpoint.Action` — records the verb of action-style endpoints.
+  The codegen now emits `Start<Name>`, `Stop<Name>`, `Restart<Name>`,
+  `Sync<Name>`, `Restore<Name>`, `Check<Name>` instead of
+  `Do<Name>(ctx, body)`. Covers 10 endpoints across `network`,
+  `system` groups. No-body actions take no parameters; body-taking
+  actions accept any JSON value.
+- `Delete<Name>WithBody(ctx, body)` — companion to `Delete<Name>`
+  for the rare cases that need a custom JSON body on DELETE (e.g.
+  future catalog entries that target iKuai's body-style DELETE).
+- `APIClient.Call` now forwards `params` to `DELETE` requests, so
+  the `?srcfile=…` style of iKuai DELETE works through the escape
+  hatch: `api.Call(ctx, "system", "backup", "DELETE", nil,
+  map[string]string{"srcfile": "x"})`.
+- `Client.FormatQuery` — small helper for callers that need to
+  assemble a query string themselves.
+- Per-group Field Hints comments appended to each generated
+  service file (`service/<group>.go`). Covers 36 fields across
+  `network` (NAT/DNAT), `objects`, `system`, `vpn`, `auth` groups.
+  Hints live in `codegen/fieldHints` and can be expanded without
+  regenerating from scratch.
+
+### Changed
+
+- `Delete<Name>(ctx, id)` now sends `?id=<n>` as a query parameter
+  instead of `{"id": n}` in the JSON body. This matches what the
+  iKuai firmware actually expects; the v1.0.0 body form was a
+  no-op on the wire. Callers that need the body form can use the
+  new `Delete<Name>WithBody`.
+- `backup` in the catalog now has `DELETE` listed as a method
+  (the missing verb that made `DELETE /system/backup?srcfile=…`
+  unreachable through the typed helper in v1.0.0).
+
+### Fixed
+
+- The codegen's catalog parser was anchored to the end of the
+  `Methods` array and therefore could not see trailing `Load: true`
+  / `Action: "…"` fields. Reshaped the parser to scan the full
+  composite literal so the new fields actually take effect.
+
+### Compatibility
+
+- All v1.0.0 callers continue to work. New helpers are additive;
+  the existing `Get<Name>` / `Do<Name>` methods for non-Load,
+  non-Action endpoints are unchanged.
+- The Delete<Name> change is technically a wire change but matches
+  what iKuai expects; switching to `Delete<Name>WithBody` is the
+  escape hatch for the rare body-style DELETE.
+
 ## v1.0.0 — 2026-07-27
 
 The first v4-only stable release. The entire v3 surface is gone, the
