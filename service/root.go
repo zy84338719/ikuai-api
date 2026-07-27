@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net/url"
 	"strconv"
+	"strings"
 
 	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
@@ -44,36 +45,36 @@ func extractRowID(raw json.RawMessage) (int64, error) {
 // APIClient is the typed v4 entry point. Construct it with NewAPIClient
 // and call any of the per-group service accessors.
 type APIClient struct {
-	client        *ikuaiapi.Client
-	svcAdvanced   *AdvancedService
-	svcAuth       *AuthService
+	client *ikuaiapi.Client
+	svcAdvanced *AdvancedService
+	svcAuth *AuthService
 	svcInterfaces *InterfacesService
-	svcLog        *LogService
+	svcLog *LogService
 	svcMonitoring *MonitoringService
-	svcNetwork    *NetworkService
-	svcObjects    *ObjectsService
-	svcRouting    *RoutingService
-	svcSecurity   *SecurityService
-	svcSystem     *SystemService
-	svcVpn        *VpnService
-	svcWireless   *WirelessService
+	svcNetwork *NetworkService
+	svcObjects *ObjectsService
+	svcRouting *RoutingService
+	svcSecurity *SecurityService
+	svcSystem *SystemService
+	svcVpn *VpnService
+	svcWireless *WirelessService
 }
 
 // NewAPIClient wires every group service to the supplied client.
 func NewAPIClient(client *ikuaiapi.Client) *APIClient {
 	return &APIClient{client: client,
-		svcAdvanced:   &AdvancedService{client: client},
-		svcAuth:       &AuthService{client: client},
+		svcAdvanced: &AdvancedService{client: client},
+		svcAuth: &AuthService{client: client},
 		svcInterfaces: &InterfacesService{client: client},
-		svcLog:        &LogService{client: client},
+		svcLog: &LogService{client: client},
 		svcMonitoring: &MonitoringService{client: client},
-		svcNetwork:    &NetworkService{client: client},
-		svcObjects:    &ObjectsService{client: client},
-		svcRouting:    &RoutingService{client: client},
-		svcSecurity:   &SecurityService{client: client},
-		svcSystem:     &SystemService{client: client},
-		svcVpn:        &VpnService{client: client},
-		svcWireless:   &WirelessService{client: client},
+		svcNetwork: &NetworkService{client: client},
+		svcObjects: &ObjectsService{client: client},
+		svcRouting: &RoutingService{client: client},
+		svcSecurity: &SecurityService{client: client},
+		svcSystem: &SystemService{client: client},
+		svcVpn: &VpnService{client: client},
+		svcWireless: &WirelessService{client: client},
 	}
 }
 
@@ -134,7 +135,15 @@ func (a *APIClient) Call(ctx context.Context, group, name, method string, body a
 	case "PATCH":
 		return a.client.Patch(ctx, ep.Path, body)
 	case "DELETE":
-		return a.client.Delete(ctx, ep.Path, body)
+		delURL := ep.Path
+		if len(params) > 0 {
+			sep := "?"
+			if strings.Contains(ep.Path, "?") {
+				sep = "&"
+			}
+			delURL = ep.Path + sep + a.client.FormatQuery(params)
+		}
+		return a.client.Delete(ctx, delURL, body)
 	default:
 		return nil, &ikuaiapi.APIError{Message: "unsupported method: " + method}
 	}

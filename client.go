@@ -483,6 +483,20 @@ func (c *Client) Delete(ctx context.Context, p string, body any) (json.RawMessag
 	return c.doPayload(ctx, http.MethodDelete, p, body)
 }
 
+// FormatQuery is exported for callers that need to assemble a query
+// string from a map (e.g. the Call escape hatch appends ?key=value to
+// the path for DELETE requests that iKuai drives with query params).
+func (c *Client) FormatQuery(q map[string]string) string {
+	if len(q) == 0 {
+		return ""
+	}
+	uv := make(url.Values)
+	for k, v := range q {
+		uv.Set(k, v)
+	}
+	return uv.Encode()
+}
+
 func (c *Client) doPayload(ctx context.Context, method, p string, body any) (json.RawMessage, error) {
 	if c.DryRun {
 		preview := map[string]any{

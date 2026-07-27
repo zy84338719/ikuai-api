@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"strconv"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // WirelessService is the typed v4 entry point for the "wireless" group.
@@ -30,6 +30,7 @@ func pathGroupWireless() []V4Endpoint {
 	}
 	return out
 }
+
 
 // WirelessAccessControlRules wraps wireless access-control-rules.
 //
@@ -100,11 +101,23 @@ func (s *WirelessService) PatchWirelessAccessControlRules(ctx context.Context, b
 	return err
 }
 
-// DeleteWirelessAccessControlRules removes the resource at /wireless/access-control/rules.
+// DeleteWirelessAccessControlRules removes the resource at /wireless/access-control/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteWirelessAccessControlRulesWithBody to send a custom JSON body instead.
 func (s *WirelessService) DeleteWirelessAccessControlRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/wireless/access-control/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/wireless/access-control/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteWirelessAccessControlRulesWithBody removes the resource at /wireless/access-control/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteWirelessAccessControlRules cannot model directly).
+func (s *WirelessService) DeleteWirelessAccessControlRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/wireless/access-control/rules", body)
+	return err
+}
+
 
 // WirelessVlanRules wraps wireless vlan-rules.
 //
@@ -175,8 +188,20 @@ func (s *WirelessService) PatchWirelessVlanRules(ctx context.Context, body any) 
 	return err
 }
 
-// DeleteWirelessVlanRules removes the resource at /wireless/vlan/rules.
+// DeleteWirelessVlanRules removes the resource at /wireless/vlan/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteWirelessVlanRulesWithBody to send a custom JSON body instead.
 func (s *WirelessService) DeleteWirelessVlanRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/wireless/vlan/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/wireless/vlan/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteWirelessVlanRulesWithBody removes the resource at /wireless/vlan/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteWirelessVlanRules cannot model directly).
+func (s *WirelessService) DeleteWirelessVlanRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/wireless/vlan/rules", body)
+	return err
+}
+

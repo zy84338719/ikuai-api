@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"strconv"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // SystemService is the typed v4 entry point for the "system" group.
@@ -30,6 +30,7 @@ func pathGroupSystem() []V4Endpoint {
 	}
 	return out
 }
+
 
 // SystemAcClients wraps system ac-clients.
 //
@@ -94,11 +95,23 @@ func (s *SystemService) UpdateSystemAcClients(ctx context.Context, body any) err
 	return err
 }
 
-// DeleteSystemAcClients removes the resource at /clients.
+// DeleteSystemAcClients removes the resource at /clients. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSystemAcClientsWithBody to send a custom JSON body instead.
 func (s *SystemService) DeleteSystemAcClients(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/clients", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/clients"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSystemAcClientsWithBody removes the resource at /clients with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSystemAcClients cannot model directly).
+func (s *SystemService) DeleteSystemAcClientsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/clients", body)
+	return err
+}
+
 
 // SystemAcPeers wraps system ac-peers.
 //
@@ -163,11 +176,23 @@ func (s *SystemService) UpdateSystemAcPeers(ctx context.Context, body any) error
 	return err
 }
 
-// DeleteSystemAcPeers removes the resource at /peers.
+// DeleteSystemAcPeers removes the resource at /peers. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSystemAcPeersWithBody to send a custom JSON body instead.
 func (s *SystemService) DeleteSystemAcPeers(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/peers", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/peers"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSystemAcPeersWithBody removes the resource at /peers with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSystemAcPeers cannot model directly).
+func (s *SystemService) DeleteSystemAcPeersWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/peers", body)
+	return err
+}
+
 
 // SystemAcRef wraps system ac-ref.
 //
@@ -232,11 +257,23 @@ func (s *SystemService) UpdateSystemAcRef(ctx context.Context, body any) error {
 	return err
 }
 
-// DeleteSystemAcRef removes the resource at /ref.
+// DeleteSystemAcRef removes the resource at /ref. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSystemAcRefWithBody to send a custom JSON body instead.
 func (s *SystemService) DeleteSystemAcRef(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/ref", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/ref"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSystemAcRefWithBody removes the resource at /ref with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSystemAcRef cannot model directly).
+func (s *SystemService) DeleteSystemAcRefWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/ref", body)
+	return err
+}
+
 
 // SystemAcServices wraps system ac-services.
 //
@@ -301,11 +338,23 @@ func (s *SystemService) UpdateSystemAcServices(ctx context.Context, body any) er
 	return err
 }
 
-// DeleteSystemAcServices removes the resource at /services.
+// DeleteSystemAcServices removes the resource at /services. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSystemAcServicesWithBody to send a custom JSON body instead.
 func (s *SystemService) DeleteSystemAcServices(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/services", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/services"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSystemAcServicesWithBody removes the resource at /services with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSystemAcServices cannot model directly).
+func (s *SystemService) DeleteSystemAcServicesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/services", body)
+	return err
+}
+
 
 // SystemAlg wraps system alg.
 //
@@ -360,9 +409,10 @@ func (s *SystemService) UpdateSystemAlg(ctx context.Context, body any) error {
 	return err
 }
 
+
 // SystemBackup wraps system backup.
 //
-// Methods: GET, POST
+// Methods: GET, POST, DELETE
 //
 // Path: /system/backup
 //
@@ -416,6 +466,24 @@ func (s *SystemService) CreateSystemBackup(ctx context.Context, body any) (int64
 	}
 	return extractRowID(raw)
 }
+
+// DeleteSystemBackup removes the resource at /system/backup. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSystemBackupWithBody to send a custom JSON body instead.
+func (s *SystemService) DeleteSystemBackup(ctx context.Context, id int64) error {
+	_, err := s.client.Delete(ctx, "/system/backup"+"?id="+strconv.FormatInt(id, 10), nil)
+	return err
+}
+
+// DeleteSystemBackupWithBody removes the resource at /system/backup with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSystemBackup cannot model directly).
+func (s *SystemService) DeleteSystemBackupWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/system/backup", body)
+	return err
+}
+
 
 // SystemBackupAuto wraps system backup-auto.
 //
@@ -480,20 +548,35 @@ func (s *SystemService) UpdateSystemBackupAuto(ctx context.Context, body any) er
 	return err
 }
 
-// DeleteSystemBackupAuto removes the resource at /system/backup-auto.
+// DeleteSystemBackupAuto removes the resource at /system/backup-auto. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSystemBackupAutoWithBody to send a custom JSON body instead.
 func (s *SystemService) DeleteSystemBackupAuto(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/system/backup-auto", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/system/backup-auto"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSystemBackupAutoWithBody removes the resource at /system/backup-auto with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSystemBackupAuto cannot model directly).
+func (s *SystemService) DeleteSystemBackupAutoWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/system/backup-auto", body)
+	return err
+}
+
 
 // SystemBackupRestore wraps system backup-restore.
 //
 // Methods: POST
 //
 // Path: /system/backup:restore
-func (s *SystemService) DoSystemBackupRestore(ctx context.Context, body any) (json.RawMessage, error) {
+// RestoreSystemBackup Restore the resource at /system/backup:restore. body is sent as JSON;
+// pass nil if the action takes no parameters.
+func (s *SystemService) RestoreSystemBackup(ctx context.Context, body any) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/system/backup:restore", body)
 }
+
 
 // SystemBasicConfig wraps system basic-config.
 //
@@ -548,14 +631,18 @@ func (s *SystemService) UpdateSystemBasicConfig(ctx context.Context, body any) e
 	return err
 }
 
+
 // SystemBasicNtpSync wraps system basic-ntp-sync.
 //
 // Methods: POST
 //
 // Path: /system/basic/ntp:sync
-func (s *SystemService) DoSystemBasicNtpSync(ctx context.Context, body any) (json.RawMessage, error) {
+// SyncSystemBasicNtp Sync the resource at /system/basic/ntp:sync. body is sent as JSON;
+// pass nil if the action takes no parameters.
+func (s *SystemService) SyncSystemBasicNtp(ctx context.Context, body any) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/system/basic/ntp:sync", body)
 }
+
 
 // SystemCpufreq wraps system cpufreq.
 //
@@ -610,6 +697,7 @@ func (s *SystemService) UpdateSystemCpufreq(ctx context.Context, body any) error
 	return err
 }
 
+
 // SystemCpufreqMode wraps system cpufreq-mode.
 //
 // Methods: PUT
@@ -650,6 +738,7 @@ func (s *SystemService) UpdateSystemCpufreqMode(ctx context.Context, body any) e
 	return err
 }
 
+
 // SystemDisks wraps system disks.
 //
 // Methods: GET
@@ -661,6 +750,7 @@ func (s *SystemService) GetSystemDisks(ctx context.Context) (json.RawMessage, er
 	return s.client.Get(ctx, "/system/disks", nil)
 }
 
+
 // SystemFiles wraps system files.
 //
 // Methods: GET
@@ -671,6 +761,7 @@ func (s *SystemService) GetSystemDisks(ctx context.Context) (json.RawMessage, er
 func (s *SystemService) GetSystemFiles(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/system/files", nil)
 }
+
 
 // SystemKernelParams wraps system kernel-params.
 //
@@ -724,6 +815,7 @@ func (s *SystemService) UpdateSystemKernelParams(ctx context.Context, body any) 
 	_, err := s.client.Put(ctx, "/system/kernel-params", body)
 	return err
 }
+
 
 // SystemRebootSchedules wraps system reboot-schedules.
 //
@@ -794,11 +886,23 @@ func (s *SystemService) PatchSystemRebootSchedules(ctx context.Context, body any
 	return err
 }
 
-// DeleteSystemRebootSchedules removes the resource at /system/reboot-schedules.
+// DeleteSystemRebootSchedules removes the resource at /system/reboot-schedules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSystemRebootSchedulesWithBody to send a custom JSON body instead.
 func (s *SystemService) DeleteSystemRebootSchedules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/system/reboot-schedules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/system/reboot-schedules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSystemRebootSchedulesWithBody removes the resource at /system/reboot-schedules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSystemRebootSchedules cannot model directly).
+func (s *SystemService) DeleteSystemRebootSchedulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/system/reboot-schedules", body)
+	return err
+}
+
 
 // SystemRemoteAccess wraps system remote-access.
 //
@@ -852,6 +956,7 @@ func (s *SystemService) UpdateSystemRemoteAccess(ctx context.Context, body any) 
 	_, err := s.client.Put(ctx, "/system/remote-access", body)
 	return err
 }
+
 
 // SystemUpgrade wraps system upgrade.
 //
@@ -910,23 +1015,30 @@ func (s *SystemService) CreateSystemUpgrade(ctx context.Context, body any) (int6
 	return extractRowID(raw)
 }
 
+
 // SystemUpgradeCheck wraps system upgrade-check.
 //
 // Methods: POST
 //
 // Path: /system/upgrade:check
-func (s *SystemService) DoSystemUpgradeCheck(ctx context.Context, body any) (json.RawMessage, error) {
+// CheckSystemUpgrade Check the resource at /system/upgrade:check. body is sent as JSON;
+// pass nil if the action takes no parameters.
+func (s *SystemService) CheckSystemUpgrade(ctx context.Context, body any) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/system/upgrade:check", body)
 }
+
 
 // SystemUpgradeStart wraps system upgrade-start.
 //
 // Methods: POST
 //
 // Path: /system/upgrade:start
-func (s *SystemService) DoSystemUpgradeStart(ctx context.Context, body any) (json.RawMessage, error) {
+// StartSystemUpgrade Start the resource at /system/upgrade:start. body is sent as JSON;
+// pass nil if the action takes no parameters.
+func (s *SystemService) StartSystemUpgrade(ctx context.Context, body any) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/system/upgrade:start", body)
 }
+
 
 // SystemUpgradeStatus wraps system upgrade-status.
 //
@@ -938,6 +1050,7 @@ func (s *SystemService) DoSystemUpgradeStart(ctx context.Context, body any) (jso
 func (s *SystemService) GetSystemUpgradeStatus(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/system/upgrade:status", nil)
 }
+
 
 // SystemVrrpConfig wraps system vrrp-config.
 //
@@ -992,23 +1105,29 @@ func (s *SystemService) UpdateSystemVrrpConfig(ctx context.Context, body any) er
 	return err
 }
 
+
 // SystemVrrpStart wraps system vrrp-start.
 //
 // Methods: POST
 //
 // Path: /system/vrrp:start
-func (s *SystemService) DoSystemVrrpStart(ctx context.Context, body any) (json.RawMessage, error) {
+// StartSystemVrrp Start the resource at /system/vrrp:start. body is sent as JSON;
+// pass nil if the action takes no parameters.
+func (s *SystemService) StartSystemVrrp(ctx context.Context, body any) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/system/vrrp:start", body)
 }
+
 
 // SystemVrrpStop wraps system vrrp-stop.
 //
 // Methods: POST
 //
 // Path: /system/vrrp:stop
-func (s *SystemService) DoSystemVrrpStop(ctx context.Context, body any) (json.RawMessage, error) {
-	return s.client.Post(ctx, "/system/vrrp:stop", body)
+// StopSystemVrrp Stop the resource at /system/vrrp:stop. No body is required.
+func (s *SystemService) StopSystemVrrp(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Post(ctx, "/system/vrrp:stop", map[string]any{})
 }
+
 
 // SystemWebAdminAccounts wraps system web-admin-accounts.
 //
@@ -1073,11 +1192,23 @@ func (s *SystemService) UpdateSystemWebAdminAccounts(ctx context.Context, body a
 	return err
 }
 
-// DeleteSystemWebAdminAccounts removes the resource at /system/web-admin/accounts.
+// DeleteSystemWebAdminAccounts removes the resource at /system/web-admin/accounts. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSystemWebAdminAccountsWithBody to send a custom JSON body instead.
 func (s *SystemService) DeleteSystemWebAdminAccounts(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/system/web-admin/accounts", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/system/web-admin/accounts"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSystemWebAdminAccountsWithBody removes the resource at /system/web-admin/accounts with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSystemWebAdminAccounts cannot model directly).
+func (s *SystemService) DeleteSystemWebAdminAccountsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/system/web-admin/accounts", body)
+	return err
+}
+
 
 // SystemWebAdminGroups wraps system web-admin-groups.
 //
@@ -1142,11 +1273,23 @@ func (s *SystemService) UpdateSystemWebAdminGroups(ctx context.Context, body any
 	return err
 }
 
-// DeleteSystemWebAdminGroups removes the resource at /system/web-admin/groups.
+// DeleteSystemWebAdminGroups removes the resource at /system/web-admin/groups. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSystemWebAdminGroupsWithBody to send a custom JSON body instead.
 func (s *SystemService) DeleteSystemWebAdminGroups(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/system/web-admin/groups", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/system/web-admin/groups"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSystemWebAdminGroupsWithBody removes the resource at /system/web-admin/groups with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSystemWebAdminGroups cannot model directly).
+func (s *SystemService) DeleteSystemWebAdminGroupsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/system/web-admin/groups", body)
+	return err
+}
+
 
 // SystemWebAdminPassword wraps system web-admin-password.
 //
@@ -1188,6 +1331,7 @@ func (s *SystemService) UpdateSystemWebAdminPassword(ctx context.Context, body a
 	return err
 }
 
+
 // SystemWebAdminPasswordStatus wraps system web-admin-password-status.
 //
 // Methods: GET
@@ -1198,3 +1342,12 @@ func (s *SystemService) UpdateSystemWebAdminPassword(ctx context.Context, body a
 func (s *SystemService) GetSystemWebAdminPasswordStatus(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/system/web-admin/password-status", nil)
 }
+
+
+// Field hints for this group (iKuai firmware field names):
+//   hostname         Router hostname
+//   timezone         POSIX timezone (Asia/Shanghai, UTC, ...)
+//   dns1             Primary DNS
+//   dns2             Secondary DNS
+//   srcfile          Backup file name (used by /system/backup:restore)
+//   dstfile          Destination file (used by /system/backup)

@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"strconv"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // AuthService is the typed v4 entry point for the "auth" group.
@@ -30,6 +30,7 @@ func pathGroupAuth() []V4Endpoint {
 	}
 	return out
 }
+
 
 // AuthOnlineUsers wraps auth online-users.
 //
@@ -78,11 +79,23 @@ func (s *AuthService) GetAuthOnlineUsers(ctx context.Context, id int64) (json.Ra
 	return s.client.Get(ctx, "/auth/online-users", q)
 }
 
-// DeleteAuthOnlineUsers removes the resource at /auth/online-users.
+// DeleteAuthOnlineUsers removes the resource at /auth/online-users. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteAuthOnlineUsersWithBody to send a custom JSON body instead.
 func (s *AuthService) DeleteAuthOnlineUsers(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/auth/online-users", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/auth/online-users"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteAuthOnlineUsersWithBody removes the resource at /auth/online-users with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteAuthOnlineUsers cannot model directly).
+func (s *AuthService) DeleteAuthOnlineUsersWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/auth/online-users", body)
+	return err
+}
+
 
 // AuthPackages wraps auth packages.
 //
@@ -153,11 +166,23 @@ func (s *AuthService) PatchAuthPackages(ctx context.Context, body any) error {
 	return err
 }
 
-// DeleteAuthPackages removes the resource at /auth/packages.
+// DeleteAuthPackages removes the resource at /auth/packages. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteAuthPackagesWithBody to send a custom JSON body instead.
 func (s *AuthService) DeleteAuthPackages(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/auth/packages", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/auth/packages"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteAuthPackagesWithBody removes the resource at /auth/packages with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteAuthPackages cannot model directly).
+func (s *AuthService) DeleteAuthPackagesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/auth/packages", body)
+	return err
+}
+
 
 // AuthUsers wraps auth users.
 //
@@ -228,11 +253,23 @@ func (s *AuthService) PatchAuthUsers(ctx context.Context, body any) error {
 	return err
 }
 
-// DeleteAuthUsers removes the resource at /auth/users.
+// DeleteAuthUsers removes the resource at /auth/users. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteAuthUsersWithBody to send a custom JSON body instead.
 func (s *AuthService) DeleteAuthUsers(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/auth/users", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/auth/users"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteAuthUsersWithBody removes the resource at /auth/users with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteAuthUsers cannot model directly).
+func (s *AuthService) DeleteAuthUsersWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/auth/users", body)
+	return err
+}
+
 
 // AuthWebServices wraps auth web-services.
 //
@@ -286,3 +323,13 @@ func (s *AuthService) UpdateAuthWebServices(ctx context.Context, body any) error
 	_, err := s.client.Put(ctx, "/auth/web/services", body)
 	return err
 }
+
+
+// Field hints for this group (iKuai firmware field names):
+//   username         Auth user name (required)
+//   password         Auth user password (raw, not md5)
+//   group_id         Group id (1-based; required)
+//   enabled          yes | no
+//   comment          Free-form comment
+//   ip_addr          Bind IP (optional)
+//   sesstimeout      Session timeout in seconds (0 = no limit)
