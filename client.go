@@ -1,152 +1,602 @@
-// Package ikuaiapi provides a Go SDK for interacting with iKuai routers.
-// It supports both v3 and v4 versions of iKuai OS with automatic version detection.
+// Package ikuaiapi provides a Go SDK for interacting with iKuai routers
+// using the local v4.0 REST API.
 //
-// The SDK uses reqv3 HTTP client for better performance, debugging, retry, and HTTP2/3 support.
-// All services are defined through interfaces for easy testing and extension.
+// The SDK uses the Go standard library net/http with a small custom layer
+// (retry + timeout + sanitization) and exposes a typed service layer per
+// functional area (system, network, firewall, monitor, ...).
+//
+// Authentication uses a Bearer token obtained from the router web UI
+// (System → Auth → API Token). iKuai OS v4.x exposes all router
+// configuration under /api/v4.0/*.
 //
 // Basic usage:
 //
-//	client, err := ikuaiapi.NewClientWithLogin("http://192.168.1.1", "admin", "password")
+//	client, err := ikuaiapi.NewClient("https://192.168.1.1",
+//	    ikuaiapi.WithToken("<router-api-token>"),
+//	)
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
 //	defer client.Close()
 //
 //	api := service.NewAPIClient(client)
-//	homepage, err := api.System().GetHomepage(context.Background())
+//	iface, err := api.Network().GetInterfaces(ctx)
 package ikuaiapi
 
 import (
+	"bytes"
 	"context"
+	"crypto/tls"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"math"
+	"math/rand"
+	"net/http"
+	"net/url"
+	"path"
+	"strings"
 	"time"
-
-	"github.com/imroc/req/v3"
-	"github.com/zy84338719/ikuai-api/internal"
-	"github.com/zy84338719/ikuai-api/types"
 )
 
-// Client is the main client for interacting with iKuai router.
-// It handles authentication, session management, and API calls.
+// V4APIBase is the canonical root for all iKuai v4 REST endpoints.
+const V4APIBase = "/api/v4.0"
+
+// defaultTimeout is the per-request timeout when none is configured.
+const defaultTimeout = 30 * time.Second
+
+// defaultRetryMax is the default maximum number of attempts (initial + retries).
+const defaultRetryMax = 3
+
+// defaultRetryBaseDelay is the base delay for the first retry.
+const defaultRetryBaseDelay = 200 * time.Millisecond
+
+// defaultRetryMaxDelay caps the back-off window.
+const defaultRetryMaxDelay = 5 * time.Second
+
+// Client is the iKuai HTTP API client.
 type Client struct {
-	client   *req.Client
-	baseURL  string
-	username string
-	password string
-	token    string
-	version  Version
-	protocol apiProtocol
-	loggedIn bool
-	cache    *ResponseCache
-	logger   Logger
-	metrics  *Metrics
+	BaseURL    string
+	Token      string
+	APIBase    string
+	HTTPClient *http.Client
+	UserAgent  string
+
+	// RawMode returns the full JSON envelope (data/results/rowid/code/message)
+	// instead of just the data field. Useful for debugging.
+	RawMode bool
+	// DryRun reports the request it would have made without contacting the
+	// router. Read methods return the preview as a JSON object, write
+	// methods return without executing.
+	DryRun bool
+	// Logger, if set, receives short human-readable status lines.
+	Logger func(format string, args ...any)
+
+	timeout    time.Duration
+	retryMax   int
+	retryBase  time.Duration
+	retryMaxD  time.Duration
+	apiBaseURL *url.URL
 }
 
+// ClientOption configures a Client at construction time.
 type ClientOption func(*Client)
 
-func WithTimeout(timeout time.Duration) ClientOption {
-	return func(c *Client) {
-		c.client.SetTimeout(timeout)
-	}
+// WithToken sets the Bearer token used on every request.
+func WithToken(token string) ClientOption {
+	return func(c *Client) { c.Token = token }
 }
 
+// WithTimeout sets the per-request timeout. The same value is also used
+// as the overall upper bound for retried requests.
+func WithTimeout(d time.Duration) ClientOption {
+	return func(c *Client) { c.timeout = d }
+}
+
+// WithInsecureSkipVerify disables TLS certificate verification. iKuai
+// routers use self-signed certificates by default, so this is normally
+// the desired behaviour. Use only on trusted networks.
 func WithInsecureSkipVerify(skip bool) ClientOption {
 	return func(c *Client) {
-		if skip {
-			c.client.EnableInsecureSkipVerify()
+		if !skip {
+			return
+		}
+		if c.HTTPClient == nil {
+			c.HTTPClient = &http.Client{Timeout: defaultTimeout}
+		}
+		if tr, ok := c.HTTPClient.Transport.(*http.Transport); ok {
+			if tr.TLSClientConfig == nil {
+				tr.TLSClientConfig = &tls.Config{}
+			}
+			tr.TLSClientConfig.InsecureSkipVerify = true //nolint:gosec
+		} else if c.HTTPClient.Transport == nil {
+			c.HTTPClient.Transport = &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+			}
 		}
 	}
 }
 
-func WithHTTPClient(httpClient *req.Client) ClientOption {
+// WithHTTPClient replaces the underlying *http.Client. Callers that need
+// proxy, custom CA, or tracing support can pass their own.
+func WithHTTPClient(h *http.Client) ClientOption {
+	return func(c *Client) { c.HTTPClient = h }
+}
+
+// WithAPIBase overrides the default /api/v4.0 prefix.
+func WithAPIBase(base string) ClientOption {
 	return func(c *Client) {
-		c.client = httpClient
+		c.APIBase = "/" + strings.TrimLeft(strings.TrimSpace(base), "/")
 	}
 }
 
-func WithVersion(version Version) ClientOption {
+// WithRawMode enables envelope-level responses (see Client.RawMode).
+func WithRawMode(raw bool) ClientOption { return func(c *Client) { c.RawMode = raw } }
+
+// WithDryRun reports the request it would have made without contacting
+// the router.
+func WithDryRun(dry bool) ClientOption { return func(c *Client) { c.DryRun = dry } }
+
+// WithRetry configures exponential-back-off retries. retryMax is the
+// total attempt count (initial + retries). The default is 3.
+func WithRetry(retryMax int) ClientOption {
 	return func(c *Client) {
-		c.version = version
-		c.protocol = protocolForVersion(version)
+		if retryMax < 1 {
+			retryMax = 1
+		}
+		c.retryMax = retryMax
 	}
 }
 
-func WithToken(token string) ClientOption {
+// WithRetryDelay sets the base delay and maximum delay for retries.
+func WithRetryDelay(base, max time.Duration) ClientOption {
 	return func(c *Client) {
-		c.token = token
+		if base > 0 {
+			c.retryBase = base
+		}
+		if max > 0 {
+			c.retryMaxD = max
+		}
 	}
 }
 
-func NewClient(baseURL, username, password string, opts ...ClientOption) *Client {
-	baseURL = internal.NormalizeAddr(baseURL)
+// WithLogger sets a logging callback. The callback is invoked once per
+// request with a short status line.
+func WithLogger(fn func(format string, args ...any)) ClientOption {
+	return func(c *Client) { c.Logger = fn }
+}
 
+// NewClient creates a Client targeting the given router. baseURL should
+// be of the form "http://192.168.1.1" or "https://router.lan:443".
+func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
+	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	if baseURL == "" {
+		return nil, errors.New("ikuaiapi: baseURL is required")
+	}
+	apiBase, err := url.Parse(baseURL + V4APIBase)
+	if err != nil {
+		return nil, fmt.Errorf("ikuaiapi: parse baseURL: %w", err)
+	}
 	c := &Client{
-		baseURL:  baseURL,
-		username: username,
-		password: password,
-		version:  VersionUnknown,
-		loggedIn: false,
-		logger:   NewDefaultLogger(LogLevelInfo),
-		metrics:  NewMetrics(),
-		client: req.C().
-			SetBaseURL(baseURL).
-			SetTimeout(30 * time.Second),
+		BaseURL: baseURL,
+		APIBase: V4APIBase,
+		HTTPClient: &http.Client{
+			Timeout: defaultTimeout,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+			},
+		},
+		UserAgent:  "ikuai-api-go/4",
+		timeout:    defaultTimeout,
+		retryMax:   defaultRetryMax,
+		retryBase:  defaultRetryBaseDelay,
+		retryMaxD:  defaultRetryMaxDelay,
+		apiBaseURL: apiBase,
 	}
-
 	for _, opt := range opts {
 		opt(c)
 	}
-
-	return c
+	return c, nil
 }
 
-func NewV3Client(baseURL, username, password string, opts ...ClientOption) *Client {
-	opts = append([]ClientOption{WithVersion(VersionV3)}, opts...)
-	return NewClient(baseURL, username, password, opts...)
+// Close releases the underlying transport. Safe to call multiple times.
+func (c *Client) Close() {
+	if c.HTTPClient != nil && c.HTTPClient.Transport != nil {
+		if t, ok := c.HTTPClient.Transport.(*http.Transport); ok {
+			t.CloseIdleConnections()
+		}
+	}
 }
 
-func (c *Client) GetVersion() Version {
-	return c.version
+// SanitizeNil replaces bare `nil` tokens in JSON value positions with
+// `null`. Some iKuai firmware emits `nil` instead of `null`; the function
+// tracks string state to avoid corrupting legitimate string content.
+func SanitizeNil(body []byte) []byte {
+	body = bytes.ReplaceAll(body, []byte("\r\n"), []byte("\n"))
+	n := len(body)
+	if n < 3 {
+		return body
+	}
+	out := make([]byte, 0, n+8)
+	inString := false
+	for i := 0; i < n; i++ {
+		ch := body[i]
+		if ch == '\\' && inString && i+1 < n {
+			out = append(out, ch, body[i+1])
+			i++
+			continue
+		}
+		if ch == '"' {
+			inString = !inString
+			out = append(out, ch)
+			continue
+		}
+		if inString {
+			out = append(out, ch)
+			continue
+		}
+		if ch == 'n' && i+2 < n && body[i+1] == 'i' && body[i+2] == 'l' {
+			nextOK := i+3 >= n || !isIdentByte(body[i+3])
+			if nextOK {
+				out = append(out, 'n', 'u', 'l', 'l')
+				i += 2
+				continue
+			}
+		}
+		out = append(out, ch)
+	}
+	return out
 }
 
-func (c *Client) IsLoggedIn() bool {
-	return c.loggedIn
+func isIdentByte(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+		(c >= '0' && c <= '9') || c == '_'
 }
 
-func (c *Client) doRequest(ctx context.Context, path string, reqBody interface{}, result interface{}) error {
-	resp, err := c.client.R().
-		SetContext(ctx).
-		SetBody(reqBody).
-		SetSuccessResult(result).
-		Post(path)
+type envelope struct {
+	Code    int             `json:"code"`
+	Message string          `json:"message"`
+	Data    json.RawMessage `json:"data"`
+	Results json.RawMessage `json:"results"`
+	RowID   json.RawMessage `json:"rowid"`
+}
 
+// check inspects the HTTP response, normalizes the body, and returns the
+// payload callers should use (Data preferred, then Results, then a
+// synthetic envelope carrying RowID/message for create-style endpoints).
+func (c *Client) check(resp *http.Response) (json.RawMessage, error) {
+	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return NewSDKError(ErrCodeRequestFailed, "failed to send request", err)
+		return nil, &APIError{HTTPStatus: resp.StatusCode, Message: "read response body: " + err.Error()}
+	}
+	body := SanitizeNil(raw)
+
+	if resp.StatusCode >= 400 {
+		msg := string(body)
+		var env envelope
+		_ = json.Unmarshal(body, &env)
+		if env.Message != "" {
+			msg = env.Message
+		}
+		if hint, ok := errorHints[env.Code]; ok {
+			msg = msg + " (" + hint + ")"
+		}
+		var detailsEnv struct {
+			Details []APIErrorDetail `json:"details"`
+		}
+		_ = json.Unmarshal(body, &detailsEnv)
+		return nil, &APIError{
+			HTTPStatus: resp.StatusCode,
+			Code:       env.Code,
+			Message:    msg,
+			Details:    detailsEnv.Details,
+		}
 	}
 
-	if resp.Err != nil {
-		return NewSDKError(ErrCodeRequestFailed, "request error", resp.Err)
+	var env envelope
+	if err := json.Unmarshal(body, &env); err != nil {
+		return nil, &APIError{
+			HTTPStatus: resp.StatusCode,
+			Message:    "non-JSON response: " + string(body),
+		}
 	}
 
+	if env.Code != 0 && env.Code != 20000 {
+		msg := env.Message
+		if msg == "" {
+			msg = "request failed"
+		}
+		if hint, ok := errorHints[env.Code]; ok {
+			msg = msg + " (" + hint + ")"
+		}
+		var detailsEnv struct {
+			Details []APIErrorDetail `json:"details"`
+		}
+		_ = json.Unmarshal(body, &detailsEnv)
+		return nil, &APIError{
+			HTTPStatus: resp.StatusCode,
+			Code:       env.Code,
+			Message:    msg,
+			Details:    detailsEnv.Details,
+		}
+	}
+
+	if c.RawMode {
+		return body, nil
+	}
+
+	payload := env.Data
+	if (len(payload) == 0 || string(payload) == "null") &&
+		len(env.Results) > 0 && string(env.Results) != "null" {
+		payload = env.Results
+	}
+	if len(payload) == 0 || string(payload) == "null" {
+		msg := env.Message
+		if msg == "" {
+			msg = "ok"
+		}
+		if len(env.RowID) > 0 && string(env.RowID) != "null" {
+			var rowid any
+			if err := json.Unmarshal(env.RowID, &rowid); err == nil {
+				synthetic, _ := json.Marshal(map[string]any{
+					"message": msg,
+					"rowid":   rowid,
+				})
+				return synthetic, nil
+			}
+		}
+		synthetic, _ := json.Marshal(map[string]any{"message": msg})
+		return synthetic, nil
+	}
+	return payload, nil
+}
+
+func (c *Client) headers() http.Header {
+	h := http.Header{}
+	h.Set("Content-Type", "application/json")
+	h.Set("Accept", "application/json")
+	if c.UserAgent != "" {
+		h.Set("User-Agent", c.UserAgent)
+	}
+	if c.Token != "" {
+		h.Set("Authorization", "Bearer "+c.Token)
+	}
+	return h
+}
+
+func (c *Client) fullURL(p string) (string, error) {
+	if strings.HasPrefix(p, "http://") || strings.HasPrefix(p, "https://") {
+		return p, nil
+	}
+	rel := strings.TrimLeft(p, "/")
+	if !strings.HasPrefix(rel, "api/v4.0/") && !strings.HasPrefix(rel, "api/") {
+		rel = strings.TrimLeft(c.APIBase, "/") + "/" + rel
+	}
+	u := *c.apiBaseURL
+	u.Path = path.Clean("/" + strings.SplitN(rel, "?", 2)[0])
+	if i := strings.Index(rel, "?"); i >= 0 {
+		u.RawQuery = rel[i+1:]
+	}
+	return u.String(), nil
+}
+
+func (c *Client) log(format string, args ...any) {
+	if c.Logger != nil {
+		c.Logger(format, args...)
+	}
+}
+
+// Do executes a typed REST call and decodes the result into out (which
+// may be nil for requests that only return a rowid/message).
+func (c *Client) Do(ctx context.Context, method, p string, body, out any) error {
+	if c.DryRun {
+		preview := map[string]any{
+			"dry_run": true,
+			"method":  strings.ToUpper(method),
+			"path":    p,
+		}
+		if body != nil {
+			bb, _ := json.Marshal(body)
+			preview["body"] = json.RawMessage(bb)
+		}
+		raw, _ := json.Marshal(preview)
+		if out != nil {
+			return json.Unmarshal(raw, out)
+		}
+		return nil
+	}
+
+	fullURL, err := c.fullURL(p)
+	if err != nil {
+		return err
+	}
+	payload, err := c.doWithRetry(ctx, method, fullURL, body)
+	if err != nil {
+		return err
+	}
+	if out == nil {
+		return nil
+	}
+	if len(payload) == 0 || string(payload) == "null" {
+		return nil
+	}
+	if err := json.Unmarshal(payload, out); err != nil {
+		return &APIError{HTTPStatus: 200, Message: "decode response: " + err.Error()}
+	}
 	return nil
 }
 
-func (c *Client) Call(ctx context.Context, funcName, action string, param interface{}, result interface{}) error {
-	if !c.loggedIn {
-		return NewSDKError(ErrCodeNotLoggedIn, "client not logged in", nil)
+// Get issues a GET request. params is optional and added to the query
+// string.
+func (c *Client) Get(ctx context.Context, p string, params map[string]string) (json.RawMessage, error) {
+	if c.DryRun {
+		preview := map[string]any{
+			"dry_run": true,
+			"method":  "GET",
+			"path":    p,
+		}
+		if len(params) > 0 {
+			q := url.Values{}
+			for k, v := range params {
+				q.Set(k, v)
+			}
+			preview["query"] = q.Encode()
+		}
+		return json.Marshal(preview)
 	}
-	if c.protocol == nil {
-		return NewSDKError(ErrCodeVersionNotSupported, "iKuai API version is not selected", nil)
+	if len(params) > 0 {
+		q := url.Values{}
+		for k, v := range params {
+			q.Set(k, v)
+		}
+		sep := "?"
+		if strings.Contains(p, "?") {
+			sep = "&"
+		}
+		p = p + sep + q.Encode()
 	}
-
-	req := &types.BaseRequest{
-		FuncName: funcName,
-		Action:   action,
-		Param:    param,
+	fullURL, err := c.fullURL(p)
+	if err != nil {
+		return nil, err
 	}
-
-	return c.doRequest(ctx, c.protocol.CallPath(), req, result)
+	return c.doWithRetry(ctx, http.MethodGet, fullURL, nil)
 }
 
-func (c *Client) Close() {
-	c.client.CloseIdleConnections()
+// Post issues a POST request with a JSON body.
+func (c *Client) Post(ctx context.Context, p string, body any) (json.RawMessage, error) {
+	return c.doPayload(ctx, http.MethodPost, p, body)
+}
+
+// Put issues a PUT request with a JSON body.
+func (c *Client) Put(ctx context.Context, p string, body any) (json.RawMessage, error) {
+	return c.doPayload(ctx, http.MethodPut, p, body)
+}
+
+// Patch issues a PATCH request with a JSON body.
+func (c *Client) Patch(ctx context.Context, p string, body any) (json.RawMessage, error) {
+	return c.doPayload(ctx, http.MethodPatch, p, body)
+}
+
+// Delete issues a DELETE request. The optional body is sent as JSON.
+func (c *Client) Delete(ctx context.Context, p string, body any) (json.RawMessage, error) {
+	return c.doPayload(ctx, http.MethodDelete, p, body)
+}
+
+func (c *Client) doPayload(ctx context.Context, method, p string, body any) (json.RawMessage, error) {
+	if c.DryRun {
+		preview := map[string]any{
+			"dry_run": true,
+			"method":  method,
+			"path":    p,
+		}
+		if body != nil {
+			bb, _ := json.Marshal(body)
+			preview["body"] = json.RawMessage(bb)
+		}
+		return json.Marshal(preview)
+	}
+	fullURL, err := c.fullURL(p)
+	if err != nil {
+		return nil, err
+	}
+	return c.doWithRetry(ctx, method, fullURL, body)
+}
+
+// doWithRetry runs doRequest up to retryMax times, applying exponential
+// back-off with jitter on transient failures.
+func (c *Client) doWithRetry(ctx context.Context, method, fullURL string, body any) (json.RawMessage, error) {
+	idem := method == http.MethodGet || method == http.MethodHead ||
+		method == http.MethodOptions || method == http.MethodDelete
+	var lastErr error
+	for attempt := 1; attempt <= c.retryMax; attempt++ {
+		raw, err := c.doOnce(ctx, method, fullURL, body)
+		if err == nil {
+			return raw, nil
+		}
+		lastErr = err
+		if !shouldRetry(err, idem) || attempt == c.retryMax {
+			break
+		}
+		delay := backoffDelay(attempt, c.retryBase, c.retryMaxD)
+		c.log("retry %d/%d after %s: %v", attempt+1, c.retryMax, delay, err)
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(delay):
+		}
+	}
+	return nil, lastErr
+}
+
+func shouldRetry(err error, idempotent bool) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, context.Canceled) {
+		return false
+	}
+	var netErr *NetworkError
+	if errors.As(err, &netErr) {
+		return true
+	}
+	if !idempotent {
+		return false
+	}
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.HTTPStatus >= 500
+	}
+	return false
+}
+
+func backoffDelay(attempt int, base, max time.Duration) time.Duration {
+	if base <= 0 {
+		base = defaultRetryBaseDelay
+	}
+	if max <= 0 {
+		max = defaultRetryMaxDelay
+	}
+	d := time.Duration(float64(base) * math.Pow(2, float64(attempt-1)))
+	if d > max {
+		d = max
+	}
+	// Full jitter (0..d).
+	if d > 0 {
+		d = time.Duration(rand.Int63n(int64(d) + 1)) //nolint:gosec
+	}
+	return d
+}
+
+func (c *Client) doOnce(ctx context.Context, method, fullURL string, body any) (json.RawMessage, error) {
+	var bodyBytes []byte
+	if body != nil {
+		b, err := json.Marshal(body)
+		if err != nil {
+			return nil, &APIError{Message: "encode request body: " + err.Error()}
+		}
+		bodyBytes = b
+	} else {
+		bodyBytes = []byte("{}")
+	}
+
+	reqCtx := ctx
+	if c.timeout > 0 {
+		var cancel context.CancelFunc
+		reqCtx, cancel = context.WithTimeout(ctx, c.timeout)
+		defer cancel()
+	}
+	req, err := http.NewRequestWithContext(reqCtx, method, fullURL, bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, &APIError{Message: "build request: " + err.Error()}
+	}
+	req.Header = c.headers()
+
+	c.log("%s %s", method, fullURL)
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, &NetworkError{Message: "request failed", Cause: err}
+	}
+	defer func() { _ = resp.Body.Close() }()
+	return c.check(resp)
 }

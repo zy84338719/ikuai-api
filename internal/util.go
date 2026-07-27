@@ -1,40 +1,18 @@
+// Package internal holds utilities shared by the SDK core and the
+// generated service layer. It is not part of the public API.
 package internal
 
-import (
-	"crypto/md5"
-	"encoding/hex"
-	"net/url"
-	"strings"
-)
+import "strings"
 
-func MD5Hash(s string) string {
-	hash := md5.Sum([]byte(s))
-	return hex.EncodeToString(hash[:])
-}
-
-func Base64Password(password string) string {
-	salt := "salt_11"
-	return Base64Encode(salt + password)
-}
-
-func Base64Encode(s string) string {
-	return strings.TrimRight(
-		strings.ReplaceAll(
-			strings.ReplaceAll(
-				url.QueryEscape(s),
-				"%", "",
-			),
-			"=", "",
-		),
-		"+",
-	)
-}
-
+// NormalizeAddr trims whitespace, appends the http:// scheme if missing
+// and strips a trailing slash. Empty input is returned as "".
 func NormalizeAddr(addr string) string {
 	addr = strings.TrimSpace(addr)
+	if addr == "" {
+		return ""
+	}
 	if !strings.HasPrefix(addr, "http://") && !strings.HasPrefix(addr, "https://") {
 		addr = "http://" + addr
 	}
-	addr = strings.TrimRight(addr, "/")
-	return addr
+	return strings.TrimRight(addr, "/")
 }
