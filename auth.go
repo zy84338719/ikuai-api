@@ -1,100 +1,30 @@
 package ikuaiapi
 
-import (
-	"context"
+import "strings"
 
-	"github.com/zy84338719/ikuai-api/internal"
-	"github.com/zy84338719/ikuai-api/types"
-)
+// TokenHelp is a short, copy-pasteable instruction for obtaining a token
+// from an iKuai router web UI. The SDK does not log in on behalf of the
+// caller: tokens are generated manually in System → Auth → API Token.
+const TokenHelp = "obtain a token from the router web UI (System → Auth → API Token)"
 
-func (c *Client) Login(ctx context.Context) error {
-	loginPath := "/Action/login"
-	if c.protocol != nil {
-		loginPath = c.protocol.LoginPath()
+// ValidateToken returns an error if the token looks malformed. iKuai
+// router tokens are 32-character lowercase hex strings.
+func ValidateToken(token string) error {
+	t := strings.TrimSpace(token)
+	if t == "" {
+		return &APIError{Code: 0, Message: "empty token; " + TokenHelp}
 	}
-
-	req := &types.LoginRequest{
-		Username: c.username,
-		Password: internal.MD5Hash(c.password),
-		Pass:     internal.Base64Password(c.password),
+	if len(t) != 32 {
+		return &APIError{Code: 0, Message: "token must be 32 hex characters; " + TokenHelp}
 	}
-
-	var loginResp types.BaseResponse
-	if err := c.doRequest(ctx, loginPath, req, &loginResp); err != nil {
-		return err
+	for _, c := range t {
+		switch {
+		case c >= '0' && c <= '9':
+		case c >= 'a' && c <= 'f':
+		case c >= 'A' && c <= 'F':
+		default:
+			return &APIError{Code: 0, Message: "token must be hex; " + TokenHelp}
+		}
 	}
-
-	if c.protocol == nil {
-		c.protocol = detectProtocol(&loginResp)
-	}
-	c.version = c.protocol.Version()
-
-	if !c.protocol.IsSuccess(&loginResp) {
-		return NewSDKError(ErrCodeLoginFailed, c.protocol.ErrorMessage(&loginResp), nil)
-	}
-
-	c.loggedIn = true
 	return nil
-}
-
-func (c *Client) Logout(ctx context.Context) error {
-	req := &types.BaseRequest{
-		FuncName: "logout",
-		Action:   "logout",
-	}
-
-	var baseResp types.BaseResponse
-	logoutPath := "/Action/logout"
-	if c.protocol != nil {
-		logoutPath = c.protocol.LogoutPath()
-	}
-	if err := c.doRequest(ctx, logoutPath, req, &baseResp); err != nil {
-		return err
-	}
-
-	c.loggedIn = false
-	return nil
-}
-
-func (c *Client) CheckLogin(ctx context.Context) (bool, error) {
-	req := &types.BaseRequest{
-		FuncName: "webuser",
-		Action:   "show",
-	}
-
-	var baseResp types.BaseResponse
-	callPath := "/Action/call"
-	if c.protocol != nil {
-		callPath = c.protocol.CallPath()
-	}
-	if err := c.doRequest(ctx, callPath, req, &baseResp); err != nil {
-		return false, err
-	}
-
-	if c.protocol != nil {
-		return c.protocol.IsSuccess(&baseResp), nil
-	}
-	return baseResp.IsSuccess(), nil
-}
-
-func NewClientWithLogin(baseURL, username, password string, opts ...ClientOption) (*Client, error) {
-	return NewClientWithLoginContext(context.Background(), baseURL, username, password, opts...)
-}
-
-func NewClientWithLoginContext(ctx context.Context, baseURL, username, password string, opts ...ClientOption) (*Client, error) {
-	client := NewClient(baseURL, username, password, opts...)
-	if err := client.Login(ctx); err != nil {
-		client.Close()
-		return nil, err
-	}
-	return client, nil
-}
-
-func NewV3ClientWithLogin(baseURL, username, password string, opts ...ClientOption) (*Client, error) {
-	return NewV3ClientWithLoginContext(context.Background(), baseURL, username, password, opts...)
-}
-
-func NewV3ClientWithLoginContext(ctx context.Context, baseURL, username, password string, opts ...ClientOption) (*Client, error) {
-	opts = append([]ClientOption{WithVersion(VersionV3)}, opts...)
-	return NewClientWithLoginContext(ctx, baseURL, username, password, opts...)
 }

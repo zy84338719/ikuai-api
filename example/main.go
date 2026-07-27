@@ -1,10 +1,22 @@
-// Example demonstrates how to use the iKuai SDK
+// Example program demonstrating the v4 SDK.
+//
+// Usage:
+//
+//	IKUAI_BASE_URL=https://192.168.1.1 \
+//	IKUAI_TOKEN=deadbeefcafebabe1234567890abcdef \
+//	go run ./example
+//
+// The program lists online clients, prints the system overview, and
+// (in dry-run mode) shows the request it would send to create a new
+// auth user without actually doing so.
 package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	ikuaiapi "github.com/zy84338719/ikuai-api"
@@ -12,169 +24,109 @@ import (
 )
 
 func main() {
-	// Example 1: Create client and manually login
-	fmt.Println("=== Example 1: Manual Login ===")
-	manualLoginExample()
-
-	// Example 2: Create client with auto login (recommended)
-	fmt.Println("\n=== Example 2: Auto Login ===")
-	autoLoginExample()
-
-	// Example 3: Using services
-	fmt.Println("\n=== Example 3: Using Services ===")
-	servicesExample()
-
-	// Example 4: Custom configuration
-	fmt.Println("\n=== Example 4: Custom Configuration ===")
-	customConfigExample()
-}
-
-func manualLoginExample() {
-	// Replace with your router's address and credentials
-	client := ikuaiapi.NewClient(
-		"http://10.10.40.254",
-		"admin",
-		"password",
-		ikuaiapi.WithTimeout(30*time.Second),
-	)
-	defer client.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := client.Login(ctx); err != nil {
-		log.Printf("Login failed: %v\n", err)
-		return
+	baseURL := os.Getenv("IKUAI_BASE_URL")
+	token := os.Getenv("IKUAI_TOKEN")
+	if baseURL == "" || token == "" {
+		log.Fatal("set IKUAI_BASE_URL and IKUAI_TOKEN")
 	}
 
-	fmt.Printf("Logged in successfully! iKuai version: %s\n", client.GetVersion())
-
-	if err := client.Logout(ctx); err != nil {
-		log.Printf("Logout failed: %v\n", err)
-	}
-}
-
-func autoLoginExample() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Create client with auto login
-	client, err := ikuaiapi.NewClientWithLoginContext(
-		ctx,
-		"http://10.10.40.254",
-		"admin",
-		"password",
-		ikuaiapi.WithTimeout(30*time.Second),
+	client, err := ikuaiapi.NewClient(baseURL,
+		ikuaiapi.WithToken(token),
+		ikuaiapi.WithTimeout(15*time.Second),
+		ikuaiapi.WithLogger(func(format string, args ...any) {
+			log.Printf("[ikuai] "+format, args...)
+		}),
 	)
 	if err != nil {
-		log.Printf("Failed to create client: %v\n", err)
-		return
+		log.Fatalf("new client: %v", err)
 	}
 	defer client.Close()
 
-	fmt.Printf("Connected to iKuai %s\n", client.GetVersion())
-	fmt.Printf("Is logged in: %v\n", client.IsLoggedIn())
-}
+	if err := ikuaiapi.ValidateToken(token); err != nil {
+		log.Fatalf("token: %v", err)
+	}
 
-func servicesExample() {
+	api := service.NewAPIClient(client)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	client, err := ikuaiapi.NewClientWithLoginContext(
-		ctx,
-		"http://10.10.40.254",
-		"admin",
-		"password",
-	)
-	if err != nil {
-		log.Printf("Failed to create client: %v\n", err)
-		return
-	}
-	defer client.Close()
-
-	// Create API client for accessing services
-	api := service.NewAPIClient(client)
-
-	// Get system information
-	homepage, err := api.System().GetHomepage(ctx)
-	if err != nil {
-		log.Printf("Failed to get homepage: %v\n", err)
-	} else {
-		fmt.Printf("Hostname: %s\n", homepage.Hostname)
-		fmt.Printf("Version: %s\n", homepage.VerInfo.Version)
-		fmt.Printf("Uptime: %d seconds\n", homepage.Uptime)
-		fmt.Printf("CPU: %v\n", homepage.CPU)
-		fmt.Printf("Memory Used: %s\n", homepage.Memory.Used)
+	if os.Getenv("IKUAI_DRY_RUN") == "1" {
+		// Replace client with a dry-run variant; no router traffic.
+		dryClient, _ := ikuaiapi.NewClient(baseURL, ikuaiapi.WithToken(token), ikuaiapi.WithDryRun(true))
+		api = service.NewAPIClient(dryClient)
+		fmt.Println("# IKUAI_DRY_RUN=1 — printing requests without contacting the router")
 	}
 
-	// Get LAN devices
-	devices, err := api.Monitor().GetLanIP(ctx)
+	// 1. System overview (single GET).
+	system, err := api.Monitoring().GetMonitoringSystem(ctx)
 	if err != nil {
-		log.Printf("Failed to get LAN devices: %v\n", err)
-	} else {
-		fmt.Printf("\nFound %d LAN devices:\n", len(devices))
-		for i, device := range devices {
-			if i >= 5 {
-				fmt.Printf("  ... and %d more\n", len(devices)-5)
-				break
-			}
-			hostname := device.Hostname
-			if hostname == "" {
-				hostname = "(unknown)"
-			}
-			fmt.Printf("  %s (%s): %s\n", hostname, device.Mac, device.IPAddr)
-		}
+		log.Fatalf("monitoring/system: %v", err)
 	}
+	fmt.Println("system overview:")
+	prettyPrint(system)
 
-	// Get network interfaces
-	ifaces, err := api.Monitor().GetInterfaces(ctx)
+	// 2. Online clients (single GET).
+	clients, err := api.Monitoring().GetMonitoringClientsOnline(ctx)
 	if err != nil {
-		log.Printf("Failed to get interfaces: %v\n", err)
-	} else {
-		fmt.Printf("\nNetwork interfaces:\n")
-		for _, iface := range ifaces.GetIFaceStream() {
-			fmt.Printf("  %s: %s (Up: %d, Down: %d)\n",
-				iface.Interface, iface.Comment, iface.Upload, iface.Download)
-		}
+		log.Fatalf("monitoring/clients-online: %v", err)
 	}
+	fmt.Println("\nclients online:")
+	prettyPrint(clients)
 
-	// Get WAN configuration
-	wans, err := api.Network().GetWan(ctx)
+	// 2b. Paginated list example: log/arp.
+	arp, err := api.Log().ListLogArp(ctx,
+		&service.LogArpListOptions{Page: 1, PageSize: 50, Order: "desc", OrderBy: "id"})
 	if err != nil {
-		log.Printf("Failed to get WAN config: %v\n", err)
-	} else {
-		fmt.Printf("\nWAN configurations:\n")
-		for _, wan := range wans {
-			fmt.Printf("  %s: %s (Internet: %d)\n", wan.Name, wan.Comment, wan.Internet)
-		}
+		log.Fatalf("log/arp: %v", err)
 	}
+	fmt.Println("\nlog/arp (first page, desc):")
+	prettyPrint(arp)
+	if err != nil {
+		log.Fatalf("monitoring/clients-online: %v", err)
+	}
+	fmt.Println("\nclients (first page):")
+	prettyPrint(clients)
+
+	// 3. Auth users (paginated list).
+	users, err := api.Auth().ListAuthUsers(ctx,
+		&service.AuthUsersListOptions{Page: 1, PageSize: 50})
+	if err != nil {
+		log.Fatalf("auth/users: %v", err)
+	}
+	fmt.Println("\nauth users (first page):")
+	prettyPrint(users)
+
+	// 4. Network DHCP services (list).
+	dhcp, err := api.Network().ListNetworkDhcpServices(ctx,
+		&service.NetworkDhcpServicesListOptions{Page: 1, PageSize: 50})
+	if err != nil {
+		log.Fatalf("network/dhcp/services: %v", err)
+	}
+	fmt.Println("\ndhcp services (first page):")
+	prettyPrint(dhcp)
+
+	// 5. Catalog-driven call: get a single endpoint by (group, name).
+	raw, err := api.Call(ctx, "interfaces", "wan-config", "GET", nil, nil)
+	if err != nil {
+		log.Fatalf("interfaces/wan-config: %v", err)
+	}
+	fmt.Println("\ninterfaces/wan-config:")
+	prettyPrint(raw)
+
+	// 6. Create dry-run (no router traffic) — only meaningful in dry-run mode.
+	preview, err := api.Auth().CreateAuthUsers(ctx, map[string]any{
+		"username": "alice",
+		"password": "demo",
+		"enabled":  "yes",
+	})
+	if err != nil {
+		log.Fatalf("create auth user: %v", err)
+	}
+	fmt.Println("\ncreate preview (id=0 in dry-run):")
+	fmt.Printf("  %+v\n", preview)
 }
 
-func customConfigExample() {
-	// Create client with custom HTTP client for debugging
-	// Note: This requires importing github.com/imroc/req/v3
-	fmt.Println("Custom HTTP client configuration example:")
-	fmt.Println(`
-import "github.com/imroc/req/v3"
-
-customReqClient := req.C().
-    SetTimeout(60*time.Second).
-    EnableInsecureSkipVerify().
-    EnableDumpEachRequest()  // Enable request/response dump for debugging
-
-client := ikuaiapi.NewClient(
-    "http://192.168.1.1",
-    "admin",
-    "password",
-    ikuaiapi.WithHTTPClient(customReqClient),
-)
-	`)
-
-	// Example with cache enabled
-	fmt.Println("\nExample with cache enabled:")
-	fmt.Println(`
-client, _ := ikuaiapi.NewClientWithLogin("http://192.168.1.1", "admin", "password")
-client.EnableCache(5 * time.Minute)  // Cache responses for 5 minutes
-defer client.DisableCache()
-	`)
+func prettyPrint(v any) {
+	b, _ := json.MarshalIndent(v, "", "  ")
+	fmt.Println(string(b))
 }

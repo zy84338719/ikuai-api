@@ -100,6 +100,23 @@ var V4EndpointCatalog = []V4Endpoint{
 	{Group: "objects", Name: "port-objects", Path: "/port-objects", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
 	{Group: "objects", Name: "protocol-objects", Path: "/protocol-objects", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
 	{Group: "objects", Name: "time-objects", Path: "/time-objects", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
+	{Group: "system", Name: "ac-clients", Path: "/clients", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
+	{Group: "system", Name: "ac-peers", Path: "/peers", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
+	{Group: "system", Name: "ac-ref", Path: "/ref", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
+	{Group: "system", Name: "ac-services", Path: "/services", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
+	{Group: "system", Name: "backup", Path: "/system/backup", Methods: []string{"GET", "POST"}},
+	{Group: "system", Name: "backup-auto", Path: "/system/backup-auto", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
+	{Group: "system", Name: "backup-restore", Path: "/system/backup:restore", Methods: []string{"POST"}},
+	{Group: "system", Name: "disks", Path: "/system/disks", Methods: []string{"GET"}},
+	{Group: "system", Name: "files", Path: "/system/files", Methods: []string{"GET"}},
+	{Group: "system", Name: "upgrade", Path: "/system/upgrade", Methods: []string{"GET", "POST"}},
+	{Group: "system", Name: "upgrade-check", Path: "/system/upgrade:check", Methods: []string{"POST"}},
+	{Group: "system", Name: "upgrade-start", Path: "/system/upgrade:start", Methods: []string{"POST"}},
+	{Group: "system", Name: "upgrade-status", Path: "/system/upgrade:status", Methods: []string{"GET"}},
+	{Group: "system", Name: "web-admin-accounts", Path: "/system/web-admin/accounts", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
+	{Group: "system", Name: "web-admin-groups", Path: "/system/web-admin/groups", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
+	{Group: "system", Name: "web-admin-password", Path: "/system/web-admin/password", Methods: []string{"PUT"}},
+	{Group: "system", Name: "web-admin-password-status", Path: "/system/web-admin/password-status", Methods: []string{"GET"}},
 	{Group: "routing", Name: "app-protocols", Path: "/routing/app-protocols", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 	{Group: "routing", Name: "domain-rules", Path: "/routing/domain-rules", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 	{Group: "routing", Name: "five-tuple-rules", Path: "/routing/five-tuple-rules", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
@@ -157,6 +174,18 @@ func V4EndpointsByGroup(group string) []V4Endpoint {
 func V4EndpointByName(name string) (V4Endpoint, bool) {
 	for _, endpoint := range V4EndpointCatalog {
 		if endpoint.Name == name {
+			return endpoint, true
+		}
+	}
+	return V4Endpoint{}, false
+}
+
+// V4EndpointByGroupName resolves an endpoint by its (group, name) pair.
+// Use this when the same Name appears under multiple Groups (e.g.
+// "system" exists in both "log" and "monitoring").
+func V4EndpointByGroupName(group, name string) (V4Endpoint, bool) {
+	for _, endpoint := range V4EndpointCatalog {
+		if endpoint.Group == group && endpoint.Name == name {
 			return endpoint, true
 		}
 	}

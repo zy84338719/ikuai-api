@@ -1,3 +1,16 @@
-coverage.out
+# Build artifacts
+/bin/
+/dist/
+/coverage.out
+/coverage.html
 *.test
-bin/
+*.out
+
+# Editor
+.idea/
+.vscode/
+.DS_Store
+
+# Go workspace files
+go.work
+go.work.sum
