@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"strconv"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // NetworkService is the typed v4 entry point for the "network" group.
@@ -30,6 +30,7 @@ func pathGroupNetwork() []V4Endpoint {
 	}
 	return out
 }
+
 
 // NetworkAcApConfig wraps network ac-ap-config.
 //
@@ -84,11 +85,23 @@ func (s *NetworkService) UpdateNetworkAcApConfig(ctx context.Context, body any) 
 	return err
 }
 
-// DeleteNetworkAcApConfig removes the resource at /network/ac/ap-config.
+// DeleteNetworkAcApConfig removes the resource at /network/ac/ap-config. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteNetworkAcApConfigWithBody to send a custom JSON body instead.
 func (s *NetworkService) DeleteNetworkAcApConfig(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/network/ac/ap-config", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/network/ac/ap-config"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteNetworkAcApConfigWithBody removes the resource at /network/ac/ap-config with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteNetworkAcApConfig cannot model directly).
+func (s *NetworkService) DeleteNetworkAcApConfigWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/network/ac/ap-config", body)
+	return err
+}
+
 
 // NetworkAcServices wraps network ac-services.
 //
@@ -143,23 +156,29 @@ func (s *NetworkService) UpdateNetworkAcServices(ctx context.Context, body any) 
 	return err
 }
 
+
 // NetworkAcServicesStart wraps network ac-services-start.
 //
 // Methods: POST
 //
 // Path: /network/ac/services:start
-func (s *NetworkService) DoNetworkAcServicesStart(ctx context.Context, body any) (json.RawMessage, error) {
+// StartNetworkAcServices Start the resource at /network/ac/services:start. body is sent as JSON;
+// pass nil if the action takes no parameters.
+func (s *NetworkService) StartNetworkAcServices(ctx context.Context, body any) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/network/ac/services:start", body)
 }
+
 
 // NetworkAcServicesStop wraps network ac-services-stop.
 //
 // Methods: POST
 //
 // Path: /network/ac/services:stop
-func (s *NetworkService) DoNetworkAcServicesStop(ctx context.Context, body any) (json.RawMessage, error) {
-	return s.client.Post(ctx, "/network/ac/services:stop", body)
+// StopNetworkAcServices Stop the resource at /network/ac/services:stop. No body is required.
+func (s *NetworkService) StopNetworkAcServices(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Post(ctx, "/network/ac/services:stop", map[string]any{})
 }
+
 
 // NetworkDhcpAccessControlMode wraps network dhcp-access-control-mode.
 //
@@ -213,6 +232,7 @@ func (s *NetworkService) UpdateNetworkDhcpAccessControlMode(ctx context.Context,
 	_, err := s.client.Put(ctx, "/network/dhcp/access-control/mode", body)
 	return err
 }
+
 
 // NetworkDhcpAccessControlRules wraps network dhcp-access-control-rules.
 //
@@ -283,11 +303,23 @@ func (s *NetworkService) PatchNetworkDhcpAccessControlRules(ctx context.Context,
 	return err
 }
 
-// DeleteNetworkDhcpAccessControlRules removes the resource at /network/dhcp/access-control/rules.
+// DeleteNetworkDhcpAccessControlRules removes the resource at /network/dhcp/access-control/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteNetworkDhcpAccessControlRulesWithBody to send a custom JSON body instead.
 func (s *NetworkService) DeleteNetworkDhcpAccessControlRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/network/dhcp/access-control/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/network/dhcp/access-control/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteNetworkDhcpAccessControlRulesWithBody removes the resource at /network/dhcp/access-control/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteNetworkDhcpAccessControlRules cannot model directly).
+func (s *NetworkService) DeleteNetworkDhcpAccessControlRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/network/dhcp/access-control/rules", body)
+	return err
+}
+
 
 // NetworkDhcpClients wraps network dhcp-clients.
 //
@@ -299,6 +331,7 @@ func (s *NetworkService) DeleteNetworkDhcpAccessControlRules(ctx context.Context
 func (s *NetworkService) GetNetworkDhcpClients(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/network/dhcp/clients", nil)
 }
+
 
 // NetworkDhcpServices wraps network dhcp-services.
 //
@@ -369,32 +402,40 @@ func (s *NetworkService) PatchNetworkDhcpServices(ctx context.Context, body any)
 	return err
 }
 
+
 // NetworkDhcpServicesRestart wraps network dhcp-services-restart.
 //
 // Methods: POST
 //
 // Path: /network/dhcp/services:restart
-func (s *NetworkService) DoNetworkDhcpServicesRestart(ctx context.Context, body any) (json.RawMessage, error) {
-	return s.client.Post(ctx, "/network/dhcp/services:restart", body)
+// RestartNetworkDhcpServices Restart the resource at /network/dhcp/services:restart. No body is required.
+func (s *NetworkService) RestartNetworkDhcpServices(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Post(ctx, "/network/dhcp/services:restart", map[string]any{})
 }
+
 
 // NetworkDhcpServicesStart wraps network dhcp-services-start.
 //
 // Methods: POST
 //
 // Path: /network/dhcp/services:start
-func (s *NetworkService) DoNetworkDhcpServicesStart(ctx context.Context, body any) (json.RawMessage, error) {
+// StartNetworkDhcpServices Start the resource at /network/dhcp/services:start. body is sent as JSON;
+// pass nil if the action takes no parameters.
+func (s *NetworkService) StartNetworkDhcpServices(ctx context.Context, body any) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/network/dhcp/services:start", body)
 }
+
 
 // NetworkDhcpServicesStop wraps network dhcp-services-stop.
 //
 // Methods: POST
 //
 // Path: /network/dhcp/services:stop
-func (s *NetworkService) DoNetworkDhcpServicesStop(ctx context.Context, body any) (json.RawMessage, error) {
-	return s.client.Post(ctx, "/network/dhcp/services:stop", body)
+// StopNetworkDhcpServices Stop the resource at /network/dhcp/services:stop. No body is required.
+func (s *NetworkService) StopNetworkDhcpServices(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Post(ctx, "/network/dhcp/services:stop", map[string]any{})
 }
+
 
 // NetworkDhcpStatic wraps network dhcp-static.
 //
@@ -465,6 +506,7 @@ func (s *NetworkService) PatchNetworkDhcpStatic(ctx context.Context, body any) e
 	return err
 }
 
+
 // NetworkDhcp6AccessControlMode wraps network dhcp6-access-control-mode.
 //
 // Methods: GET, PUT
@@ -517,6 +559,7 @@ func (s *NetworkService) UpdateNetworkDhcp6AccessControlMode(ctx context.Context
 	_, err := s.client.Put(ctx, "/network/dhcp6/access-control/mode", body)
 	return err
 }
+
 
 // NetworkDhcp6AccessControlRules wraps network dhcp6-access-control-rules.
 //
@@ -587,6 +630,7 @@ func (s *NetworkService) PatchNetworkDhcp6AccessControlRules(ctx context.Context
 	return err
 }
 
+
 // NetworkDhcp6Clients wraps network dhcp6-clients.
 //
 // Methods: GET
@@ -597,6 +641,7 @@ func (s *NetworkService) PatchNetworkDhcp6AccessControlRules(ctx context.Context
 func (s *NetworkService) GetNetworkDhcp6Clients(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/network/dhcp6/clients", nil)
 }
+
 
 // NetworkDmzRules wraps network dmz-rules.
 //
@@ -667,11 +712,23 @@ func (s *NetworkService) PatchNetworkDmzRules(ctx context.Context, body any) err
 	return err
 }
 
-// DeleteNetworkDmzRules removes the resource at /network/dmz/rules.
+// DeleteNetworkDmzRules removes the resource at /network/dmz/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteNetworkDmzRulesWithBody to send a custom JSON body instead.
 func (s *NetworkService) DeleteNetworkDmzRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/network/dmz/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/network/dmz/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteNetworkDmzRulesWithBody removes the resource at /network/dmz/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteNetworkDmzRules cannot model directly).
+func (s *NetworkService) DeleteNetworkDmzRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/network/dmz/rules", body)
+	return err
+}
+
 
 // NetworkDnatRules wraps network dnat-rules.
 //
@@ -742,11 +799,23 @@ func (s *NetworkService) PatchNetworkDnatRules(ctx context.Context, body any) er
 	return err
 }
 
-// DeleteNetworkDnatRules removes the resource at /network/dnat/rules.
+// DeleteNetworkDnatRules removes the resource at /network/dnat/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteNetworkDnatRulesWithBody to send a custom JSON body instead.
 func (s *NetworkService) DeleteNetworkDnatRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/network/dnat/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/network/dnat/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteNetworkDnatRulesWithBody removes the resource at /network/dnat/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteNetworkDnatRules cannot model directly).
+func (s *NetworkService) DeleteNetworkDnatRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/network/dnat/rules", body)
+	return err
+}
+
 
 // NetworkDnsConfig wraps network dns-config.
 //
@@ -800,6 +869,7 @@ func (s *NetworkService) UpdateNetworkDnsConfig(ctx context.Context, body any) e
 	_, err := s.client.Put(ctx, "/network/dns/config", body)
 	return err
 }
+
 
 // NetworkDnsProxyRules wraps network dns-proxy-rules.
 //
@@ -864,6 +934,7 @@ func (s *NetworkService) UpdateNetworkDnsProxyRules(ctx context.Context, body an
 	return err
 }
 
+
 // NetworkDnsStats wraps network dns-stats.
 //
 // Methods: GET
@@ -874,6 +945,7 @@ func (s *NetworkService) UpdateNetworkDnsProxyRules(ctx context.Context, body an
 func (s *NetworkService) GetNetworkDnsStats(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/network/dns/stats", nil)
 }
+
 
 // NetworkNatRules wraps network nat-rules.
 //
@@ -944,11 +1016,23 @@ func (s *NetworkService) PatchNetworkNatRules(ctx context.Context, body any) err
 	return err
 }
 
-// DeleteNetworkNatRules removes the resource at /network/nat/rules.
+// DeleteNetworkNatRules removes the resource at /network/nat/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteNetworkNatRulesWithBody to send a custom JSON body instead.
 func (s *NetworkService) DeleteNetworkNatRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/network/nat/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/network/nat/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteNetworkNatRulesWithBody removes the resource at /network/nat/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteNetworkNatRules cannot model directly).
+func (s *NetworkService) DeleteNetworkNatRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/network/nat/rules", body)
+	return err
+}
+
 
 // NetworkPppoeServices wraps network pppoe-services.
 //
@@ -1002,6 +1086,7 @@ func (s *NetworkService) UpdateNetworkPppoeServices(ctx context.Context, body an
 	_, err := s.client.Put(ctx, "/network/pppoe/services", body)
 	return err
 }
+
 
 // NetworkQosIp wraps network qos-ip.
 //
@@ -1072,11 +1157,23 @@ func (s *NetworkService) PatchNetworkQosIp(ctx context.Context, body any) error 
 	return err
 }
 
-// DeleteNetworkQosIp removes the resource at /network/qos/ip.
+// DeleteNetworkQosIp removes the resource at /network/qos/ip. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteNetworkQosIpWithBody to send a custom JSON body instead.
 func (s *NetworkService) DeleteNetworkQosIp(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/network/qos/ip", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/network/qos/ip"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteNetworkQosIpWithBody removes the resource at /network/qos/ip with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteNetworkQosIp cannot model directly).
+func (s *NetworkService) DeleteNetworkQosIpWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/network/qos/ip", body)
+	return err
+}
+
 
 // NetworkQosMac wraps network qos-mac.
 //
@@ -1147,11 +1244,23 @@ func (s *NetworkService) PatchNetworkQosMac(ctx context.Context, body any) error
 	return err
 }
 
-// DeleteNetworkQosMac removes the resource at /network/qos/mac.
+// DeleteNetworkQosMac removes the resource at /network/qos/mac. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteNetworkQosMacWithBody to send a custom JSON body instead.
 func (s *NetworkService) DeleteNetworkQosMac(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/network/qos/mac", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/network/qos/mac"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteNetworkQosMacWithBody removes the resource at /network/qos/mac with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteNetworkQosMac cannot model directly).
+func (s *NetworkService) DeleteNetworkQosMacWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/network/qos/mac", body)
+	return err
+}
+
 
 // NetworkVlan wraps network vlan.
 //
@@ -1221,3 +1330,20 @@ func (s *NetworkService) PatchNetworkVlan(ctx context.Context, body any) error {
 	_, err := s.client.Patch(ctx, "/network/vlan", body)
 	return err
 }
+
+
+// Field hints for this group (iKuai firmware field names):
+//   name             Rule name (required for create, used in list views)
+//   action           NAT action: filter | dnat | snat
+//   protocol         Protocol: tcp | udp | any
+//   in_interface     Inbound interface (wan1, lan1, …)
+//   out_interface    Outbound interface
+//   comment          Free-form comment, shown in the web UI
+//   wan_port         WAN port (NAT rule). Single port, range, or comma list
+//   lan_addr         LAN target address (DNAT). IP or CIDR
+//   lan_port         LAN target port (DNAT)
+//   src_addr         Source address(es). Comma-separated IP/CIDR groups
+//   dst_addr         Destination address(es). Comma-separated IP/CIDR groups
+//   src_port         Source port(s). Comma-separated ports/ranges
+//   dst_port         Destination port(s). Comma-separated ports/ranges
+//   enabled          yes | no. Whether the rule is active

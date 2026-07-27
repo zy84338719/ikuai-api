@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"strconv"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // LogService is the typed v4 entry point for the "log" group.
@@ -30,6 +30,7 @@ func pathGroupLog() []V4Endpoint {
 	}
 	return out
 }
+
 
 // LogArp wraps log arp.
 //
@@ -78,11 +79,23 @@ func (s *LogService) GetLogArp(ctx context.Context, id int64) (json.RawMessage, 
 	return s.client.Get(ctx, "/log/arp", q)
 }
 
-// DeleteLogArp removes the resource at /log/arp.
+// DeleteLogArp removes the resource at /log/arp. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteLogArpWithBody to send a custom JSON body instead.
 func (s *LogService) DeleteLogArp(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/log/arp", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/log/arp"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteLogArpWithBody removes the resource at /log/arp with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteLogArp cannot model directly).
+func (s *LogService) DeleteLogArpWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/log/arp", body)
+	return err
+}
+
 
 // LogAuth wraps log auth.
 //
@@ -131,11 +144,23 @@ func (s *LogService) GetLogAuth(ctx context.Context, id int64) (json.RawMessage,
 	return s.client.Get(ctx, "/log/auth", q)
 }
 
-// DeleteLogAuth removes the resource at /log/auth.
+// DeleteLogAuth removes the resource at /log/auth. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteLogAuthWithBody to send a custom JSON body instead.
 func (s *LogService) DeleteLogAuth(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/log/auth", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/log/auth"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteLogAuthWithBody removes the resource at /log/auth with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteLogAuth cannot model directly).
+func (s *LogService) DeleteLogAuthWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/log/auth", body)
+	return err
+}
+
 
 // LogDdns wraps log ddns.
 //
@@ -184,11 +209,23 @@ func (s *LogService) GetLogDdns(ctx context.Context, id int64) (json.RawMessage,
 	return s.client.Get(ctx, "/log/ddns", q)
 }
 
-// DeleteLogDdns removes the resource at /log/ddns.
+// DeleteLogDdns removes the resource at /log/ddns. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteLogDdnsWithBody to send a custom JSON body instead.
 func (s *LogService) DeleteLogDdns(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/log/ddns", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/log/ddns"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteLogDdnsWithBody removes the resource at /log/ddns with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteLogDdns cannot model directly).
+func (s *LogService) DeleteLogDdnsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/log/ddns", body)
+	return err
+}
+
 
 // LogDhcp wraps log dhcp.
 //
@@ -237,11 +274,23 @@ func (s *LogService) GetLogDhcp(ctx context.Context, id int64) (json.RawMessage,
 	return s.client.Get(ctx, "/log/dhcp", q)
 }
 
-// DeleteLogDhcp removes the resource at /log/dhcp.
+// DeleteLogDhcp removes the resource at /log/dhcp. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteLogDhcpWithBody to send a custom JSON body instead.
 func (s *LogService) DeleteLogDhcp(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/log/dhcp", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/log/dhcp"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteLogDhcpWithBody removes the resource at /log/dhcp with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteLogDhcp cannot model directly).
+func (s *LogService) DeleteLogDhcpWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/log/dhcp", body)
+	return err
+}
+
 
 // LogNotice wraps log notice.
 //
@@ -290,11 +339,23 @@ func (s *LogService) GetLogNotice(ctx context.Context, id int64) (json.RawMessag
 	return s.client.Get(ctx, "/log/notice", q)
 }
 
-// DeleteLogNotice removes the resource at /log/notice.
+// DeleteLogNotice removes the resource at /log/notice. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteLogNoticeWithBody to send a custom JSON body instead.
 func (s *LogService) DeleteLogNotice(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/log/notice", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/log/notice"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteLogNoticeWithBody removes the resource at /log/notice with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteLogNotice cannot model directly).
+func (s *LogService) DeleteLogNoticeWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/log/notice", body)
+	return err
+}
+
 
 // LogPppoe wraps log pppoe.
 //
@@ -343,11 +404,23 @@ func (s *LogService) GetLogPppoe(ctx context.Context, id int64) (json.RawMessage
 	return s.client.Get(ctx, "/log/pppoe", q)
 }
 
-// DeleteLogPppoe removes the resource at /log/pppoe.
+// DeleteLogPppoe removes the resource at /log/pppoe. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteLogPppoeWithBody to send a custom JSON body instead.
 func (s *LogService) DeleteLogPppoe(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/log/pppoe", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/log/pppoe"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteLogPppoeWithBody removes the resource at /log/pppoe with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteLogPppoe cannot model directly).
+func (s *LogService) DeleteLogPppoeWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/log/pppoe", body)
+	return err
+}
+
 
 // LogSystem wraps log system.
 //
@@ -396,11 +469,23 @@ func (s *LogService) GetLogSystem(ctx context.Context, id int64) (json.RawMessag
 	return s.client.Get(ctx, "/log/system", q)
 }
 
-// DeleteLogSystem removes the resource at /log/system.
+// DeleteLogSystem removes the resource at /log/system. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteLogSystemWithBody to send a custom JSON body instead.
 func (s *LogService) DeleteLogSystem(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/log/system", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/log/system"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteLogSystemWithBody removes the resource at /log/system with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteLogSystem cannot model directly).
+func (s *LogService) DeleteLogSystemWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/log/system", body)
+	return err
+}
+
 
 // LogWebActivity wraps log web-activity.
 //
@@ -449,11 +534,23 @@ func (s *LogService) GetLogWebActivity(ctx context.Context, id int64) (json.RawM
 	return s.client.Get(ctx, "/log/web_activity", q)
 }
 
-// DeleteLogWebActivity removes the resource at /log/web_activity.
+// DeleteLogWebActivity removes the resource at /log/web_activity. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteLogWebActivityWithBody to send a custom JSON body instead.
 func (s *LogService) DeleteLogWebActivity(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/log/web_activity", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/log/web_activity"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteLogWebActivityWithBody removes the resource at /log/web_activity with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteLogWebActivity cannot model directly).
+func (s *LogService) DeleteLogWebActivityWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/log/web_activity", body)
+	return err
+}
+
 
 // LogWireless wraps log wireless.
 //
@@ -502,8 +599,20 @@ func (s *LogService) GetLogWireless(ctx context.Context, id int64) (json.RawMess
 	return s.client.Get(ctx, "/log/wireless", q)
 }
 
-// DeleteLogWireless removes the resource at /log/wireless.
+// DeleteLogWireless removes the resource at /log/wireless. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteLogWirelessWithBody to send a custom JSON body instead.
 func (s *LogService) DeleteLogWireless(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/log/wireless", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/log/wireless"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteLogWirelessWithBody removes the resource at /log/wireless with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteLogWireless cannot model directly).
+func (s *LogService) DeleteLogWirelessWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/log/wireless", body)
+	return err
+}
+

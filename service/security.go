@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"strconv"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // SecurityService is the typed v4 entry point for the "security" group.
@@ -30,6 +30,7 @@ func pathGroupSecurity() []V4Endpoint {
 	}
 	return out
 }
+
 
 // SecurityAclRules wraps security acl-rules.
 //
@@ -100,11 +101,23 @@ func (s *SecurityService) PatchSecurityAclRules(ctx context.Context, body any) e
 	return err
 }
 
-// DeleteSecurityAclRules removes the resource at /security/acl-rules.
+// DeleteSecurityAclRules removes the resource at /security/acl-rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSecurityAclRulesWithBody to send a custom JSON body instead.
 func (s *SecurityService) DeleteSecurityAclRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/security/acl-rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/security/acl-rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSecurityAclRulesWithBody removes the resource at /security/acl-rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSecurityAclRules cannot model directly).
+func (s *SecurityService) DeleteSecurityAclRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/security/acl-rules", body)
+	return err
+}
+
 
 // SecurityAdvancedConfig wraps security advanced-config.
 //
@@ -158,6 +171,7 @@ func (s *SecurityService) UpdateSecurityAdvancedConfig(ctx context.Context, body
 	_, err := s.client.Put(ctx, "/security/advanced/config", body)
 	return err
 }
+
 
 // SecurityAppProtocolsProfessionalRules wraps security app-protocols-professional-rules.
 //
@@ -228,11 +242,23 @@ func (s *SecurityService) PatchSecurityAppProtocolsProfessionalRules(ctx context
 	return err
 }
 
-// DeleteSecurityAppProtocolsProfessionalRules removes the resource at /security/app-protocols/professional/rules.
+// DeleteSecurityAppProtocolsProfessionalRules removes the resource at /security/app-protocols/professional/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSecurityAppProtocolsProfessionalRulesWithBody to send a custom JSON body instead.
 func (s *SecurityService) DeleteSecurityAppProtocolsProfessionalRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/security/app-protocols/professional/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/security/app-protocols/professional/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSecurityAppProtocolsProfessionalRulesWithBody removes the resource at /security/app-protocols/professional/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSecurityAppProtocolsProfessionalRules cannot model directly).
+func (s *SecurityService) DeleteSecurityAppProtocolsProfessionalRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/security/app-protocols/professional/rules", body)
+	return err
+}
+
 
 // SecurityDomainBlacklistRules wraps security domain-blacklist-rules.
 //
@@ -303,11 +329,23 @@ func (s *SecurityService) PatchSecurityDomainBlacklistRules(ctx context.Context,
 	return err
 }
 
-// DeleteSecurityDomainBlacklistRules removes the resource at /security/domain-blacklist/rules.
+// DeleteSecurityDomainBlacklistRules removes the resource at /security/domain-blacklist/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSecurityDomainBlacklistRulesWithBody to send a custom JSON body instead.
 func (s *SecurityService) DeleteSecurityDomainBlacklistRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/security/domain-blacklist/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/security/domain-blacklist/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSecurityDomainBlacklistRulesWithBody removes the resource at /security/domain-blacklist/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSecurityDomainBlacklistRules cannot model directly).
+func (s *SecurityService) DeleteSecurityDomainBlacklistRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/security/domain-blacklist/rules", body)
+	return err
+}
+
 
 // SecurityMacMode wraps security mac-mode.
 //
@@ -361,6 +399,7 @@ func (s *SecurityService) UpdateSecurityMacMode(ctx context.Context, body any) e
 	_, err := s.client.Put(ctx, "/security/mac-mode", body)
 	return err
 }
+
 
 // SecurityMacRules wraps security mac-rules.
 //
@@ -431,11 +470,23 @@ func (s *SecurityService) PatchSecurityMacRules(ctx context.Context, body any) e
 	return err
 }
 
-// DeleteSecurityMacRules removes the resource at /security/mac-rules.
+// DeleteSecurityMacRules removes the resource at /security/mac-rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSecurityMacRulesWithBody to send a custom JSON body instead.
 func (s *SecurityService) DeleteSecurityMacRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/security/mac-rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/security/mac-rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSecurityMacRulesWithBody removes the resource at /security/mac-rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSecurityMacRules cannot model directly).
+func (s *SecurityService) DeleteSecurityMacRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/security/mac-rules", body)
+	return err
+}
+
 
 // SecurityPeerconnRules wraps security peerconn-rules.
 //
@@ -506,11 +557,23 @@ func (s *SecurityService) PatchSecurityPeerconnRules(ctx context.Context, body a
 	return err
 }
 
-// DeleteSecurityPeerconnRules removes the resource at /security/peerconn/rules.
+// DeleteSecurityPeerconnRules removes the resource at /security/peerconn/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSecurityPeerconnRulesWithBody to send a custom JSON body instead.
 func (s *SecurityService) DeleteSecurityPeerconnRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/security/peerconn/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/security/peerconn/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSecurityPeerconnRulesWithBody removes the resource at /security/peerconn/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSecurityPeerconnRules cannot model directly).
+func (s *SecurityService) DeleteSecurityPeerconnRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/security/peerconn/rules", body)
+	return err
+}
+
 
 // SecuritySecondaryRouteConfig wraps security secondary-route-config.
 //
@@ -564,6 +627,7 @@ func (s *SecurityService) UpdateSecuritySecondaryRouteConfig(ctx context.Context
 	_, err := s.client.Put(ctx, "/security/secondary-route/config", body)
 	return err
 }
+
 
 // SecurityTerminals wraps security terminals.
 //
@@ -634,11 +698,23 @@ func (s *SecurityService) PatchSecurityTerminals(ctx context.Context, body any) 
 	return err
 }
 
-// DeleteSecurityTerminals removes the resource at /security/terminals.
+// DeleteSecurityTerminals removes the resource at /security/terminals. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSecurityTerminalsWithBody to send a custom JSON body instead.
 func (s *SecurityService) DeleteSecurityTerminals(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/security/terminals", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/security/terminals"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSecurityTerminalsWithBody removes the resource at /security/terminals with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSecurityTerminals cannot model directly).
+func (s *SecurityService) DeleteSecurityTerminalsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/security/terminals", body)
+	return err
+}
+
 
 // SecurityUrlBlackRules wraps security url-black-rules.
 //
@@ -709,11 +785,23 @@ func (s *SecurityService) PatchSecurityUrlBlackRules(ctx context.Context, body a
 	return err
 }
 
-// DeleteSecurityUrlBlackRules removes the resource at /security/url-black/rules.
+// DeleteSecurityUrlBlackRules removes the resource at /security/url-black/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSecurityUrlBlackRulesWithBody to send a custom JSON body instead.
 func (s *SecurityService) DeleteSecurityUrlBlackRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/security/url-black/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/security/url-black/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSecurityUrlBlackRulesWithBody removes the resource at /security/url-black/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSecurityUrlBlackRules cannot model directly).
+func (s *SecurityService) DeleteSecurityUrlBlackRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/security/url-black/rules", body)
+	return err
+}
+
 
 // SecurityUrlKeywordsRules wraps security url-keywords-rules.
 //
@@ -784,11 +872,23 @@ func (s *SecurityService) PatchSecurityUrlKeywordsRules(ctx context.Context, bod
 	return err
 }
 
-// DeleteSecurityUrlKeywordsRules removes the resource at /security/url-keywords/rules.
+// DeleteSecurityUrlKeywordsRules removes the resource at /security/url-keywords/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSecurityUrlKeywordsRulesWithBody to send a custom JSON body instead.
 func (s *SecurityService) DeleteSecurityUrlKeywordsRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/security/url-keywords/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/security/url-keywords/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSecurityUrlKeywordsRulesWithBody removes the resource at /security/url-keywords/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSecurityUrlKeywordsRules cannot model directly).
+func (s *SecurityService) DeleteSecurityUrlKeywordsRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/security/url-keywords/rules", body)
+	return err
+}
+
 
 // SecurityUrlRedirectRules wraps security url-redirect-rules.
 //
@@ -859,11 +959,23 @@ func (s *SecurityService) PatchSecurityUrlRedirectRules(ctx context.Context, bod
 	return err
 }
 
-// DeleteSecurityUrlRedirectRules removes the resource at /security/url-redirect/rules.
+// DeleteSecurityUrlRedirectRules removes the resource at /security/url-redirect/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSecurityUrlRedirectRulesWithBody to send a custom JSON body instead.
 func (s *SecurityService) DeleteSecurityUrlRedirectRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/security/url-redirect/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/security/url-redirect/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSecurityUrlRedirectRulesWithBody removes the resource at /security/url-redirect/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSecurityUrlRedirectRules cannot model directly).
+func (s *SecurityService) DeleteSecurityUrlRedirectRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/security/url-redirect/rules", body)
+	return err
+}
+
 
 // SecurityUrlReplaceRules wraps security url-replace-rules.
 //
@@ -934,8 +1046,20 @@ func (s *SecurityService) PatchSecurityUrlReplaceRules(ctx context.Context, body
 	return err
 }
 
-// DeleteSecurityUrlReplaceRules removes the resource at /security/url-replace/rules.
+// DeleteSecurityUrlReplaceRules removes the resource at /security/url-replace/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteSecurityUrlReplaceRulesWithBody to send a custom JSON body instead.
 func (s *SecurityService) DeleteSecurityUrlReplaceRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/security/url-replace/rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/security/url-replace/rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteSecurityUrlReplaceRulesWithBody removes the resource at /security/url-replace/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteSecurityUrlReplaceRules cannot model directly).
+func (s *SecurityService) DeleteSecurityUrlReplaceRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/security/url-replace/rules", body)
+	return err
+}
+

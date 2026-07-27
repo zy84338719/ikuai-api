@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"strconv"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // VpnService is the typed v4 entry point for the "vpn" group.
@@ -30,6 +30,7 @@ func pathGroupVpn() []V4Endpoint {
 	}
 	return out
 }
+
 
 // VpnIkev2 wraps vpn ikev2.
 //
@@ -83,6 +84,7 @@ func (s *VpnService) UpdateVpnIkev2(ctx context.Context, body any) error {
 	_, err := s.client.Put(ctx, "/vpn/ikev2", body)
 	return err
 }
+
 
 // VpnIkev2Clients wraps vpn ikev2-clients.
 //
@@ -153,11 +155,23 @@ func (s *VpnService) PatchVpnIkev2Clients(ctx context.Context, body any) error {
 	return err
 }
 
-// DeleteVpnIkev2Clients removes the resource at /vpn/ikev2/clients.
+// DeleteVpnIkev2Clients removes the resource at /vpn/ikev2/clients. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteVpnIkev2ClientsWithBody to send a custom JSON body instead.
 func (s *VpnService) DeleteVpnIkev2Clients(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/vpn/ikev2/clients", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/vpn/ikev2/clients"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteVpnIkev2ClientsWithBody removes the resource at /vpn/ikev2/clients with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteVpnIkev2Clients cannot model directly).
+func (s *VpnService) DeleteVpnIkev2ClientsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/vpn/ikev2/clients", body)
+	return err
+}
+
 
 // VpnIpsecClients wraps vpn ipsec-clients.
 //
@@ -228,11 +242,23 @@ func (s *VpnService) PatchVpnIpsecClients(ctx context.Context, body any) error {
 	return err
 }
 
-// DeleteVpnIpsecClients removes the resource at /vpn/ipsec/clients.
+// DeleteVpnIpsecClients removes the resource at /vpn/ipsec/clients. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteVpnIpsecClientsWithBody to send a custom JSON body instead.
 func (s *VpnService) DeleteVpnIpsecClients(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/vpn/ipsec/clients", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/vpn/ipsec/clients"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteVpnIpsecClientsWithBody removes the resource at /vpn/ipsec/clients with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteVpnIpsecClients cannot model directly).
+func (s *VpnService) DeleteVpnIpsecClientsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/vpn/ipsec/clients", body)
+	return err
+}
+
 
 // VpnL2Tp wraps vpn l2tp.
 //
@@ -286,6 +312,7 @@ func (s *VpnService) UpdateVpnL2Tp(ctx context.Context, body any) error {
 	_, err := s.client.Put(ctx, "/vpn/l2tp", body)
 	return err
 }
+
 
 // VpnL2TpClients wraps vpn l2tp-clients.
 //
@@ -356,11 +383,23 @@ func (s *VpnService) PatchVpnL2TpClients(ctx context.Context, body any) error {
 	return err
 }
 
-// DeleteVpnL2TpClients removes the resource at /vpn/l2tp/clients.
+// DeleteVpnL2TpClients removes the resource at /vpn/l2tp/clients. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteVpnL2TpClientsWithBody to send a custom JSON body instead.
 func (s *VpnService) DeleteVpnL2TpClients(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/vpn/l2tp/clients", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/vpn/l2tp/clients"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteVpnL2TpClientsWithBody removes the resource at /vpn/l2tp/clients with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteVpnL2TpClients cannot model directly).
+func (s *VpnService) DeleteVpnL2TpClientsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/vpn/l2tp/clients", body)
+	return err
+}
+
 
 // VpnOpenvpn wraps vpn openvpn.
 //
@@ -414,6 +453,7 @@ func (s *VpnService) UpdateVpnOpenvpn(ctx context.Context, body any) error {
 	_, err := s.client.Put(ctx, "/vpn/openvpn", body)
 	return err
 }
+
 
 // VpnOpenvpnClients wraps vpn openvpn-clients.
 //
@@ -484,11 +524,23 @@ func (s *VpnService) PatchVpnOpenvpnClients(ctx context.Context, body any) error
 	return err
 }
 
-// DeleteVpnOpenvpnClients removes the resource at /vpn/openvpn/clients.
+// DeleteVpnOpenvpnClients removes the resource at /vpn/openvpn/clients. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteVpnOpenvpnClientsWithBody to send a custom JSON body instead.
 func (s *VpnService) DeleteVpnOpenvpnClients(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/vpn/openvpn/clients", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/vpn/openvpn/clients"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteVpnOpenvpnClientsWithBody removes the resource at /vpn/openvpn/clients with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteVpnOpenvpnClients cannot model directly).
+func (s *VpnService) DeleteVpnOpenvpnClientsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/vpn/openvpn/clients", body)
+	return err
+}
+
 
 // VpnPptp wraps vpn pptp.
 //
@@ -542,6 +594,7 @@ func (s *VpnService) UpdateVpnPptp(ctx context.Context, body any) error {
 	_, err := s.client.Put(ctx, "/vpn/pptp", body)
 	return err
 }
+
 
 // VpnPptpClients wraps vpn pptp-clients.
 //
@@ -612,11 +665,23 @@ func (s *VpnService) PatchVpnPptpClients(ctx context.Context, body any) error {
 	return err
 }
 
-// DeleteVpnPptpClients removes the resource at /vpn/pptp/clients.
+// DeleteVpnPptpClients removes the resource at /vpn/pptp/clients. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteVpnPptpClientsWithBody to send a custom JSON body instead.
 func (s *VpnService) DeleteVpnPptpClients(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/vpn/pptp/clients", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/vpn/pptp/clients"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteVpnPptpClientsWithBody removes the resource at /vpn/pptp/clients with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteVpnPptpClients cannot model directly).
+func (s *VpnService) DeleteVpnPptpClientsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/vpn/pptp/clients", body)
+	return err
+}
+
 
 // VpnWireguard wraps vpn wireguard.
 //
@@ -687,8 +752,27 @@ func (s *VpnService) PatchVpnWireguard(ctx context.Context, body any) error {
 	return err
 }
 
-// DeleteVpnWireguard removes the resource at /vpn/wireguard.
+// DeleteVpnWireguard removes the resource at /vpn/wireguard. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteVpnWireguardWithBody to send a custom JSON body instead.
 func (s *VpnService) DeleteVpnWireguard(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/vpn/wireguard", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/vpn/wireguard"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteVpnWireguardWithBody removes the resource at /vpn/wireguard with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteVpnWireguard cannot model directly).
+func (s *VpnService) DeleteVpnWireguardWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/vpn/wireguard", body)
+	return err
+}
+
+
+// Field hints for this group (iKuai firmware field names):
+//   name             Tunnel name
+//   server_ip        VPN server IP (PPTP / L2TP / OpenVPN server)
+//   username         VPN account username
+//   password         VPN account password
+//   enabled          yes | no

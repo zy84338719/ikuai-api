@@ -5,6 +5,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
@@ -30,6 +31,7 @@ func pathGroupMonitoring() []V4Endpoint {
 	return out
 }
 
+
 // MonitoringAppProtocolsHistoryLoad wraps monitoring app-protocols-history-load.
 //
 // Methods: GET
@@ -40,6 +42,7 @@ func pathGroupMonitoring() []V4Endpoint {
 func (s *MonitoringService) GetMonitoringAppProtocolsHistoryLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/app-protocols/history-load", nil)
 }
+
 
 // MonitoringAppProtocolsLoad wraps monitoring app-protocols-load.
 //
@@ -52,6 +55,7 @@ func (s *MonitoringService) GetMonitoringAppProtocolsLoad(ctx context.Context) (
 	return s.client.Get(ctx, "/monitoring/app-protocols/load", nil)
 }
 
+
 // MonitoringAppProtocolsTerminalLoad wraps monitoring app-protocols-terminal-load.
 //
 // Methods: GET
@@ -62,6 +66,7 @@ func (s *MonitoringService) GetMonitoringAppProtocolsLoad(ctx context.Context) (
 func (s *MonitoringService) GetMonitoringAppProtocolsTerminalLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/app-protocols/terminal-load", nil)
 }
+
 
 // MonitoringAppTrafficSummary wraps monitoring app-traffic-summary.
 //
@@ -74,6 +79,7 @@ func (s *MonitoringService) GetMonitoringAppTrafficSummary(ctx context.Context) 
 	return s.client.Get(ctx, "/monitoring/app-traffic-summary", nil)
 }
 
+
 // MonitoringCameras wraps monitoring cameras.
 //
 // Methods: GET
@@ -84,6 +90,7 @@ func (s *MonitoringService) GetMonitoringAppTrafficSummary(ctx context.Context) 
 func (s *MonitoringService) GetMonitoringCameras(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/cameras", nil)
 }
+
 
 // MonitoringChannelClients wraps monitoring channel-clients.
 //
@@ -96,6 +103,7 @@ func (s *MonitoringService) GetMonitoringChannelClients(ctx context.Context) (js
 	return s.client.Get(ctx, "/monitoring/channel-clients", nil)
 }
 
+
 // MonitoringClientsAppProtocolsLoad wraps monitoring clients-app-protocols-load.
 //
 // Methods: GET
@@ -106,6 +114,7 @@ func (s *MonitoringService) GetMonitoringChannelClients(ctx context.Context) (js
 func (s *MonitoringService) GetMonitoringClientsAppProtocolsLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients/app-protocols/load", nil)
 }
+
 
 // MonitoringClientsIp6Offline wraps monitoring clients-ip6-offline.
 //
@@ -118,6 +127,7 @@ func (s *MonitoringService) GetMonitoringClientsIp6Offline(ctx context.Context) 
 	return s.client.Get(ctx, "/monitoring/clients-ip6-offline", nil)
 }
 
+
 // MonitoringClientsIp6Online wraps monitoring clients-ip6-online.
 //
 // Methods: GET
@@ -128,6 +138,7 @@ func (s *MonitoringService) GetMonitoringClientsIp6Offline(ctx context.Context) 
 func (s *MonitoringService) GetMonitoringClientsIp6Online(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients-ip6-online", nil)
 }
+
 
 // MonitoringClientsOffline wraps monitoring clients-offline.
 //
@@ -140,6 +151,7 @@ func (s *MonitoringService) GetMonitoringClientsOffline(ctx context.Context) (js
 	return s.client.Get(ctx, "/monitoring/clients-offline", nil)
 }
 
+
 // MonitoringClientsOnline wraps monitoring clients-online.
 //
 // Methods: GET
@@ -150,6 +162,7 @@ func (s *MonitoringService) GetMonitoringClientsOffline(ctx context.Context) (js
 func (s *MonitoringService) GetMonitoringClientsOnline(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients-online", nil)
 }
+
 
 // MonitoringClientsProtocols wraps monitoring clients-protocols.
 //
@@ -162,6 +175,7 @@ func (s *MonitoringService) GetMonitoringClientsProtocols(ctx context.Context) (
 	return s.client.Get(ctx, "/monitoring/clients/protocols", nil)
 }
 
+
 // MonitoringClientsProtocolsHistoryLoad wraps monitoring clients-protocols-history-load.
 //
 // Methods: GET
@@ -172,6 +186,7 @@ func (s *MonitoringService) GetMonitoringClientsProtocols(ctx context.Context) (
 func (s *MonitoringService) GetMonitoringClientsProtocolsHistoryLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients/protocols/history-load", nil)
 }
+
 
 // MonitoringClientsTrafficLoad wraps monitoring clients-traffic-load.
 //
@@ -184,6 +199,7 @@ func (s *MonitoringService) GetMonitoringClientsTrafficLoad(ctx context.Context)
 	return s.client.Get(ctx, "/monitoring/clients-traffic-load", nil)
 }
 
+
 // MonitoringClientsTrafficSummary wraps monitoring clients-traffic-summary.
 //
 // Methods: GET
@@ -194,6 +210,7 @@ func (s *MonitoringService) GetMonitoringClientsTrafficLoad(ctx context.Context)
 func (s *MonitoringService) GetMonitoringClientsTrafficSummary(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients-traffic-summary", nil)
 }
+
 
 // MonitoringConnections wraps monitoring connections.
 //
@@ -206,38 +223,186 @@ func (s *MonitoringService) GetMonitoringConnections(ctx context.Context) (json.
 	return s.client.Get(ctx, "/monitoring/connections", nil)
 }
 
+
 // MonitoringCpu wraps monitoring cpu.
 //
 // Methods: GET
 //
 // Path: /monitoring/cpu
+// MonitoringCpuLoadOptions configures a load query against /monitoring/cpu.
+// All fields are required; the router rejects partial queries.
 //
-// Use ListMonitoringCpu(ctx, opts...) for paginated reads.
-func (s *MonitoringService) GetMonitoringCpu(ctx context.Context) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/monitoring/cpu", nil)
+// DataType selects the time bucket. iKuai accepts one of
+// "hour", "day", "week", "month".
+//
+// Math is the aggregation. iKuai accepts one of "avg", "max".
+//
+// StartTime / EndTime are Unix epoch seconds. StartTime must be
+// strictly less than EndTime.
+type MonitoringCpuLoadOptions struct {
+	DataType  string
+	StartTime int64
+	EndTime   int64
+	Math      string
 }
+
+func (o *MonitoringCpuLoadOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringCpuLoadOptions: options are required"}
+	}
+	switch o.DataType {
+	case "hour", "day", "week", "month":
+	default:
+		return nil, &ikuaiapi.APIError{Message: "MonitoringCpuLoadOptions: DataType must be one of: hour, day, week, month"}
+	}
+	switch o.Math {
+	case "avg", "max":
+	default:
+		return nil, &ikuaiapi.APIError{Message: "MonitoringCpuLoadOptions: Math must be one of: avg, max"}
+	}
+	if o.StartTime <= 0 || o.EndTime <= 0 {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringCpuLoadOptions: StartTime and EndTime are required (Unix seconds)"}
+	}
+	if o.StartTime >= o.EndTime {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringCpuLoadOptions: StartTime must be less than EndTime"}
+	}
+	return map[string]string{
+		"datetype":   o.DataType,
+		"start_time": strconv.FormatInt(o.StartTime, 10),
+		"end_time":   strconv.FormatInt(o.EndTime, 10),
+		"math":       o.Math,
+	}, nil
+}
+
+// LoadCpu runs a typed load query against /monitoring/cpu.
+func (s *MonitoringService) LoadCpu(ctx context.Context, opts *MonitoringCpuLoadOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/cpu", q)
+}
+
 
 // MonitoringCputemp wraps monitoring cputemp.
 //
 // Methods: GET
 //
 // Path: /monitoring/cputemp
+// MonitoringCputempLoadOptions configures a load query against /monitoring/cputemp.
+// All fields are required; the router rejects partial queries.
 //
-// Use ListMonitoringCputemp(ctx, opts...) for paginated reads.
-func (s *MonitoringService) GetMonitoringCputemp(ctx context.Context) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/monitoring/cputemp", nil)
+// DataType selects the time bucket. iKuai accepts one of
+// "hour", "day", "week", "month".
+//
+// Math is the aggregation. iKuai accepts one of "avg", "max".
+//
+// StartTime / EndTime are Unix epoch seconds. StartTime must be
+// strictly less than EndTime.
+type MonitoringCputempLoadOptions struct {
+	DataType  string
+	StartTime int64
+	EndTime   int64
+	Math      string
 }
+
+func (o *MonitoringCputempLoadOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringCputempLoadOptions: options are required"}
+	}
+	switch o.DataType {
+	case "hour", "day", "week", "month":
+	default:
+		return nil, &ikuaiapi.APIError{Message: "MonitoringCputempLoadOptions: DataType must be one of: hour, day, week, month"}
+	}
+	switch o.Math {
+	case "avg", "max":
+	default:
+		return nil, &ikuaiapi.APIError{Message: "MonitoringCputempLoadOptions: Math must be one of: avg, max"}
+	}
+	if o.StartTime <= 0 || o.EndTime <= 0 {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringCputempLoadOptions: StartTime and EndTime are required (Unix seconds)"}
+	}
+	if o.StartTime >= o.EndTime {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringCputempLoadOptions: StartTime must be less than EndTime"}
+	}
+	return map[string]string{
+		"datetype":   o.DataType,
+		"start_time": strconv.FormatInt(o.StartTime, 10),
+		"end_time":   strconv.FormatInt(o.EndTime, 10),
+		"math":       o.Math,
+	}, nil
+}
+
+// LoadCputemp runs a typed load query against /monitoring/cputemp.
+func (s *MonitoringService) LoadCputemp(ctx context.Context, opts *MonitoringCputempLoadOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/cputemp", q)
+}
+
 
 // MonitoringDisk wraps monitoring disk.
 //
 // Methods: GET
 //
 // Path: /monitoring/disk
+// MonitoringDiskLoadOptions configures a load query against /monitoring/disk.
+// All fields are required; the router rejects partial queries.
 //
-// Use ListMonitoringDisk(ctx, opts...) for paginated reads.
-func (s *MonitoringService) GetMonitoringDisk(ctx context.Context) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/monitoring/disk", nil)
+// DataType selects the time bucket. iKuai accepts one of
+// "hour", "day", "week", "month".
+//
+// Math is the aggregation. iKuai accepts one of "avg", "max".
+//
+// StartTime / EndTime are Unix epoch seconds. StartTime must be
+// strictly less than EndTime.
+type MonitoringDiskLoadOptions struct {
+	DataType  string
+	StartTime int64
+	EndTime   int64
+	Math      string
 }
+
+func (o *MonitoringDiskLoadOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringDiskLoadOptions: options are required"}
+	}
+	switch o.DataType {
+	case "hour", "day", "week", "month":
+	default:
+		return nil, &ikuaiapi.APIError{Message: "MonitoringDiskLoadOptions: DataType must be one of: hour, day, week, month"}
+	}
+	switch o.Math {
+	case "avg", "max":
+	default:
+		return nil, &ikuaiapi.APIError{Message: "MonitoringDiskLoadOptions: Math must be one of: avg, max"}
+	}
+	if o.StartTime <= 0 || o.EndTime <= 0 {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringDiskLoadOptions: StartTime and EndTime are required (Unix seconds)"}
+	}
+	if o.StartTime >= o.EndTime {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringDiskLoadOptions: StartTime must be less than EndTime"}
+	}
+	return map[string]string{
+		"datetype":   o.DataType,
+		"start_time": strconv.FormatInt(o.StartTime, 10),
+		"end_time":   strconv.FormatInt(o.EndTime, 10),
+		"math":       o.Math,
+	}, nil
+}
+
+// LoadDisk runs a typed load query against /monitoring/disk.
+func (s *MonitoringService) LoadDisk(ctx context.Context, opts *MonitoringDiskLoadOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/disk", q)
+}
+
 
 // MonitoringDownstream wraps monitoring downstream.
 //
@@ -250,6 +415,7 @@ func (s *MonitoringService) GetMonitoringDownstream(ctx context.Context) (json.R
 	return s.client.Get(ctx, "/monitoring/downstream", nil)
 }
 
+
 // MonitoringFlowShunting wraps monitoring flow-shunting.
 //
 // Methods: GET
@@ -260,6 +426,7 @@ func (s *MonitoringService) GetMonitoringDownstream(ctx context.Context) (json.R
 func (s *MonitoringService) GetMonitoringFlowShunting(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/flow-shunting", nil)
 }
+
 
 // MonitoringInterfacesConfig wraps monitoring interfaces-config.
 //
@@ -272,6 +439,7 @@ func (s *MonitoringService) GetMonitoringInterfacesConfig(ctx context.Context) (
 	return s.client.Get(ctx, "/monitoring/interfaces-config", nil)
 }
 
+
 // MonitoringInterfacesPhysical wraps monitoring interfaces-physical.
 //
 // Methods: GET
@@ -282,6 +450,7 @@ func (s *MonitoringService) GetMonitoringInterfacesConfig(ctx context.Context) (
 func (s *MonitoringService) GetMonitoringInterfacesPhysical(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/interfaces-physical", nil)
 }
+
 
 // MonitoringInterfacesStatus wraps monitoring interfaces-status.
 //
@@ -294,6 +463,7 @@ func (s *MonitoringService) GetMonitoringInterfacesStatus(ctx context.Context) (
 	return s.client.Get(ctx, "/monitoring/interfaces-status", nil)
 }
 
+
 // MonitoringInterfacesTraffic wraps monitoring interfaces-traffic.
 //
 // Methods: GET
@@ -304,6 +474,7 @@ func (s *MonitoringService) GetMonitoringInterfacesStatus(ctx context.Context) (
 func (s *MonitoringService) GetMonitoringInterfacesTraffic(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/interfaces-traffic", nil)
 }
+
 
 // MonitoringInterfacesTrafficV6 wraps monitoring interfaces-traffic-v6.
 //
@@ -316,16 +487,66 @@ func (s *MonitoringService) GetMonitoringInterfacesTrafficV6(ctx context.Context
 	return s.client.Get(ctx, "/monitoring/interfaces-traffic-v6", nil)
 }
 
+
 // MonitoringMemory wraps monitoring memory.
 //
 // Methods: GET
 //
 // Path: /monitoring/memory
+// MonitoringMemoryLoadOptions configures a load query against /monitoring/memory.
+// All fields are required; the router rejects partial queries.
 //
-// Use ListMonitoringMemory(ctx, opts...) for paginated reads.
-func (s *MonitoringService) GetMonitoringMemory(ctx context.Context) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/monitoring/memory", nil)
+// DataType selects the time bucket. iKuai accepts one of
+// "hour", "day", "week", "month".
+//
+// Math is the aggregation. iKuai accepts one of "avg", "max".
+//
+// StartTime / EndTime are Unix epoch seconds. StartTime must be
+// strictly less than EndTime.
+type MonitoringMemoryLoadOptions struct {
+	DataType  string
+	StartTime int64
+	EndTime   int64
+	Math      string
 }
+
+func (o *MonitoringMemoryLoadOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringMemoryLoadOptions: options are required"}
+	}
+	switch o.DataType {
+	case "hour", "day", "week", "month":
+	default:
+		return nil, &ikuaiapi.APIError{Message: "MonitoringMemoryLoadOptions: DataType must be one of: hour, day, week, month"}
+	}
+	switch o.Math {
+	case "avg", "max":
+	default:
+		return nil, &ikuaiapi.APIError{Message: "MonitoringMemoryLoadOptions: Math must be one of: avg, max"}
+	}
+	if o.StartTime <= 0 || o.EndTime <= 0 {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringMemoryLoadOptions: StartTime and EndTime are required (Unix seconds)"}
+	}
+	if o.StartTime >= o.EndTime {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringMemoryLoadOptions: StartTime must be less than EndTime"}
+	}
+	return map[string]string{
+		"datetype":   o.DataType,
+		"start_time": strconv.FormatInt(o.StartTime, 10),
+		"end_time":   strconv.FormatInt(o.EndTime, 10),
+		"math":       o.Math,
+	}, nil
+}
+
+// LoadMemory runs a typed load query against /monitoring/memory.
+func (s *MonitoringService) LoadMemory(ctx context.Context, opts *MonitoringMemoryLoadOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/memory", q)
+}
+
 
 // MonitoringNetwork wraps monitoring network.
 //
@@ -338,6 +559,7 @@ func (s *MonitoringService) GetMonitoringNetwork(ctx context.Context) (json.RawM
 	return s.client.Get(ctx, "/monitoring/network", nil)
 }
 
+
 // MonitoringProtocols wraps monitoring protocols.
 //
 // Methods: GET
@@ -348,6 +570,7 @@ func (s *MonitoringService) GetMonitoringNetwork(ctx context.Context) (json.RawM
 func (s *MonitoringService) GetMonitoringProtocols(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/protocols", nil)
 }
+
 
 // MonitoringProtocolsHistoryLoad wraps monitoring protocols-history-load.
 //
@@ -360,6 +583,7 @@ func (s *MonitoringService) GetMonitoringProtocolsHistoryLoad(ctx context.Contex
 	return s.client.Get(ctx, "/monitoring/protocols/history-load", nil)
 }
 
+
 // MonitoringSsidClients wraps monitoring ssid-clients.
 //
 // Methods: GET
@@ -370,6 +594,7 @@ func (s *MonitoringService) GetMonitoringProtocolsHistoryLoad(ctx context.Contex
 func (s *MonitoringService) GetMonitoringSsidClients(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/ssid-clients", nil)
 }
+
 
 // MonitoringSwitch wraps monitoring switch.
 //
@@ -382,6 +607,7 @@ func (s *MonitoringService) GetMonitoringSwitch(ctx context.Context) (json.RawMe
 	return s.client.Get(ctx, "/monitoring/switch", nil)
 }
 
+
 // MonitoringSystem wraps monitoring system.
 //
 // Methods: GET
@@ -393,16 +619,66 @@ func (s *MonitoringService) GetMonitoringSystem(ctx context.Context) (json.RawMe
 	return s.client.Get(ctx, "/monitoring/system", nil)
 }
 
+
 // MonitoringTerminals wraps monitoring terminals.
 //
 // Methods: GET
 //
 // Path: /monitoring/terminals
+// MonitoringTerminalsLoadOptions configures a load query against /monitoring/terminals.
+// All fields are required; the router rejects partial queries.
 //
-// Use ListMonitoringTerminals(ctx, opts...) for paginated reads.
-func (s *MonitoringService) GetMonitoringTerminals(ctx context.Context) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/monitoring/terminals", nil)
+// DataType selects the time bucket. iKuai accepts one of
+// "hour", "day", "week", "month".
+//
+// Math is the aggregation. iKuai accepts one of "avg", "max".
+//
+// StartTime / EndTime are Unix epoch seconds. StartTime must be
+// strictly less than EndTime.
+type MonitoringTerminalsLoadOptions struct {
+	DataType  string
+	StartTime int64
+	EndTime   int64
+	Math      string
 }
+
+func (o *MonitoringTerminalsLoadOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringTerminalsLoadOptions: options are required"}
+	}
+	switch o.DataType {
+	case "hour", "day", "week", "month":
+	default:
+		return nil, &ikuaiapi.APIError{Message: "MonitoringTerminalsLoadOptions: DataType must be one of: hour, day, week, month"}
+	}
+	switch o.Math {
+	case "avg", "max":
+	default:
+		return nil, &ikuaiapi.APIError{Message: "MonitoringTerminalsLoadOptions: Math must be one of: avg, max"}
+	}
+	if o.StartTime <= 0 || o.EndTime <= 0 {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringTerminalsLoadOptions: StartTime and EndTime are required (Unix seconds)"}
+	}
+	if o.StartTime >= o.EndTime {
+		return nil, &ikuaiapi.APIError{Message: "MonitoringTerminalsLoadOptions: StartTime must be less than EndTime"}
+	}
+	return map[string]string{
+		"datetype":   o.DataType,
+		"start_time": strconv.FormatInt(o.StartTime, 10),
+		"end_time":   strconv.FormatInt(o.EndTime, 10),
+		"math":       o.Math,
+	}, nil
+}
+
+// LoadTerminals runs a typed load query against /monitoring/terminals.
+func (s *MonitoringService) LoadTerminals(ctx context.Context, opts *MonitoringTerminalsLoadOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/terminals", q)
+}
+
 
 // MonitoringWirelessScore wraps monitoring wireless-score.
 //
@@ -415,6 +691,7 @@ func (s *MonitoringService) GetMonitoringWirelessScore(ctx context.Context) (jso
 	return s.client.Get(ctx, "/monitoring/wireless-score", nil)
 }
 
+
 // MonitoringWirelessStatistics wraps monitoring wireless-statistics.
 //
 // Methods: GET
@@ -426,6 +703,7 @@ func (s *MonitoringService) GetMonitoringWirelessStatistics(ctx context.Context)
 	return s.client.Get(ctx, "/monitoring/wireless-statistics", nil)
 }
 
+
 // MonitoringWirelessTraffic wraps monitoring wireless-traffic.
 //
 // Methods: GET
@@ -436,3 +714,4 @@ func (s *MonitoringService) GetMonitoringWirelessStatistics(ctx context.Context)
 func (s *MonitoringService) GetMonitoringWirelessTraffic(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/wireless-traffic", nil)
 }
+

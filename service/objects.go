@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"strconv"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // ObjectsService is the typed v4 entry point for the "objects" group.
@@ -30,6 +30,7 @@ func pathGroupObjects() []V4Endpoint {
 	}
 	return out
 }
+
 
 // ObjectsDomainObjects wraps objects domain-objects.
 //
@@ -94,11 +95,23 @@ func (s *ObjectsService) UpdateObjectsDomainObjects(ctx context.Context, body an
 	return err
 }
 
-// DeleteObjectsDomainObjects removes the resource at /domain-objects.
+// DeleteObjectsDomainObjects removes the resource at /domain-objects. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteObjectsDomainObjectsWithBody to send a custom JSON body instead.
 func (s *ObjectsService) DeleteObjectsDomainObjects(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/domain-objects", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/domain-objects"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteObjectsDomainObjectsWithBody removes the resource at /domain-objects with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteObjectsDomainObjects cannot model directly).
+func (s *ObjectsService) DeleteObjectsDomainObjectsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/domain-objects", body)
+	return err
+}
+
 
 // ObjectsIpObjects wraps objects ip-objects.
 //
@@ -163,11 +176,23 @@ func (s *ObjectsService) UpdateObjectsIpObjects(ctx context.Context, body any) e
 	return err
 }
 
-// DeleteObjectsIpObjects removes the resource at /ip-objects.
+// DeleteObjectsIpObjects removes the resource at /ip-objects. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteObjectsIpObjectsWithBody to send a custom JSON body instead.
 func (s *ObjectsService) DeleteObjectsIpObjects(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/ip-objects", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/ip-objects"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteObjectsIpObjectsWithBody removes the resource at /ip-objects with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteObjectsIpObjects cannot model directly).
+func (s *ObjectsService) DeleteObjectsIpObjectsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/ip-objects", body)
+	return err
+}
+
 
 // ObjectsIpv6Objects wraps objects ipv6-objects.
 //
@@ -232,11 +257,23 @@ func (s *ObjectsService) UpdateObjectsIpv6Objects(ctx context.Context, body any)
 	return err
 }
 
-// DeleteObjectsIpv6Objects removes the resource at /ipv6-objects.
+// DeleteObjectsIpv6Objects removes the resource at /ipv6-objects. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteObjectsIpv6ObjectsWithBody to send a custom JSON body instead.
 func (s *ObjectsService) DeleteObjectsIpv6Objects(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/ipv6-objects", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/ipv6-objects"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteObjectsIpv6ObjectsWithBody removes the resource at /ipv6-objects with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteObjectsIpv6Objects cannot model directly).
+func (s *ObjectsService) DeleteObjectsIpv6ObjectsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/ipv6-objects", body)
+	return err
+}
+
 
 // ObjectsMacObjects wraps objects mac-objects.
 //
@@ -301,11 +338,23 @@ func (s *ObjectsService) UpdateObjectsMacObjects(ctx context.Context, body any) 
 	return err
 }
 
-// DeleteObjectsMacObjects removes the resource at /mac-objects.
+// DeleteObjectsMacObjects removes the resource at /mac-objects. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteObjectsMacObjectsWithBody to send a custom JSON body instead.
 func (s *ObjectsService) DeleteObjectsMacObjects(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/mac-objects", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/mac-objects"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteObjectsMacObjectsWithBody removes the resource at /mac-objects with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteObjectsMacObjects cannot model directly).
+func (s *ObjectsService) DeleteObjectsMacObjectsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/mac-objects", body)
+	return err
+}
+
 
 // ObjectsPortObjects wraps objects port-objects.
 //
@@ -370,11 +419,23 @@ func (s *ObjectsService) UpdateObjectsPortObjects(ctx context.Context, body any)
 	return err
 }
 
-// DeleteObjectsPortObjects removes the resource at /port-objects.
+// DeleteObjectsPortObjects removes the resource at /port-objects. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteObjectsPortObjectsWithBody to send a custom JSON body instead.
 func (s *ObjectsService) DeleteObjectsPortObjects(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/port-objects", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/port-objects"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteObjectsPortObjectsWithBody removes the resource at /port-objects with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteObjectsPortObjects cannot model directly).
+func (s *ObjectsService) DeleteObjectsPortObjectsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/port-objects", body)
+	return err
+}
+
 
 // ObjectsProtocolObjects wraps objects protocol-objects.
 //
@@ -439,11 +500,23 @@ func (s *ObjectsService) UpdateObjectsProtocolObjects(ctx context.Context, body 
 	return err
 }
 
-// DeleteObjectsProtocolObjects removes the resource at /protocol-objects.
+// DeleteObjectsProtocolObjects removes the resource at /protocol-objects. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteObjectsProtocolObjectsWithBody to send a custom JSON body instead.
 func (s *ObjectsService) DeleteObjectsProtocolObjects(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/protocol-objects", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/protocol-objects"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteObjectsProtocolObjectsWithBody removes the resource at /protocol-objects with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteObjectsProtocolObjects cannot model directly).
+func (s *ObjectsService) DeleteObjectsProtocolObjectsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/protocol-objects", body)
+	return err
+}
+
 
 // ObjectsTimeObjects wraps objects time-objects.
 //
@@ -508,8 +581,29 @@ func (s *ObjectsService) UpdateObjectsTimeObjects(ctx context.Context, body any)
 	return err
 }
 
-// DeleteObjectsTimeObjects removes the resource at /time-objects.
+// DeleteObjectsTimeObjects removes the resource at /time-objects. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteObjectsTimeObjectsWithBody to send a custom JSON body instead.
 func (s *ObjectsService) DeleteObjectsTimeObjects(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/time-objects", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/time-objects"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteObjectsTimeObjectsWithBody removes the resource at /time-objects with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteObjectsTimeObjects cannot model directly).
+func (s *ObjectsService) DeleteObjectsTimeObjectsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/time-objects", body)
+	return err
+}
+
+
+// Field hints for this group (iKuai firmware field names):
+//   name             Object name (required)
+//   comment          Free-form comment
+//   ip_group         Array of IP/CIDR strings (for ip-objects)
+//   mac              MAC address (for mac-objects)
+//   port_group       Array of port strings (for port-objects)
+//   domain_group     Array of domain strings (for domain-objects)
+//   enabled          yes | no

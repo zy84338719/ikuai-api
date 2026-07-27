@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"strconv"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // AdvancedService is the typed v4 entry point for the "advanced" group.
@@ -30,6 +30,7 @@ func pathGroupAdvanced() []V4Endpoint {
 	}
 	return out
 }
+
 
 // AdvancedFtpConfig wraps advanced ftp-config.
 //
@@ -83,6 +84,7 @@ func (s *AdvancedService) UpdateAdvancedFtpConfig(ctx context.Context, body any)
 	_, err := s.client.Put(ctx, "/advanced-service/ftp-config", body)
 	return err
 }
+
 
 // AdvancedFtpUsers wraps advanced ftp-users.
 //
@@ -153,11 +155,23 @@ func (s *AdvancedService) PatchAdvancedFtpUsers(ctx context.Context, body any) e
 	return err
 }
 
-// DeleteAdvancedFtpUsers removes the resource at /advanced-service/ftp-users.
+// DeleteAdvancedFtpUsers removes the resource at /advanced-service/ftp-users. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteAdvancedFtpUsersWithBody to send a custom JSON body instead.
 func (s *AdvancedService) DeleteAdvancedFtpUsers(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/advanced-service/ftp-users", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/advanced-service/ftp-users"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteAdvancedFtpUsersWithBody removes the resource at /advanced-service/ftp-users with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteAdvancedFtpUsers cannot model directly).
+func (s *AdvancedService) DeleteAdvancedFtpUsersWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/advanced-service/ftp-users", body)
+	return err
+}
+
 
 // AdvancedHttpUsers wraps advanced http-users.
 //
@@ -228,11 +242,23 @@ func (s *AdvancedService) PatchAdvancedHttpUsers(ctx context.Context, body any) 
 	return err
 }
 
-// DeleteAdvancedHttpUsers removes the resource at /advanced-service/http-users.
+// DeleteAdvancedHttpUsers removes the resource at /advanced-service/http-users. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteAdvancedHttpUsersWithBody to send a custom JSON body instead.
 func (s *AdvancedService) DeleteAdvancedHttpUsers(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/advanced-service/http-users", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/advanced-service/http-users"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteAdvancedHttpUsersWithBody removes the resource at /advanced-service/http-users with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteAdvancedHttpUsers cannot model directly).
+func (s *AdvancedService) DeleteAdvancedHttpUsersWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/advanced-service/http-users", body)
+	return err
+}
+
 
 // AdvancedSambaConfig wraps advanced samba-config.
 //
@@ -286,6 +312,7 @@ func (s *AdvancedService) UpdateAdvancedSambaConfig(ctx context.Context, body an
 	_, err := s.client.Put(ctx, "/advanced-service/samba-config", body)
 	return err
 }
+
 
 // AdvancedSambaUsers wraps advanced samba-users.
 //
@@ -356,11 +383,23 @@ func (s *AdvancedService) PatchAdvancedSambaUsers(ctx context.Context, body any)
 	return err
 }
 
-// DeleteAdvancedSambaUsers removes the resource at /advanced-service/samba-users.
+// DeleteAdvancedSambaUsers removes the resource at /advanced-service/samba-users. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteAdvancedSambaUsersWithBody to send a custom JSON body instead.
 func (s *AdvancedService) DeleteAdvancedSambaUsers(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/advanced-service/samba-users", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/advanced-service/samba-users"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteAdvancedSambaUsersWithBody removes the resource at /advanced-service/samba-users with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteAdvancedSambaUsers cannot model directly).
+func (s *AdvancedService) DeleteAdvancedSambaUsersWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/advanced-service/samba-users", body)
+	return err
+}
+
 
 // AdvancedSnmpdConfig wraps advanced snmpd-config.
 //
@@ -414,3 +453,4 @@ func (s *AdvancedService) UpdateAdvancedSnmpdConfig(ctx context.Context, body an
 	_, err := s.client.Put(ctx, "/advanced-service/snmpd-config", body)
 	return err
 }
+

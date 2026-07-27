@@ -5,6 +5,18 @@ type V4Endpoint struct {
 	Name    string
 	Path    string
 	Methods []string
+	// Load marks monitoring load-style endpoints. Such endpoints accept
+	// datetype/start_time/end_time/math query params rather than the
+	// usual page/page_size/filter/order/order_by. The codegen emits a
+	// typed <Name>LoadOptions struct plus enum validation for these.
+	Load bool
+	// Action is the verb suffix for action-style endpoints (those whose
+	// path ends with ":start", ":stop", ":restart", ":sync", ":restore",
+	// ":check"). The codegen uses this to emit semantically named
+	// helpers (Start<Name>, Stop<Name>, Restore<Name>, etc.) instead of
+	// a generic Do<Name>. Empty means the endpoint follows the standard
+	// CRUD shape.
+	Action string
 }
 
 var V4EndpointCatalog = []V4Endpoint{
@@ -47,9 +59,9 @@ var V4EndpointCatalog = []V4Endpoint{
 	{Group: "monitoring", Name: "clients-traffic-load", Path: "/monitoring/clients-traffic-load", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "clients-traffic-summary", Path: "/monitoring/clients-traffic-summary", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "connections", Path: "/monitoring/connections", Methods: []string{"GET"}},
-	{Group: "monitoring", Name: "cpu", Path: "/monitoring/cpu", Methods: []string{"GET"}},
-	{Group: "monitoring", Name: "cputemp", Path: "/monitoring/cputemp", Methods: []string{"GET"}},
-	{Group: "monitoring", Name: "disk", Path: "/monitoring/disk", Methods: []string{"GET"}},
+	{Group: "monitoring", Name: "cpu", Path: "/monitoring/cpu", Methods: []string{"GET"}, Load: true},
+	{Group: "monitoring", Name: "cputemp", Path: "/monitoring/cputemp", Methods: []string{"GET"}, Load: true},
+	{Group: "monitoring", Name: "disk", Path: "/monitoring/disk", Methods: []string{"GET"}, Load: true},
 	{Group: "monitoring", Name: "downstream", Path: "/monitoring/downstream", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "flow-shunting", Path: "/monitoring/flow-shunting", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "interfaces-config", Path: "/monitoring/interfaces-config", Methods: []string{"GET"}},
@@ -57,28 +69,28 @@ var V4EndpointCatalog = []V4Endpoint{
 	{Group: "monitoring", Name: "interfaces-status", Path: "/monitoring/interfaces-status", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "interfaces-traffic", Path: "/monitoring/interfaces-traffic", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "interfaces-traffic-v6", Path: "/monitoring/interfaces-traffic-v6", Methods: []string{"GET"}},
-	{Group: "monitoring", Name: "memory", Path: "/monitoring/memory", Methods: []string{"GET"}},
+	{Group: "monitoring", Name: "memory", Path: "/monitoring/memory", Methods: []string{"GET"}, Load: true},
 	{Group: "monitoring", Name: "network", Path: "/monitoring/network", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "protocols", Path: "/monitoring/protocols", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "protocols-history-load", Path: "/monitoring/protocols/history-load", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "ssid-clients", Path: "/monitoring/ssid-clients", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "switch", Path: "/monitoring/switch", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "system", Path: "/monitoring/system", Methods: []string{"GET"}},
-	{Group: "monitoring", Name: "terminals", Path: "/monitoring/terminals", Methods: []string{"GET"}},
+	{Group: "monitoring", Name: "terminals", Path: "/monitoring/terminals", Methods: []string{"GET"}, Load: true},
 	{Group: "monitoring", Name: "wireless-score", Path: "/monitoring/wireless-score", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "wireless-statistics", Path: "/monitoring/wireless-statistics", Methods: []string{"GET"}},
 	{Group: "monitoring", Name: "wireless-traffic", Path: "/monitoring/wireless-traffic", Methods: []string{"GET"}},
 	{Group: "network", Name: "ac-ap-config", Path: "/network/ac/ap-config", Methods: []string{"GET", "PUT", "DELETE"}},
 	{Group: "network", Name: "ac-services", Path: "/network/ac/services", Methods: []string{"GET", "PUT"}},
-	{Group: "network", Name: "ac-services-start", Path: "/network/ac/services:start", Methods: []string{"POST"}},
-	{Group: "network", Name: "ac-services-stop", Path: "/network/ac/services:stop", Methods: []string{"POST"}},
+	{Group: "network", Name: "ac-services-start", Path: "/network/ac/services:start", Methods: []string{"POST"}, Action: "start"},
+	{Group: "network", Name: "ac-services-stop", Path: "/network/ac/services:stop", Methods: []string{"POST"}, Action: "stop"},
 	{Group: "network", Name: "dhcp-access-control-mode", Path: "/network/dhcp/access-control/mode", Methods: []string{"GET", "PUT"}},
 	{Group: "network", Name: "dhcp-access-control-rules", Path: "/network/dhcp/access-control/rules", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 	{Group: "network", Name: "dhcp-clients", Path: "/network/dhcp/clients", Methods: []string{"GET"}},
 	{Group: "network", Name: "dhcp-services", Path: "/network/dhcp/services", Methods: []string{"GET", "POST", "PUT", "PATCH"}},
-	{Group: "network", Name: "dhcp-services-restart", Path: "/network/dhcp/services:restart", Methods: []string{"POST"}},
-	{Group: "network", Name: "dhcp-services-start", Path: "/network/dhcp/services:start", Methods: []string{"POST"}},
-	{Group: "network", Name: "dhcp-services-stop", Path: "/network/dhcp/services:stop", Methods: []string{"POST"}},
+	{Group: "network", Name: "dhcp-services-restart", Path: "/network/dhcp/services:restart", Methods: []string{"POST"}, Action: "restart"},
+	{Group: "network", Name: "dhcp-services-start", Path: "/network/dhcp/services:start", Methods: []string{"POST"}, Action: "start"},
+	{Group: "network", Name: "dhcp-services-stop", Path: "/network/dhcp/services:stop", Methods: []string{"POST"}, Action: "stop"},
 	{Group: "network", Name: "dhcp-static", Path: "/network/dhcp/static", Methods: []string{"GET", "POST", "PUT", "PATCH"}},
 	{Group: "network", Name: "dhcp6-access-control-mode", Path: "/network/dhcp6/access-control/mode", Methods: []string{"GET", "PUT"}},
 	{Group: "network", Name: "dhcp6-access-control-rules", Path: "/network/dhcp6/access-control/rules", Methods: []string{"GET", "POST", "PUT", "PATCH"}},
@@ -104,14 +116,14 @@ var V4EndpointCatalog = []V4Endpoint{
 	{Group: "system", Name: "ac-peers", Path: "/peers", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
 	{Group: "system", Name: "ac-ref", Path: "/ref", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
 	{Group: "system", Name: "ac-services", Path: "/services", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
-	{Group: "system", Name: "backup", Path: "/system/backup", Methods: []string{"GET", "POST"}},
+	{Group: "system", Name: "backup", Path: "/system/backup", Methods: []string{"GET", "POST", "DELETE"}},
 	{Group: "system", Name: "backup-auto", Path: "/system/backup-auto", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
-	{Group: "system", Name: "backup-restore", Path: "/system/backup:restore", Methods: []string{"POST"}},
+	{Group: "system", Name: "backup-restore", Path: "/system/backup:restore", Methods: []string{"POST"}, Action: "restore"},
 	{Group: "system", Name: "disks", Path: "/system/disks", Methods: []string{"GET"}},
 	{Group: "system", Name: "files", Path: "/system/files", Methods: []string{"GET"}},
 	{Group: "system", Name: "upgrade", Path: "/system/upgrade", Methods: []string{"GET", "POST"}},
-	{Group: "system", Name: "upgrade-check", Path: "/system/upgrade:check", Methods: []string{"POST"}},
-	{Group: "system", Name: "upgrade-start", Path: "/system/upgrade:start", Methods: []string{"POST"}},
+	{Group: "system", Name: "upgrade-check", Path: "/system/upgrade:check", Methods: []string{"POST"}, Action: "check"},
+	{Group: "system", Name: "upgrade-start", Path: "/system/upgrade:start", Methods: []string{"POST"}, Action: "start"},
 	{Group: "system", Name: "upgrade-status", Path: "/system/upgrade:status", Methods: []string{"GET"}},
 	{Group: "system", Name: "web-admin-accounts", Path: "/system/web-admin/accounts", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
 	{Group: "system", Name: "web-admin-groups", Path: "/system/web-admin/groups", Methods: []string{"GET", "POST", "PUT", "DELETE"}},
@@ -138,15 +150,15 @@ var V4EndpointCatalog = []V4Endpoint{
 	{Group: "security", Name: "url-replace-rules", Path: "/security/url-replace/rules", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 	{Group: "system", Name: "alg", Path: "/system/alg", Methods: []string{"GET", "PUT"}},
 	{Group: "system", Name: "basic-config", Path: "/system/basic/config", Methods: []string{"GET", "PUT"}},
-	{Group: "system", Name: "basic-ntp-sync", Path: "/system/basic/ntp:sync", Methods: []string{"POST"}},
+	{Group: "system", Name: "basic-ntp-sync", Path: "/system/basic/ntp:sync", Methods: []string{"POST"}, Action: "sync"},
 	{Group: "system", Name: "cpufreq", Path: "/system/cpufreq", Methods: []string{"GET", "PUT"}},
 	{Group: "system", Name: "cpufreq-mode", Path: "/system/cpufreq/mode", Methods: []string{"PUT"}},
 	{Group: "system", Name: "kernel-params", Path: "/system/kernel-params", Methods: []string{"GET", "PUT"}},
 	{Group: "system", Name: "reboot-schedules", Path: "/system/reboot-schedules", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 	{Group: "system", Name: "remote-access", Path: "/system/remote-access", Methods: []string{"GET", "PUT"}},
 	{Group: "system", Name: "vrrp-config", Path: "/system/vrrp/config", Methods: []string{"GET", "PUT"}},
-	{Group: "system", Name: "vrrp-start", Path: "/system/vrrp:start", Methods: []string{"POST"}},
-	{Group: "system", Name: "vrrp-stop", Path: "/system/vrrp:stop", Methods: []string{"POST"}},
+	{Group: "system", Name: "vrrp-start", Path: "/system/vrrp:start", Methods: []string{"POST"}, Action: "start"},
+	{Group: "system", Name: "vrrp-stop", Path: "/system/vrrp:stop", Methods: []string{"POST"}, Action: "stop"},
 	{Group: "vpn", Name: "ikev2", Path: "/vpn/ikev2", Methods: []string{"GET", "PUT"}},
 	{Group: "vpn", Name: "ikev2-clients", Path: "/vpn/ikev2/clients", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 	{Group: "vpn", Name: "ipsec-clients", Path: "/vpn/ipsec/clients", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},

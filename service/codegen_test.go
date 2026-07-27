@@ -114,10 +114,11 @@ func TestCreateReturnsRowID(t *testing.T) {
 	}
 }
 
-func TestDeleteUsesIDBody(t *testing.T) {
-	var gotBody string
+func TestDeleteUsesIDQuery(t *testing.T) {
+	var gotQuery, gotMethod string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gotBody = bodyToString(r)
+		gotQuery = r.URL.RawQuery
+		gotMethod = r.Method
 		_, _ = w.Write([]byte(`{"code":0,"message":"ok"}`))
 	}))
 	defer srv.Close()
@@ -127,8 +128,11 @@ func TestDeleteUsesIDBody(t *testing.T) {
 	if err := api.Auth().DeleteAuthUsers(context.Background(), 7); err != nil {
 		t.Fatalf("Delete: %v", err)
 	}
-	if !strings.Contains(gotBody, `"id":7`) && !strings.Contains(gotBody, `"id": 7`) {
-		t.Errorf("delete body missing id=7: %q", gotBody)
+	if gotMethod != "DELETE" {
+		t.Errorf("method = %q, want DELETE", gotMethod)
+	}
+	if gotQuery != "id=7" {
+		t.Errorf("query = %q, want id=7", gotQuery)
 	}
 }
 

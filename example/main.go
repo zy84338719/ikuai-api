@@ -113,7 +113,26 @@ func main() {
 	fmt.Println("\ninterfaces/wan-config:")
 	prettyPrint(raw)
 
-	// 6. Create dry-run (no router traffic) — only meaningful in dry-run mode.
+	// 6. Typed Load query: monitoring/cpu over the last hour.
+	cpu, err := api.Monitoring().LoadCpu(ctx, &service.MonitoringCpuLoadOptions{
+		DataType:  "hour",
+		StartTime: time.Now().Add(-1 * time.Hour).Unix(),
+		EndTime:   time.Now().Unix(),
+		Math:      "avg",
+	})
+	if err != nil {
+		log.Fatalf("monitoring/cpu (load): %v", err)
+	}
+	fmt.Println("\ncpu load (last hour, avg):")
+	prettyPrint(cpu)
+
+	// 7. Action helper: dry-run start ac-services.
+	if _, err := api.Network().StartNetworkAcServices(ctx, nil); err != nil {
+		log.Fatalf("ac services:start: %v", err)
+	}
+	fmt.Println("\nac services:start dispatched")
+
+	// 8. Create dry-run (no router traffic) — only meaningful in dry-run mode.
 	preview, err := api.Auth().CreateAuthUsers(ctx, map[string]any{
 		"username": "alice",
 		"password": "demo",
@@ -124,6 +143,13 @@ func main() {
 	}
 	fmt.Println("\ncreate preview (id=0 in dry-run):")
 	fmt.Printf("  %+v\n", preview)
+
+	// 9. Delete via Call + query string: /system/backup?srcfile=…
+	if _, err := api.Call(ctx, "system", "backup", "DELETE", nil,
+		map[string]string{"srcfile": "backup-2026-07-27.tar"}); err != nil {
+		log.Fatalf("delete backup: %v", err)
+	}
+	fmt.Println("\ndelete backup dispatched")
 }
 
 func prettyPrint(v any) {

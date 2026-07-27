@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"strconv"
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // RoutingService is the typed v4 entry point for the "routing" group.
@@ -30,6 +30,7 @@ func pathGroupRouting() []V4Endpoint {
 	}
 	return out
 }
+
 
 // RoutingAppProtocols wraps routing app-protocols.
 //
@@ -100,11 +101,23 @@ func (s *RoutingService) PatchRoutingAppProtocols(ctx context.Context, body any)
 	return err
 }
 
-// DeleteRoutingAppProtocols removes the resource at /routing/app-protocols.
+// DeleteRoutingAppProtocols removes the resource at /routing/app-protocols. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteRoutingAppProtocolsWithBody to send a custom JSON body instead.
 func (s *RoutingService) DeleteRoutingAppProtocols(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/routing/app-protocols", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/routing/app-protocols"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteRoutingAppProtocolsWithBody removes the resource at /routing/app-protocols with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteRoutingAppProtocols cannot model directly).
+func (s *RoutingService) DeleteRoutingAppProtocolsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/routing/app-protocols", body)
+	return err
+}
+
 
 // RoutingDomainRules wraps routing domain-rules.
 //
@@ -175,11 +188,23 @@ func (s *RoutingService) PatchRoutingDomainRules(ctx context.Context, body any) 
 	return err
 }
 
-// DeleteRoutingDomainRules removes the resource at /routing/domain-rules.
+// DeleteRoutingDomainRules removes the resource at /routing/domain-rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteRoutingDomainRulesWithBody to send a custom JSON body instead.
 func (s *RoutingService) DeleteRoutingDomainRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/routing/domain-rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/routing/domain-rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteRoutingDomainRulesWithBody removes the resource at /routing/domain-rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteRoutingDomainRules cannot model directly).
+func (s *RoutingService) DeleteRoutingDomainRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/routing/domain-rules", body)
+	return err
+}
+
 
 // RoutingFiveTupleRules wraps routing five-tuple-rules.
 //
@@ -250,11 +275,23 @@ func (s *RoutingService) PatchRoutingFiveTupleRules(ctx context.Context, body an
 	return err
 }
 
-// DeleteRoutingFiveTupleRules removes the resource at /routing/five-tuple-rules.
+// DeleteRoutingFiveTupleRules removes the resource at /routing/five-tuple-rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteRoutingFiveTupleRulesWithBody to send a custom JSON body instead.
 func (s *RoutingService) DeleteRoutingFiveTupleRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/routing/five-tuple-rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/routing/five-tuple-rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteRoutingFiveTupleRulesWithBody removes the resource at /routing/five-tuple-rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteRoutingFiveTupleRules cannot model directly).
+func (s *RoutingService) DeleteRoutingFiveTupleRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/routing/five-tuple-rules", body)
+	return err
+}
+
 
 // RoutingLoadBalanceRules wraps routing load-balance-rules.
 //
@@ -325,11 +362,23 @@ func (s *RoutingService) PatchRoutingLoadBalanceRules(ctx context.Context, body 
 	return err
 }
 
-// DeleteRoutingLoadBalanceRules removes the resource at /routing/load-balance-rules.
+// DeleteRoutingLoadBalanceRules removes the resource at /routing/load-balance-rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteRoutingLoadBalanceRulesWithBody to send a custom JSON body instead.
 func (s *RoutingService) DeleteRoutingLoadBalanceRules(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/routing/load-balance-rules", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/routing/load-balance-rules"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteRoutingLoadBalanceRulesWithBody removes the resource at /routing/load-balance-rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteRoutingLoadBalanceRules cannot model directly).
+func (s *RoutingService) DeleteRoutingLoadBalanceRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/routing/load-balance-rules", body)
+	return err
+}
+
 
 // RoutingStaticRoutes wraps routing static-routes.
 //
@@ -400,11 +449,23 @@ func (s *RoutingService) PatchRoutingStaticRoutes(ctx context.Context, body any)
 	return err
 }
 
-// DeleteRoutingStaticRoutes removes the resource at /routing/static-routes.
+// DeleteRoutingStaticRoutes removes the resource at /routing/static-routes. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteRoutingStaticRoutesWithBody to send a custom JSON body instead.
 func (s *RoutingService) DeleteRoutingStaticRoutes(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/routing/static-routes", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/routing/static-routes"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteRoutingStaticRoutesWithBody removes the resource at /routing/static-routes with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteRoutingStaticRoutes cannot model directly).
+func (s *RoutingService) DeleteRoutingStaticRoutesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/routing/static-routes", body)
+	return err
+}
+
 
 // RoutingUpdown wraps routing updown.
 //
@@ -475,8 +536,20 @@ func (s *RoutingService) PatchRoutingUpdown(ctx context.Context, body any) error
 	return err
 }
 
-// DeleteRoutingUpdown removes the resource at /routing/updown.
+// DeleteRoutingUpdown removes the resource at /routing/updown. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteRoutingUpdownWithBody to send a custom JSON body instead.
 func (s *RoutingService) DeleteRoutingUpdown(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/routing/updown", map[string]any{"id": id})
+	_, err := s.client.Delete(ctx, "/routing/updown"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
+
+// DeleteRoutingUpdownWithBody removes the resource at /routing/updown with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteRoutingUpdown cannot model directly).
+func (s *RoutingService) DeleteRoutingUpdownWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/routing/updown", body)
+	return err
+}
+
