@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // SecurityService is the typed v4 entry point for the "security" group.
@@ -30,7 +30,6 @@ func pathGroupSecurity() []V4Endpoint {
 	}
 	return out
 }
-
 
 // SecurityAclRules wraps security acl-rules.
 //
@@ -118,7 +117,6 @@ func (s *SecurityService) DeleteSecurityAclRulesWithBody(ctx context.Context, bo
 	return err
 }
 
-
 // SecurityAdvancedConfig wraps security advanced-config.
 //
 // Methods: GET, PUT
@@ -171,7 +169,6 @@ func (s *SecurityService) UpdateSecurityAdvancedConfig(ctx context.Context, body
 	_, err := s.client.Put(ctx, "/security/advanced/config", body)
 	return err
 }
-
 
 // SecurityAppProtocolsProfessionalRules wraps security app-protocols-professional-rules.
 //
@@ -259,7 +256,6 @@ func (s *SecurityService) DeleteSecurityAppProtocolsProfessionalRulesWithBody(ct
 	return err
 }
 
-
 // SecurityDomainBlacklistRules wraps security domain-blacklist-rules.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -346,7 +342,6 @@ func (s *SecurityService) DeleteSecurityDomainBlacklistRulesWithBody(ctx context
 	return err
 }
 
-
 // SecurityMacMode wraps security mac-mode.
 //
 // Methods: GET, PUT
@@ -399,7 +394,6 @@ func (s *SecurityService) UpdateSecurityMacMode(ctx context.Context, body any) e
 	_, err := s.client.Put(ctx, "/security/mac-mode", body)
 	return err
 }
-
 
 // SecurityMacRules wraps security mac-rules.
 //
@@ -487,7 +481,6 @@ func (s *SecurityService) DeleteSecurityMacRulesWithBody(ctx context.Context, bo
 	return err
 }
 
-
 // SecurityPeerconnRules wraps security peerconn-rules.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -574,7 +567,6 @@ func (s *SecurityService) DeleteSecurityPeerconnRulesWithBody(ctx context.Contex
 	return err
 }
 
-
 // SecuritySecondaryRouteConfig wraps security secondary-route-config.
 //
 // Methods: GET, PUT
@@ -627,7 +619,6 @@ func (s *SecurityService) UpdateSecuritySecondaryRouteConfig(ctx context.Context
 	_, err := s.client.Put(ctx, "/security/secondary-route/config", body)
 	return err
 }
-
 
 // SecurityTerminals wraps security terminals.
 //
@@ -715,7 +706,6 @@ func (s *SecurityService) DeleteSecurityTerminalsWithBody(ctx context.Context, b
 	return err
 }
 
-
 // SecurityUrlBlackRules wraps security url-black-rules.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -801,7 +791,6 @@ func (s *SecurityService) DeleteSecurityUrlBlackRulesWithBody(ctx context.Contex
 	_, err := s.client.Delete(ctx, "/security/url-black/rules", body)
 	return err
 }
-
 
 // SecurityUrlKeywordsRules wraps security url-keywords-rules.
 //
@@ -889,7 +878,6 @@ func (s *SecurityService) DeleteSecurityUrlKeywordsRulesWithBody(ctx context.Con
 	return err
 }
 
-
 // SecurityUrlRedirectRules wraps security url-redirect-rules.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -976,7 +964,6 @@ func (s *SecurityService) DeleteSecurityUrlRedirectRulesWithBody(ctx context.Con
 	return err
 }
 
-
 // SecurityUrlReplaceRules wraps security url-replace-rules.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -1062,4 +1049,3 @@ func (s *SecurityService) DeleteSecurityUrlReplaceRulesWithBody(ctx context.Cont
 	_, err := s.client.Delete(ctx, "/security/url-replace/rules", body)
 	return err
 }
-

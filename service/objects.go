@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // ObjectsService is the typed v4 entry point for the "objects" group.
@@ -30,7 +30,6 @@ func pathGroupObjects() []V4Endpoint {
 	}
 	return out
 }
-
 
 // ObjectsDomainObjects wraps objects domain-objects.
 //
@@ -112,7 +111,6 @@ func (s *ObjectsService) DeleteObjectsDomainObjectsWithBody(ctx context.Context,
 	return err
 }
 
-
 // ObjectsIpObjects wraps objects ip-objects.
 //
 // Methods: GET, POST, PUT, DELETE
@@ -192,7 +190,6 @@ func (s *ObjectsService) DeleteObjectsIpObjectsWithBody(ctx context.Context, bod
 	_, err := s.client.Delete(ctx, "/ip-objects", body)
 	return err
 }
-
 
 // ObjectsIpv6Objects wraps objects ipv6-objects.
 //
@@ -274,7 +271,6 @@ func (s *ObjectsService) DeleteObjectsIpv6ObjectsWithBody(ctx context.Context, b
 	return err
 }
 
-
 // ObjectsMacObjects wraps objects mac-objects.
 //
 // Methods: GET, POST, PUT, DELETE
@@ -354,7 +350,6 @@ func (s *ObjectsService) DeleteObjectsMacObjectsWithBody(ctx context.Context, bo
 	_, err := s.client.Delete(ctx, "/mac-objects", body)
 	return err
 }
-
 
 // ObjectsPortObjects wraps objects port-objects.
 //
@@ -436,7 +431,6 @@ func (s *ObjectsService) DeleteObjectsPortObjectsWithBody(ctx context.Context, b
 	return err
 }
 
-
 // ObjectsProtocolObjects wraps objects protocol-objects.
 //
 // Methods: GET, POST, PUT, DELETE
@@ -517,7 +511,6 @@ func (s *ObjectsService) DeleteObjectsProtocolObjectsWithBody(ctx context.Contex
 	return err
 }
 
-
 // ObjectsTimeObjects wraps objects time-objects.
 //
 // Methods: GET, POST, PUT, DELETE
@@ -597,7 +590,6 @@ func (s *ObjectsService) DeleteObjectsTimeObjectsWithBody(ctx context.Context, b
 	_, err := s.client.Delete(ctx, "/time-objects", body)
 	return err
 }
-
 
 // Field hints for this group (iKuai firmware field names):
 //   name             Object name (required)

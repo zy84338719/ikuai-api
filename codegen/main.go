@@ -103,7 +103,7 @@ var (
 	// "}," at end of line) so we can scan for the optional Load and
 	// Action fields inside the whole entry rather than just the part
 	// matched by epRe.
-	entryRe = regexp.MustCompile(`\{[^{}]*Group:\s*"([^"]+)"[^{}]*Name:\s*"([^"]+)"[^{}]*Path:\s*"([^"]+)"[^{}]*Methods:\s*\[\]string\{([^}]*)\}[^{}]*\}`)
+	entryRe  = regexp.MustCompile(`\{[^{}]*Group:\s*"([^"]+)"[^{}]*Name:\s*"([^"]+)"[^{}]*Path:\s*"([^"]+)"[^{}]*Methods:\s*\[\]string\{([^}]*)\}[^{}]*\}`)
 	loadRe   = regexp.MustCompile(`Load:\s*true`)
 	actionRe = regexp.MustCompile(`Action:\s*"([^"]+)"`)
 )

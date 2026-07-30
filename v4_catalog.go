@@ -98,7 +98,7 @@ var V4EndpointCatalog = []V4Endpoint{
 	{Group: "network", Name: "dmz-rules", Path: "/network/dmz/rules", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 	{Group: "network", Name: "dnat-rules", Path: "/network/dnat/rules", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 	{Group: "network", Name: "dns-config", Path: "/network/dns/config", Methods: []string{"GET", "PUT"}},
-	{Group: "network", Name: "dns-proxy-rules", Path: "/network/dns/proxy/rules", Methods: []string{"GET", "POST", "PUT"}},
+	{Group: "network", Name: "dns-proxy-rules", Path: "/network/dns/proxy/rules", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 	{Group: "network", Name: "dns-stats", Path: "/network/dns/stats", Methods: []string{"GET"}},
 	{Group: "network", Name: "nat-rules", Path: "/network/nat/rules", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 	{Group: "network", Name: "pppoe-services", Path: "/network/pppoe/services", Methods: []string{"GET", "PUT"}},

@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // MonitoringService is the typed v4 entry point for the "monitoring" group.
@@ -31,7 +31,6 @@ func pathGroupMonitoring() []V4Endpoint {
 	return out
 }
 
-
 // MonitoringAppProtocolsHistoryLoad wraps monitoring app-protocols-history-load.
 //
 // Methods: GET
@@ -42,7 +41,6 @@ func pathGroupMonitoring() []V4Endpoint {
 func (s *MonitoringService) GetMonitoringAppProtocolsHistoryLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/app-protocols/history-load", nil)
 }
-
 
 // MonitoringAppProtocolsLoad wraps monitoring app-protocols-load.
 //
@@ -55,7 +53,6 @@ func (s *MonitoringService) GetMonitoringAppProtocolsLoad(ctx context.Context) (
 	return s.client.Get(ctx, "/monitoring/app-protocols/load", nil)
 }
 
-
 // MonitoringAppProtocolsTerminalLoad wraps monitoring app-protocols-terminal-load.
 //
 // Methods: GET
@@ -66,7 +63,6 @@ func (s *MonitoringService) GetMonitoringAppProtocolsLoad(ctx context.Context) (
 func (s *MonitoringService) GetMonitoringAppProtocolsTerminalLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/app-protocols/terminal-load", nil)
 }
-
 
 // MonitoringAppTrafficSummary wraps monitoring app-traffic-summary.
 //
@@ -79,7 +75,6 @@ func (s *MonitoringService) GetMonitoringAppTrafficSummary(ctx context.Context) 
 	return s.client.Get(ctx, "/monitoring/app-traffic-summary", nil)
 }
 
-
 // MonitoringCameras wraps monitoring cameras.
 //
 // Methods: GET
@@ -90,7 +85,6 @@ func (s *MonitoringService) GetMonitoringAppTrafficSummary(ctx context.Context) 
 func (s *MonitoringService) GetMonitoringCameras(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/cameras", nil)
 }
-
 
 // MonitoringChannelClients wraps monitoring channel-clients.
 //
@@ -103,7 +97,6 @@ func (s *MonitoringService) GetMonitoringChannelClients(ctx context.Context) (js
 	return s.client.Get(ctx, "/monitoring/channel-clients", nil)
 }
 
-
 // MonitoringClientsAppProtocolsLoad wraps monitoring clients-app-protocols-load.
 //
 // Methods: GET
@@ -114,7 +107,6 @@ func (s *MonitoringService) GetMonitoringChannelClients(ctx context.Context) (js
 func (s *MonitoringService) GetMonitoringClientsAppProtocolsLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients/app-protocols/load", nil)
 }
-
 
 // MonitoringClientsIp6Offline wraps monitoring clients-ip6-offline.
 //
@@ -127,7 +119,6 @@ func (s *MonitoringService) GetMonitoringClientsIp6Offline(ctx context.Context) 
 	return s.client.Get(ctx, "/monitoring/clients-ip6-offline", nil)
 }
 
-
 // MonitoringClientsIp6Online wraps monitoring clients-ip6-online.
 //
 // Methods: GET
@@ -138,7 +129,6 @@ func (s *MonitoringService) GetMonitoringClientsIp6Offline(ctx context.Context) 
 func (s *MonitoringService) GetMonitoringClientsIp6Online(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients-ip6-online", nil)
 }
-
 
 // MonitoringClientsOffline wraps monitoring clients-offline.
 //
@@ -151,7 +141,6 @@ func (s *MonitoringService) GetMonitoringClientsOffline(ctx context.Context) (js
 	return s.client.Get(ctx, "/monitoring/clients-offline", nil)
 }
 
-
 // MonitoringClientsOnline wraps monitoring clients-online.
 //
 // Methods: GET
@@ -162,7 +151,6 @@ func (s *MonitoringService) GetMonitoringClientsOffline(ctx context.Context) (js
 func (s *MonitoringService) GetMonitoringClientsOnline(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients-online", nil)
 }
-
 
 // MonitoringClientsProtocols wraps monitoring clients-protocols.
 //
@@ -175,7 +163,6 @@ func (s *MonitoringService) GetMonitoringClientsProtocols(ctx context.Context) (
 	return s.client.Get(ctx, "/monitoring/clients/protocols", nil)
 }
 
-
 // MonitoringClientsProtocolsHistoryLoad wraps monitoring clients-protocols-history-load.
 //
 // Methods: GET
@@ -186,7 +173,6 @@ func (s *MonitoringService) GetMonitoringClientsProtocols(ctx context.Context) (
 func (s *MonitoringService) GetMonitoringClientsProtocolsHistoryLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients/protocols/history-load", nil)
 }
-
 
 // MonitoringClientsTrafficLoad wraps monitoring clients-traffic-load.
 //
@@ -199,7 +185,6 @@ func (s *MonitoringService) GetMonitoringClientsTrafficLoad(ctx context.Context)
 	return s.client.Get(ctx, "/monitoring/clients-traffic-load", nil)
 }
 
-
 // MonitoringClientsTrafficSummary wraps monitoring clients-traffic-summary.
 //
 // Methods: GET
@@ -211,7 +196,6 @@ func (s *MonitoringService) GetMonitoringClientsTrafficSummary(ctx context.Conte
 	return s.client.Get(ctx, "/monitoring/clients-traffic-summary", nil)
 }
 
-
 // MonitoringConnections wraps monitoring connections.
 //
 // Methods: GET
@@ -222,7 +206,6 @@ func (s *MonitoringService) GetMonitoringClientsTrafficSummary(ctx context.Conte
 func (s *MonitoringService) GetMonitoringConnections(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/connections", nil)
 }
-
 
 // MonitoringCpu wraps monitoring cpu.
 //
@@ -283,7 +266,6 @@ func (s *MonitoringService) LoadCpu(ctx context.Context, opts *MonitoringCpuLoad
 	return s.client.Get(ctx, "/monitoring/cpu", q)
 }
 
-
 // MonitoringCputemp wraps monitoring cputemp.
 //
 // Methods: GET
@@ -342,7 +324,6 @@ func (s *MonitoringService) LoadCputemp(ctx context.Context, opts *MonitoringCpu
 	}
 	return s.client.Get(ctx, "/monitoring/cputemp", q)
 }
-
 
 // MonitoringDisk wraps monitoring disk.
 //
@@ -403,7 +384,6 @@ func (s *MonitoringService) LoadDisk(ctx context.Context, opts *MonitoringDiskLo
 	return s.client.Get(ctx, "/monitoring/disk", q)
 }
 
-
 // MonitoringDownstream wraps monitoring downstream.
 //
 // Methods: GET
@@ -414,7 +394,6 @@ func (s *MonitoringService) LoadDisk(ctx context.Context, opts *MonitoringDiskLo
 func (s *MonitoringService) GetMonitoringDownstream(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/downstream", nil)
 }
-
 
 // MonitoringFlowShunting wraps monitoring flow-shunting.
 //
@@ -427,7 +406,6 @@ func (s *MonitoringService) GetMonitoringFlowShunting(ctx context.Context) (json
 	return s.client.Get(ctx, "/monitoring/flow-shunting", nil)
 }
 
-
 // MonitoringInterfacesConfig wraps monitoring interfaces-config.
 //
 // Methods: GET
@@ -438,7 +416,6 @@ func (s *MonitoringService) GetMonitoringFlowShunting(ctx context.Context) (json
 func (s *MonitoringService) GetMonitoringInterfacesConfig(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/interfaces-config", nil)
 }
-
 
 // MonitoringInterfacesPhysical wraps monitoring interfaces-physical.
 //
@@ -451,7 +428,6 @@ func (s *MonitoringService) GetMonitoringInterfacesPhysical(ctx context.Context)
 	return s.client.Get(ctx, "/monitoring/interfaces-physical", nil)
 }
 
-
 // MonitoringInterfacesStatus wraps monitoring interfaces-status.
 //
 // Methods: GET
@@ -462,7 +438,6 @@ func (s *MonitoringService) GetMonitoringInterfacesPhysical(ctx context.Context)
 func (s *MonitoringService) GetMonitoringInterfacesStatus(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/interfaces-status", nil)
 }
-
 
 // MonitoringInterfacesTraffic wraps monitoring interfaces-traffic.
 //
@@ -475,7 +450,6 @@ func (s *MonitoringService) GetMonitoringInterfacesTraffic(ctx context.Context) 
 	return s.client.Get(ctx, "/monitoring/interfaces-traffic", nil)
 }
 
-
 // MonitoringInterfacesTrafficV6 wraps monitoring interfaces-traffic-v6.
 //
 // Methods: GET
@@ -486,7 +460,6 @@ func (s *MonitoringService) GetMonitoringInterfacesTraffic(ctx context.Context) 
 func (s *MonitoringService) GetMonitoringInterfacesTrafficV6(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/interfaces-traffic-v6", nil)
 }
-
 
 // MonitoringMemory wraps monitoring memory.
 //
@@ -547,7 +520,6 @@ func (s *MonitoringService) LoadMemory(ctx context.Context, opts *MonitoringMemo
 	return s.client.Get(ctx, "/monitoring/memory", q)
 }
 
-
 // MonitoringNetwork wraps monitoring network.
 //
 // Methods: GET
@@ -558,7 +530,6 @@ func (s *MonitoringService) LoadMemory(ctx context.Context, opts *MonitoringMemo
 func (s *MonitoringService) GetMonitoringNetwork(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/network", nil)
 }
-
 
 // MonitoringProtocols wraps monitoring protocols.
 //
@@ -571,7 +542,6 @@ func (s *MonitoringService) GetMonitoringProtocols(ctx context.Context) (json.Ra
 	return s.client.Get(ctx, "/monitoring/protocols", nil)
 }
 
-
 // MonitoringProtocolsHistoryLoad wraps monitoring protocols-history-load.
 //
 // Methods: GET
@@ -582,7 +552,6 @@ func (s *MonitoringService) GetMonitoringProtocols(ctx context.Context) (json.Ra
 func (s *MonitoringService) GetMonitoringProtocolsHistoryLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/protocols/history-load", nil)
 }
-
 
 // MonitoringSsidClients wraps monitoring ssid-clients.
 //
@@ -595,7 +564,6 @@ func (s *MonitoringService) GetMonitoringSsidClients(ctx context.Context) (json.
 	return s.client.Get(ctx, "/monitoring/ssid-clients", nil)
 }
 
-
 // MonitoringSwitch wraps monitoring switch.
 //
 // Methods: GET
@@ -607,7 +575,6 @@ func (s *MonitoringService) GetMonitoringSwitch(ctx context.Context) (json.RawMe
 	return s.client.Get(ctx, "/monitoring/switch", nil)
 }
 
-
 // MonitoringSystem wraps monitoring system.
 //
 // Methods: GET
@@ -618,7 +585,6 @@ func (s *MonitoringService) GetMonitoringSwitch(ctx context.Context) (json.RawMe
 func (s *MonitoringService) GetMonitoringSystem(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/system", nil)
 }
-
 
 // MonitoringTerminals wraps monitoring terminals.
 //
@@ -679,7 +645,6 @@ func (s *MonitoringService) LoadTerminals(ctx context.Context, opts *MonitoringT
 	return s.client.Get(ctx, "/monitoring/terminals", q)
 }
 
-
 // MonitoringWirelessScore wraps monitoring wireless-score.
 //
 // Methods: GET
@@ -690,7 +655,6 @@ func (s *MonitoringService) LoadTerminals(ctx context.Context, opts *MonitoringT
 func (s *MonitoringService) GetMonitoringWirelessScore(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/wireless-score", nil)
 }
-
 
 // MonitoringWirelessStatistics wraps monitoring wireless-statistics.
 //
@@ -703,7 +667,6 @@ func (s *MonitoringService) GetMonitoringWirelessStatistics(ctx context.Context)
 	return s.client.Get(ctx, "/monitoring/wireless-statistics", nil)
 }
 
-
 // MonitoringWirelessTraffic wraps monitoring wireless-traffic.
 //
 // Methods: GET
@@ -714,4 +677,3 @@ func (s *MonitoringService) GetMonitoringWirelessStatistics(ctx context.Context)
 func (s *MonitoringService) GetMonitoringWirelessTraffic(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/wireless-traffic", nil)
 }
-

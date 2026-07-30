@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // AdvancedService is the typed v4 entry point for the "advanced" group.
@@ -30,7 +30,6 @@ func pathGroupAdvanced() []V4Endpoint {
 	}
 	return out
 }
-
 
 // AdvancedFtpConfig wraps advanced ftp-config.
 //
@@ -84,7 +83,6 @@ func (s *AdvancedService) UpdateAdvancedFtpConfig(ctx context.Context, body any)
 	_, err := s.client.Put(ctx, "/advanced-service/ftp-config", body)
 	return err
 }
-
 
 // AdvancedFtpUsers wraps advanced ftp-users.
 //
@@ -172,7 +170,6 @@ func (s *AdvancedService) DeleteAdvancedFtpUsersWithBody(ctx context.Context, bo
 	return err
 }
 
-
 // AdvancedHttpUsers wraps advanced http-users.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -259,7 +256,6 @@ func (s *AdvancedService) DeleteAdvancedHttpUsersWithBody(ctx context.Context, b
 	return err
 }
 
-
 // AdvancedSambaConfig wraps advanced samba-config.
 //
 // Methods: GET, PUT
@@ -312,7 +308,6 @@ func (s *AdvancedService) UpdateAdvancedSambaConfig(ctx context.Context, body an
 	_, err := s.client.Put(ctx, "/advanced-service/samba-config", body)
 	return err
 }
-
 
 // AdvancedSambaUsers wraps advanced samba-users.
 //
@@ -400,7 +395,6 @@ func (s *AdvancedService) DeleteAdvancedSambaUsersWithBody(ctx context.Context, 
 	return err
 }
 
-
 // AdvancedSnmpdConfig wraps advanced snmpd-config.
 //
 // Methods: GET, PUT
@@ -453,4 +447,3 @@ func (s *AdvancedService) UpdateAdvancedSnmpdConfig(ctx context.Context, body an
 	_, err := s.client.Put(ctx, "/advanced-service/snmpd-config", body)
 	return err
 }
-
