@@ -3,6 +3,7 @@ package ikuaiapi
 import (
 	"errors"
 	"strings"
+	"time"
 )
 
 // APIError is returned when the router replies with a non-success envelope
@@ -13,6 +14,9 @@ type APIError struct {
 	Code       int
 	Message    string
 	Details    []APIErrorDetail
+	// RetryAfter, when non-zero, carries a server-advised back-off hint
+	// (parsed from the HTTP Retry-After header, typically on 429/503).
+	RetryAfter time.Duration
 }
 
 type APIErrorDetail struct {
@@ -61,6 +65,29 @@ func (e *NetworkError) Error() string {
 }
 
 func (e *NetworkError) Unwrap() error { return e.Cause }
+
+// IsRetryable reports whether a caller may safely retry the request that
+// produced this error. It encodes the SDK's own retry policy so applications
+// can reuse it for custom retry loops or circuit-breaker decisions.
+//
+//   - *NetworkError: retryable (transport hiccups usually clear up), but only
+//     for idempotent verbs — the SDK never auto-retries a write on a network
+//     error because the request may have reached the router.
+//   - *APIError: retryable on HTTP 429 (rate limited), 5xx, and gateway errors.
+//     4xx (other than 429) are not retryable.
+//
+// Pass the HTTP method to qualify network errors: IsRetryable on a *NetworkError
+// returns false for POST/PUT/PATCH to avoid duplicate writes.
+func (e *NetworkError) IsRetryable() bool { return true }
+
+// IsRetryable on an *APIError reflects server-side retryability.
+func (e *APIError) IsRetryable() bool {
+	if e == nil {
+		return false
+	}
+	// 429 Too Many Requests and any 5xx are safe to retry.
+	return e.HTTPStatus == 429 || e.HTTPStatus >= 500
+}
 
 // errorHints maps known iKuai error codes to human-friendly hints.
 var errorHints = map[int]string{

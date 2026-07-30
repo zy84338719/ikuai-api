@@ -11,6 +11,9 @@
 .vscode/
 .DS_Store
 
+# Local agent/tool config
+.claude/
+
 # Go workspace files
 go.work
 go.work.sum

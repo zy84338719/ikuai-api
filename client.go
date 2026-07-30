@@ -36,6 +36,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -78,6 +79,8 @@ type Client struct {
 	retryBase  time.Duration
 	retryMaxD  time.Duration
 	apiBaseURL *url.URL
+	metrics    *Metrics         // optional request counters/latency
+	slogger    Logger           // optional structured logger
 }
 
 // ClientOption configures a Client at construction time.
@@ -162,10 +165,27 @@ func WithRetryDelay(base, max time.Duration) ClientOption {
 }
 
 // WithLogger sets a logging callback. The callback is invoked once per
-// request with a short status line.
+// request with a short status line. Prefer WithStructuredLogger for new code.
 func WithLogger(fn func(format string, args ...any)) ClientOption {
 	return func(c *Client) { c.Logger = fn }
 }
+
+// WithStructuredLogger attaches a leveled, structured Logger (see logger.go).
+// When set, retry / timeout / token-failure events are emitted through it
+// instead of the printf-style Logger callback.
+func WithStructuredLogger(l Logger) ClientOption {
+	return func(c *Client) { c.slogger = l }
+}
+
+// WithMetrics attaches a Metrics collector. When set, every request records
+// its duration and outcome (see Metrics.RecordRequest). Use GetStats to read
+// counters, e.g. for a /metrics endpoint or health check.
+func WithMetrics(m *Metrics) ClientOption {
+	return func(c *Client) { c.metrics = m }
+}
+
+// Metrics returns the attached Metrics collector, or nil if none was set.
+func (c *Client) Metrics() *Metrics { return c.metrics }
 
 // NewClient creates a Client targeting the given router. baseURL should
 // be of the form "http://192.168.1.1" or "https://router.lan:443".
@@ -291,6 +311,7 @@ func (c *Client) check(resp *http.Response) (json.RawMessage, error) {
 			Code:       env.Code,
 			Message:    msg,
 			Details:    detailsEnv.Details,
+			RetryAfter: parseRetryAfter(resp.Header.Get("Retry-After")),
 		}
 	}
 
@@ -385,6 +406,25 @@ func (c *Client) log(format string, args ...any) {
 	if c.Logger != nil {
 		c.Logger(format, args...)
 	}
+}
+
+// logf logs at the given structured level. Falls back to the printf Logger
+// when no structured logger is attached.
+func (c *Client) logf(level LogLevel, msg string, args ...any) {
+	if c.slogger != nil {
+		switch level {
+		case LogLevelDebug:
+			c.slogger.Debug(msg, args...)
+		case LogLevelInfo:
+			c.slogger.Info(msg, args...)
+		case LogLevelWarn:
+			c.slogger.Warn(msg, args...)
+		default:
+			c.slogger.Error(msg, args...)
+		}
+		return
+	}
+	c.log(msg, args...)
 }
 
 // Do executes a typed REST call and decodes the result into out (which
@@ -533,7 +573,11 @@ func (c *Client) doWithRetry(ctx context.Context, method, fullURL string, body a
 			break
 		}
 		delay := backoffDelay(attempt, c.retryBase, c.retryMaxD)
-		c.log("retry %d/%d after %s: %v", attempt+1, c.retryMax, delay, err)
+		// Honour a server-advised Retry-After when present (429/503).
+		if apiErr, ok := isAPIError(err); ok && apiErr.RetryAfter > 0 {
+			delay = apiErr.RetryAfter
+		}
+		c.logf(LogLevelWarn, "retry %d/%d after %s: %v", attempt+1, c.retryMax, delay, err)
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
@@ -543,6 +587,9 @@ func (c *Client) doWithRetry(ctx context.Context, method, fullURL string, body a
 	return nil, lastErr
 }
 
+// shouldRetry decides whether err warrants another attempt. Network errors
+// are retried only for idempotent verbs — a write that failed at the transport
+// layer may still have reached the router, so retrying it risks a duplicate.
 func shouldRetry(err error, idempotent bool) bool {
 	if err == nil {
 		return false
@@ -552,14 +599,12 @@ func shouldRetry(err error, idempotent bool) bool {
 	}
 	var netErr *NetworkError
 	if errors.As(err, &netErr) {
-		return true
-	}
-	if !idempotent {
-		return false
+		// Only retry transport failures on idempotent verbs.
+		return idempotent
 	}
 	var apiErr *APIError
 	if errors.As(err, &apiErr) {
-		return apiErr.HTTPStatus >= 500
+		return apiErr.IsRetryable()
 	}
 	return false
 }
@@ -580,6 +625,27 @@ func backoffDelay(attempt int, base, max time.Duration) time.Duration {
 		d = time.Duration(rand.Int63n(int64(d) + 1)) //nolint:gosec
 	}
 	return d
+}
+
+// parseRetryAfter parses an HTTP Retry-After header value, which may be either
+// a delta-seconds integer or an HTTP-date. Returns 0 when the header is absent
+// or unparseable.
+func parseRetryAfter(v string) time.Duration {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return 0
+	}
+	// Integer seconds form.
+	if n, err := strconv.Atoi(v); err == nil && n > 0 {
+		return time.Duration(n) * time.Second
+	}
+	// HTTP-date form.
+	if t, err := http.ParseTime(v); err == nil {
+		if d := time.Until(t); d > 0 {
+			return d
+		}
+	}
+	return 0
 }
 
 func (c *Client) doOnce(ctx context.Context, method, fullURL string, body any) (json.RawMessage, error) {
@@ -606,11 +672,23 @@ func (c *Client) doOnce(ctx context.Context, method, fullURL string, body any) (
 	}
 	req.Header = c.headers()
 
-	c.log("%s %s", method, fullURL)
+	c.logf(LogLevelDebug, "%s %s", method, fullURL)
+	start := time.Now()
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
+		dur := time.Since(start)
+		c.recordMetrics(dur, true)
 		return nil, &NetworkError{Message: "request failed", Cause: err}
 	}
 	defer func() { _ = resp.Body.Close() }()
-	return c.check(resp)
+	payload, err := c.check(resp)
+	c.recordMetrics(time.Since(start), err != nil)
+	return payload, err
+}
+
+// recordMetrics records the request if a Metrics collector is attached.
+func (c *Client) recordMetrics(dur time.Duration, hasError bool) {
+	if c.metrics != nil {
+		c.metrics.RecordRequest(dur, hasError)
+	}
 }
