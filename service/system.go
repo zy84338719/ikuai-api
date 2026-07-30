@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // SystemService is the typed v4 entry point for the "system" group.
@@ -30,7 +30,6 @@ func pathGroupSystem() []V4Endpoint {
 	}
 	return out
 }
-
 
 // SystemAcClients wraps system ac-clients.
 //
@@ -112,7 +111,6 @@ func (s *SystemService) DeleteSystemAcClientsWithBody(ctx context.Context, body 
 	return err
 }
 
-
 // SystemAcPeers wraps system ac-peers.
 //
 // Methods: GET, POST, PUT, DELETE
@@ -192,7 +190,6 @@ func (s *SystemService) DeleteSystemAcPeersWithBody(ctx context.Context, body an
 	_, err := s.client.Delete(ctx, "/peers", body)
 	return err
 }
-
 
 // SystemAcRef wraps system ac-ref.
 //
@@ -274,7 +271,6 @@ func (s *SystemService) DeleteSystemAcRefWithBody(ctx context.Context, body any)
 	return err
 }
 
-
 // SystemAcServices wraps system ac-services.
 //
 // Methods: GET, POST, PUT, DELETE
@@ -355,7 +351,6 @@ func (s *SystemService) DeleteSystemAcServicesWithBody(ctx context.Context, body
 	return err
 }
 
-
 // SystemAlg wraps system alg.
 //
 // Methods: GET, PUT
@@ -408,7 +403,6 @@ func (s *SystemService) UpdateSystemAlg(ctx context.Context, body any) error {
 	_, err := s.client.Put(ctx, "/system/alg", body)
 	return err
 }
-
 
 // SystemBackup wraps system backup.
 //
@@ -483,7 +477,6 @@ func (s *SystemService) DeleteSystemBackupWithBody(ctx context.Context, body any
 	_, err := s.client.Delete(ctx, "/system/backup", body)
 	return err
 }
-
 
 // SystemBackupAuto wraps system backup-auto.
 //
@@ -565,7 +558,6 @@ func (s *SystemService) DeleteSystemBackupAutoWithBody(ctx context.Context, body
 	return err
 }
 
-
 // SystemBackupRestore wraps system backup-restore.
 //
 // Methods: POST
@@ -576,7 +568,6 @@ func (s *SystemService) DeleteSystemBackupAutoWithBody(ctx context.Context, body
 func (s *SystemService) RestoreSystemBackup(ctx context.Context, body any) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/system/backup:restore", body)
 }
-
 
 // SystemBasicConfig wraps system basic-config.
 //
@@ -631,7 +622,6 @@ func (s *SystemService) UpdateSystemBasicConfig(ctx context.Context, body any) e
 	return err
 }
 
-
 // SystemBasicNtpSync wraps system basic-ntp-sync.
 //
 // Methods: POST
@@ -642,7 +632,6 @@ func (s *SystemService) UpdateSystemBasicConfig(ctx context.Context, body any) e
 func (s *SystemService) SyncSystemBasicNtp(ctx context.Context, body any) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/system/basic/ntp:sync", body)
 }
-
 
 // SystemCpufreq wraps system cpufreq.
 //
@@ -697,7 +686,6 @@ func (s *SystemService) UpdateSystemCpufreq(ctx context.Context, body any) error
 	return err
 }
 
-
 // SystemCpufreqMode wraps system cpufreq-mode.
 //
 // Methods: PUT
@@ -738,7 +726,6 @@ func (s *SystemService) UpdateSystemCpufreqMode(ctx context.Context, body any) e
 	return err
 }
 
-
 // SystemDisks wraps system disks.
 //
 // Methods: GET
@@ -750,7 +737,6 @@ func (s *SystemService) GetSystemDisks(ctx context.Context) (json.RawMessage, er
 	return s.client.Get(ctx, "/system/disks", nil)
 }
 
-
 // SystemFiles wraps system files.
 //
 // Methods: GET
@@ -761,7 +747,6 @@ func (s *SystemService) GetSystemDisks(ctx context.Context) (json.RawMessage, er
 func (s *SystemService) GetSystemFiles(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/system/files", nil)
 }
-
 
 // SystemKernelParams wraps system kernel-params.
 //
@@ -815,7 +800,6 @@ func (s *SystemService) UpdateSystemKernelParams(ctx context.Context, body any) 
 	_, err := s.client.Put(ctx, "/system/kernel-params", body)
 	return err
 }
-
 
 // SystemRebootSchedules wraps system reboot-schedules.
 //
@@ -903,7 +887,6 @@ func (s *SystemService) DeleteSystemRebootSchedulesWithBody(ctx context.Context,
 	return err
 }
 
-
 // SystemRemoteAccess wraps system remote-access.
 //
 // Methods: GET, PUT
@@ -956,7 +939,6 @@ func (s *SystemService) UpdateSystemRemoteAccess(ctx context.Context, body any) 
 	_, err := s.client.Put(ctx, "/system/remote-access", body)
 	return err
 }
-
 
 // SystemUpgrade wraps system upgrade.
 //
@@ -1015,7 +997,6 @@ func (s *SystemService) CreateSystemUpgrade(ctx context.Context, body any) (int6
 	return extractRowID(raw)
 }
 
-
 // SystemUpgradeCheck wraps system upgrade-check.
 //
 // Methods: POST
@@ -1026,7 +1007,6 @@ func (s *SystemService) CreateSystemUpgrade(ctx context.Context, body any) (int6
 func (s *SystemService) CheckSystemUpgrade(ctx context.Context, body any) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/system/upgrade:check", body)
 }
-
 
 // SystemUpgradeStart wraps system upgrade-start.
 //
@@ -1039,7 +1019,6 @@ func (s *SystemService) StartSystemUpgrade(ctx context.Context, body any) (json.
 	return s.client.Post(ctx, "/system/upgrade:start", body)
 }
 
-
 // SystemUpgradeStatus wraps system upgrade-status.
 //
 // Methods: GET
@@ -1050,7 +1029,6 @@ func (s *SystemService) StartSystemUpgrade(ctx context.Context, body any) (json.
 func (s *SystemService) GetSystemUpgradeStatus(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/system/upgrade:status", nil)
 }
-
 
 // SystemVrrpConfig wraps system vrrp-config.
 //
@@ -1105,7 +1083,6 @@ func (s *SystemService) UpdateSystemVrrpConfig(ctx context.Context, body any) er
 	return err
 }
 
-
 // SystemVrrpStart wraps system vrrp-start.
 //
 // Methods: POST
@@ -1117,7 +1094,6 @@ func (s *SystemService) StartSystemVrrp(ctx context.Context, body any) (json.Raw
 	return s.client.Post(ctx, "/system/vrrp:start", body)
 }
 
-
 // SystemVrrpStop wraps system vrrp-stop.
 //
 // Methods: POST
@@ -1127,7 +1103,6 @@ func (s *SystemService) StartSystemVrrp(ctx context.Context, body any) (json.Raw
 func (s *SystemService) StopSystemVrrp(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/system/vrrp:stop", map[string]any{})
 }
-
 
 // SystemWebAdminAccounts wraps system web-admin-accounts.
 //
@@ -1209,7 +1184,6 @@ func (s *SystemService) DeleteSystemWebAdminAccountsWithBody(ctx context.Context
 	return err
 }
 
-
 // SystemWebAdminGroups wraps system web-admin-groups.
 //
 // Methods: GET, POST, PUT, DELETE
@@ -1290,7 +1264,6 @@ func (s *SystemService) DeleteSystemWebAdminGroupsWithBody(ctx context.Context, 
 	return err
 }
 
-
 // SystemWebAdminPassword wraps system web-admin-password.
 //
 // Methods: PUT
@@ -1331,7 +1304,6 @@ func (s *SystemService) UpdateSystemWebAdminPassword(ctx context.Context, body a
 	return err
 }
 
-
 // SystemWebAdminPasswordStatus wraps system web-admin-password-status.
 //
 // Methods: GET
@@ -1342,7 +1314,6 @@ func (s *SystemService) UpdateSystemWebAdminPassword(ctx context.Context, body a
 func (s *SystemService) GetSystemWebAdminPasswordStatus(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/system/web-admin/password-status", nil)
 }
-
 
 // Field hints for this group (iKuai firmware field names):
 //   hostname         Router hostname

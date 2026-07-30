@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // VpnService is the typed v4 entry point for the "vpn" group.
@@ -30,7 +30,6 @@ func pathGroupVpn() []V4Endpoint {
 	}
 	return out
 }
-
 
 // VpnIkev2 wraps vpn ikev2.
 //
@@ -84,7 +83,6 @@ func (s *VpnService) UpdateVpnIkev2(ctx context.Context, body any) error {
 	_, err := s.client.Put(ctx, "/vpn/ikev2", body)
 	return err
 }
-
 
 // VpnIkev2Clients wraps vpn ikev2-clients.
 //
@@ -172,7 +170,6 @@ func (s *VpnService) DeleteVpnIkev2ClientsWithBody(ctx context.Context, body any
 	return err
 }
 
-
 // VpnIpsecClients wraps vpn ipsec-clients.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -259,7 +256,6 @@ func (s *VpnService) DeleteVpnIpsecClientsWithBody(ctx context.Context, body any
 	return err
 }
 
-
 // VpnL2Tp wraps vpn l2tp.
 //
 // Methods: GET, PUT
@@ -312,7 +308,6 @@ func (s *VpnService) UpdateVpnL2Tp(ctx context.Context, body any) error {
 	_, err := s.client.Put(ctx, "/vpn/l2tp", body)
 	return err
 }
-
 
 // VpnL2TpClients wraps vpn l2tp-clients.
 //
@@ -400,7 +395,6 @@ func (s *VpnService) DeleteVpnL2TpClientsWithBody(ctx context.Context, body any)
 	return err
 }
 
-
 // VpnOpenvpn wraps vpn openvpn.
 //
 // Methods: GET, PUT
@@ -453,7 +447,6 @@ func (s *VpnService) UpdateVpnOpenvpn(ctx context.Context, body any) error {
 	_, err := s.client.Put(ctx, "/vpn/openvpn", body)
 	return err
 }
-
 
 // VpnOpenvpnClients wraps vpn openvpn-clients.
 //
@@ -541,7 +534,6 @@ func (s *VpnService) DeleteVpnOpenvpnClientsWithBody(ctx context.Context, body a
 	return err
 }
 
-
 // VpnPptp wraps vpn pptp.
 //
 // Methods: GET, PUT
@@ -594,7 +586,6 @@ func (s *VpnService) UpdateVpnPptp(ctx context.Context, body any) error {
 	_, err := s.client.Put(ctx, "/vpn/pptp", body)
 	return err
 }
-
 
 // VpnPptpClients wraps vpn pptp-clients.
 //
@@ -682,7 +673,6 @@ func (s *VpnService) DeleteVpnPptpClientsWithBody(ctx context.Context, body any)
 	return err
 }
 
-
 // VpnWireguard wraps vpn wireguard.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -768,7 +758,6 @@ func (s *VpnService) DeleteVpnWireguardWithBody(ctx context.Context, body any) e
 	_, err := s.client.Delete(ctx, "/vpn/wireguard", body)
 	return err
 }
-
 
 // Field hints for this group (iKuai firmware field names):
 //   name             Tunnel name

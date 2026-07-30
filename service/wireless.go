@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // WirelessService is the typed v4 entry point for the "wireless" group.
@@ -30,7 +30,6 @@ func pathGroupWireless() []V4Endpoint {
 	}
 	return out
 }
-
 
 // WirelessAccessControlRules wraps wireless access-control-rules.
 //
@@ -118,7 +117,6 @@ func (s *WirelessService) DeleteWirelessAccessControlRulesWithBody(ctx context.C
 	return err
 }
 
-
 // WirelessVlanRules wraps wireless vlan-rules.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -204,4 +202,3 @@ func (s *WirelessService) DeleteWirelessVlanRulesWithBody(ctx context.Context, b
 	_, err := s.client.Delete(ctx, "/wireless/vlan/rules", body)
 	return err
 }
-

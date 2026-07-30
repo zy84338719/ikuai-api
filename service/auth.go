@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // AuthService is the typed v4 entry point for the "auth" group.
@@ -30,7 +30,6 @@ func pathGroupAuth() []V4Endpoint {
 	}
 	return out
 }
-
 
 // AuthOnlineUsers wraps auth online-users.
 //
@@ -95,7 +94,6 @@ func (s *AuthService) DeleteAuthOnlineUsersWithBody(ctx context.Context, body an
 	_, err := s.client.Delete(ctx, "/auth/online-users", body)
 	return err
 }
-
 
 // AuthPackages wraps auth packages.
 //
@@ -183,7 +181,6 @@ func (s *AuthService) DeleteAuthPackagesWithBody(ctx context.Context, body any) 
 	return err
 }
 
-
 // AuthUsers wraps auth users.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -270,7 +267,6 @@ func (s *AuthService) DeleteAuthUsersWithBody(ctx context.Context, body any) err
 	return err
 }
 
-
 // AuthWebServices wraps auth web-services.
 //
 // Methods: GET, PUT
@@ -323,7 +319,6 @@ func (s *AuthService) UpdateAuthWebServices(ctx context.Context, body any) error
 	_, err := s.client.Put(ctx, "/auth/web/services", body)
 	return err
 }
-
 
 // Field hints for this group (iKuai firmware field names):
 //   username         Auth user name (required)

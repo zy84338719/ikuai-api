@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // RoutingService is the typed v4 entry point for the "routing" group.
@@ -30,7 +30,6 @@ func pathGroupRouting() []V4Endpoint {
 	}
 	return out
 }
-
 
 // RoutingAppProtocols wraps routing app-protocols.
 //
@@ -118,7 +117,6 @@ func (s *RoutingService) DeleteRoutingAppProtocolsWithBody(ctx context.Context, 
 	return err
 }
 
-
 // RoutingDomainRules wraps routing domain-rules.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -204,7 +202,6 @@ func (s *RoutingService) DeleteRoutingDomainRulesWithBody(ctx context.Context, b
 	_, err := s.client.Delete(ctx, "/routing/domain-rules", body)
 	return err
 }
-
 
 // RoutingFiveTupleRules wraps routing five-tuple-rules.
 //
@@ -292,7 +289,6 @@ func (s *RoutingService) DeleteRoutingFiveTupleRulesWithBody(ctx context.Context
 	return err
 }
 
-
 // RoutingLoadBalanceRules wraps routing load-balance-rules.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -378,7 +374,6 @@ func (s *RoutingService) DeleteRoutingLoadBalanceRulesWithBody(ctx context.Conte
 	_, err := s.client.Delete(ctx, "/routing/load-balance-rules", body)
 	return err
 }
-
 
 // RoutingStaticRoutes wraps routing static-routes.
 //
@@ -466,7 +461,6 @@ func (s *RoutingService) DeleteRoutingStaticRoutesWithBody(ctx context.Context, 
 	return err
 }
 
-
 // RoutingUpdown wraps routing updown.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -552,4 +546,3 @@ func (s *RoutingService) DeleteRoutingUpdownWithBody(ctx context.Context, body a
 	_, err := s.client.Delete(ctx, "/routing/updown", body)
 	return err
 }
-

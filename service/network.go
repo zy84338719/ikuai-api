@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // NetworkService is the typed v4 entry point for the "network" group.
@@ -30,7 +30,6 @@ func pathGroupNetwork() []V4Endpoint {
 	}
 	return out
 }
-
 
 // NetworkAcApConfig wraps network ac-ap-config.
 //
@@ -102,7 +101,6 @@ func (s *NetworkService) DeleteNetworkAcApConfigWithBody(ctx context.Context, bo
 	return err
 }
 
-
 // NetworkAcServices wraps network ac-services.
 //
 // Methods: GET, PUT
@@ -156,7 +154,6 @@ func (s *NetworkService) UpdateNetworkAcServices(ctx context.Context, body any) 
 	return err
 }
 
-
 // NetworkAcServicesStart wraps network ac-services-start.
 //
 // Methods: POST
@@ -168,7 +165,6 @@ func (s *NetworkService) StartNetworkAcServices(ctx context.Context, body any) (
 	return s.client.Post(ctx, "/network/ac/services:start", body)
 }
 
-
 // NetworkAcServicesStop wraps network ac-services-stop.
 //
 // Methods: POST
@@ -178,7 +174,6 @@ func (s *NetworkService) StartNetworkAcServices(ctx context.Context, body any) (
 func (s *NetworkService) StopNetworkAcServices(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/network/ac/services:stop", map[string]any{})
 }
-
 
 // NetworkDhcpAccessControlMode wraps network dhcp-access-control-mode.
 //
@@ -232,7 +227,6 @@ func (s *NetworkService) UpdateNetworkDhcpAccessControlMode(ctx context.Context,
 	_, err := s.client.Put(ctx, "/network/dhcp/access-control/mode", body)
 	return err
 }
-
 
 // NetworkDhcpAccessControlRules wraps network dhcp-access-control-rules.
 //
@@ -320,7 +314,6 @@ func (s *NetworkService) DeleteNetworkDhcpAccessControlRulesWithBody(ctx context
 	return err
 }
 
-
 // NetworkDhcpClients wraps network dhcp-clients.
 //
 // Methods: GET
@@ -331,7 +324,6 @@ func (s *NetworkService) DeleteNetworkDhcpAccessControlRulesWithBody(ctx context
 func (s *NetworkService) GetNetworkDhcpClients(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/network/dhcp/clients", nil)
 }
-
 
 // NetworkDhcpServices wraps network dhcp-services.
 //
@@ -402,7 +394,6 @@ func (s *NetworkService) PatchNetworkDhcpServices(ctx context.Context, body any)
 	return err
 }
 
-
 // NetworkDhcpServicesRestart wraps network dhcp-services-restart.
 //
 // Methods: POST
@@ -412,7 +403,6 @@ func (s *NetworkService) PatchNetworkDhcpServices(ctx context.Context, body any)
 func (s *NetworkService) RestartNetworkDhcpServices(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/network/dhcp/services:restart", map[string]any{})
 }
-
 
 // NetworkDhcpServicesStart wraps network dhcp-services-start.
 //
@@ -425,7 +415,6 @@ func (s *NetworkService) StartNetworkDhcpServices(ctx context.Context, body any)
 	return s.client.Post(ctx, "/network/dhcp/services:start", body)
 }
 
-
 // NetworkDhcpServicesStop wraps network dhcp-services-stop.
 //
 // Methods: POST
@@ -435,7 +424,6 @@ func (s *NetworkService) StartNetworkDhcpServices(ctx context.Context, body any)
 func (s *NetworkService) StopNetworkDhcpServices(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Post(ctx, "/network/dhcp/services:stop", map[string]any{})
 }
-
 
 // NetworkDhcpStatic wraps network dhcp-static.
 //
@@ -506,7 +494,6 @@ func (s *NetworkService) PatchNetworkDhcpStatic(ctx context.Context, body any) e
 	return err
 }
 
-
 // NetworkDhcp6AccessControlMode wraps network dhcp6-access-control-mode.
 //
 // Methods: GET, PUT
@@ -559,7 +546,6 @@ func (s *NetworkService) UpdateNetworkDhcp6AccessControlMode(ctx context.Context
 	_, err := s.client.Put(ctx, "/network/dhcp6/access-control/mode", body)
 	return err
 }
-
 
 // NetworkDhcp6AccessControlRules wraps network dhcp6-access-control-rules.
 //
@@ -630,7 +616,6 @@ func (s *NetworkService) PatchNetworkDhcp6AccessControlRules(ctx context.Context
 	return err
 }
 
-
 // NetworkDhcp6Clients wraps network dhcp6-clients.
 //
 // Methods: GET
@@ -641,7 +626,6 @@ func (s *NetworkService) PatchNetworkDhcp6AccessControlRules(ctx context.Context
 func (s *NetworkService) GetNetworkDhcp6Clients(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/network/dhcp6/clients", nil)
 }
-
 
 // NetworkDmzRules wraps network dmz-rules.
 //
@@ -729,7 +713,6 @@ func (s *NetworkService) DeleteNetworkDmzRulesWithBody(ctx context.Context, body
 	return err
 }
 
-
 // NetworkDnatRules wraps network dnat-rules.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -816,7 +799,6 @@ func (s *NetworkService) DeleteNetworkDnatRulesWithBody(ctx context.Context, bod
 	return err
 }
 
-
 // NetworkDnsConfig wraps network dns-config.
 //
 // Methods: GET, PUT
@@ -870,10 +852,9 @@ func (s *NetworkService) UpdateNetworkDnsConfig(ctx context.Context, body any) e
 	return err
 }
 
-
 // NetworkDnsProxyRules wraps network dns-proxy-rules.
 //
-// Methods: GET, POST, PUT
+// Methods: GET, POST, PUT, PATCH, DELETE
 //
 // Path: /network/dns/proxy/rules
 //
@@ -934,6 +915,28 @@ func (s *NetworkService) UpdateNetworkDnsProxyRules(ctx context.Context, body an
 	return err
 }
 
+// PatchNetworkDnsProxyRules partial-updates the resource at /network/dns/proxy/rules.
+func (s *NetworkService) PatchNetworkDnsProxyRules(ctx context.Context, body any) error {
+	_, err := s.client.Patch(ctx, "/network/dns/proxy/rules", body)
+	return err
+}
+
+// DeleteNetworkDnsProxyRules removes the resource at /network/dns/proxy/rules. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteNetworkDnsProxyRulesWithBody to send a custom JSON body instead.
+func (s *NetworkService) DeleteNetworkDnsProxyRules(ctx context.Context, id int64) error {
+	_, err := s.client.Delete(ctx, "/network/dns/proxy/rules"+"?id="+strconv.FormatInt(id, 10), nil)
+	return err
+}
+
+// DeleteNetworkDnsProxyRulesWithBody removes the resource at /network/dns/proxy/rules with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteNetworkDnsProxyRules cannot model directly).
+func (s *NetworkService) DeleteNetworkDnsProxyRulesWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/network/dns/proxy/rules", body)
+	return err
+}
 
 // NetworkDnsStats wraps network dns-stats.
 //
@@ -945,7 +948,6 @@ func (s *NetworkService) UpdateNetworkDnsProxyRules(ctx context.Context, body an
 func (s *NetworkService) GetNetworkDnsStats(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/network/dns/stats", nil)
 }
-
 
 // NetworkNatRules wraps network nat-rules.
 //
@@ -1033,7 +1035,6 @@ func (s *NetworkService) DeleteNetworkNatRulesWithBody(ctx context.Context, body
 	return err
 }
 
-
 // NetworkPppoeServices wraps network pppoe-services.
 //
 // Methods: GET, PUT
@@ -1086,7 +1087,6 @@ func (s *NetworkService) UpdateNetworkPppoeServices(ctx context.Context, body an
 	_, err := s.client.Put(ctx, "/network/pppoe/services", body)
 	return err
 }
-
 
 // NetworkQosIp wraps network qos-ip.
 //
@@ -1174,7 +1174,6 @@ func (s *NetworkService) DeleteNetworkQosIpWithBody(ctx context.Context, body an
 	return err
 }
 
-
 // NetworkQosMac wraps network qos-mac.
 //
 // Methods: GET, POST, PUT, PATCH, DELETE
@@ -1261,7 +1260,6 @@ func (s *NetworkService) DeleteNetworkQosMacWithBody(ctx context.Context, body a
 	return err
 }
 
-
 // NetworkVlan wraps network vlan.
 //
 // Methods: GET, POST, PUT, PATCH
@@ -1330,7 +1328,6 @@ func (s *NetworkService) PatchNetworkVlan(ctx context.Context, body any) error {
 	_, err := s.client.Patch(ctx, "/network/vlan", body)
 	return err
 }
-
 
 // Field hints for this group (iKuai firmware field names):
 //   name             Rule name (required for create, used in list views)

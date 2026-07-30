@@ -30,7 +30,6 @@ func pathGroupInterfaces() []V4Endpoint {
 	return out
 }
 
-
 // InterfacesLanConfig wraps interfaces lan-config.
 //
 // Methods: GET
@@ -41,7 +40,6 @@ func pathGroupInterfaces() []V4Endpoint {
 func (s *InterfacesService) GetInterfacesLanConfig(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/interfaces/lan-config", nil)
 }
-
 
 // InterfacesPhysical wraps interfaces physical.
 //
@@ -54,7 +52,6 @@ func (s *InterfacesService) GetInterfacesPhysical(ctx context.Context) (json.Raw
 	return s.client.Get(ctx, "/interfaces/physical", nil)
 }
 
-
 // InterfacesWanConfig wraps interfaces wan-config.
 //
 // Methods: GET
@@ -66,7 +63,6 @@ func (s *InterfacesService) GetInterfacesWanConfig(ctx context.Context) (json.Ra
 	return s.client.Get(ctx, "/interfaces/wan-config", nil)
 }
 
-
 // InterfacesWanVlanConfig wraps interfaces wan-vlan-config.
 //
 // Methods: GET
@@ -77,4 +73,3 @@ func (s *InterfacesService) GetInterfacesWanConfig(ctx context.Context) (json.Ra
 func (s *InterfacesService) GetInterfacesWanVlanConfig(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/interfaces/wan-vlan-config", nil)
 }
-

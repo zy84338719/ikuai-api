@@ -5,8 +5,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
+	"strconv"
 )
 
 // LogService is the typed v4 entry point for the "log" group.
@@ -30,7 +30,6 @@ func pathGroupLog() []V4Endpoint {
 	}
 	return out
 }
-
 
 // LogArp wraps log arp.
 //
@@ -96,7 +95,6 @@ func (s *LogService) DeleteLogArpWithBody(ctx context.Context, body any) error {
 	return err
 }
 
-
 // LogAuth wraps log auth.
 //
 // Methods: GET, DELETE
@@ -160,7 +158,6 @@ func (s *LogService) DeleteLogAuthWithBody(ctx context.Context, body any) error 
 	_, err := s.client.Delete(ctx, "/log/auth", body)
 	return err
 }
-
 
 // LogDdns wraps log ddns.
 //
@@ -226,7 +223,6 @@ func (s *LogService) DeleteLogDdnsWithBody(ctx context.Context, body any) error 
 	return err
 }
 
-
 // LogDhcp wraps log dhcp.
 //
 // Methods: GET, DELETE
@@ -290,7 +286,6 @@ func (s *LogService) DeleteLogDhcpWithBody(ctx context.Context, body any) error 
 	_, err := s.client.Delete(ctx, "/log/dhcp", body)
 	return err
 }
-
 
 // LogNotice wraps log notice.
 //
@@ -356,7 +351,6 @@ func (s *LogService) DeleteLogNoticeWithBody(ctx context.Context, body any) erro
 	return err
 }
 
-
 // LogPppoe wraps log pppoe.
 //
 // Methods: GET, DELETE
@@ -420,7 +414,6 @@ func (s *LogService) DeleteLogPppoeWithBody(ctx context.Context, body any) error
 	_, err := s.client.Delete(ctx, "/log/pppoe", body)
 	return err
 }
-
 
 // LogSystem wraps log system.
 //
@@ -486,7 +479,6 @@ func (s *LogService) DeleteLogSystemWithBody(ctx context.Context, body any) erro
 	return err
 }
 
-
 // LogWebActivity wraps log web-activity.
 //
 // Methods: GET, DELETE
@@ -551,7 +543,6 @@ func (s *LogService) DeleteLogWebActivityWithBody(ctx context.Context, body any)
 	return err
 }
 
-
 // LogWireless wraps log wireless.
 //
 // Methods: GET, DELETE
@@ -615,4 +606,3 @@ func (s *LogService) DeleteLogWirelessWithBody(ctx context.Context, body any) er
 	_, err := s.client.Delete(ctx, "/log/wireless", body)
 	return err
 }
-
