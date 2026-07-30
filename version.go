@@ -1,6 +1,9 @@
 // Package version: the iKuai API only supports the v4 REST surface.
 package ikuaiapi
 
+// SDKVersion is the semantic version of this SDK.
+const SDKVersion = "1.1.0"
+
 // Version enumerates the iKuai API generations the SDK recognises.
 type Version int
 

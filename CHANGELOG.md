@@ -1,5 +1,43 @@
 # Changelog
 
+## v1.1.0 — 2026-07-31
+
+Production hardening of the HTTP client layer: observability wiring, retry
+safety, and retryability introspection. Additive — all v1.0.x callers keep
+working.
+
+### Added
+
+- `SDKVersion` constant ("1.1.0") for runtime version introspection.
+- `WithMetrics(*Metrics)` wires the existing (previously dead) `Metrics`
+  collector into every request: `doOnce` now times each call and records
+  duration + outcome. Read via `Client.Metrics()` / `Metrics.GetStats()`.
+- `WithStructuredLogger(Logger)` attaches the leveled `Logger` interface
+  from logger.go; retry / timeout / debug events flow through it. The
+  printf-style `WithLogger` callback is retained for backward compatibility.
+- `APIError.IsRetryable()` and `NetworkError.IsRetryable()` expose the
+  SDK's own retryability judgement so applications can reuse it for custom
+  retry loops or circuit breakers.
+- `APIError.RetryAfter` carries the parsed `Retry-After` header (delta-seconds
+  or HTTP-date) from 429/503 responses.
+
+### Changed (behaviour)
+
+- **Write operations are no longer retried on network errors.** Previously a
+  POST/PUT/PATCH that failed at the transport layer was retried
+  unconditionally, which risks duplicate writes since the request may have
+  reached the router. Network errors are now retried only for idempotent
+  verbs (GET/HEAD/OPTIONS/DELETE).
+- `429 Too Many Requests` is now recognised as retryable, and `Retry-After`
+  is honoured as the back-off when present.
+
+### Compatibility
+
+All v1.0.x callers continue to work. The write-retry change is a safety fix
+that matches what a stateful router API actually requires; callers that
+relied on retrying writes on transport errors should wrap the call in their
+own idempotency guard.
+
 ## v1.0.1 — 2026-07-27
 
 Brings the SDK to parity with `ikuai-cli` for the bits that v1.0.0
