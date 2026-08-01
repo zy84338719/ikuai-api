@@ -173,16 +173,6 @@ var V4EndpointCatalog = []V4Endpoint{
 	{Group: "wireless", Name: "vlan-rules", Path: "/wireless/vlan/rules", Methods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"}},
 }
 
-func V4EndpointsByGroup(group string) []V4Endpoint {
-	var endpoints []V4Endpoint
-	for _, endpoint := range V4EndpointCatalog {
-		if endpoint.Group == group {
-			endpoints = append(endpoints, endpoint)
-		}
-	}
-	return endpoints
-}
-
 func V4EndpointByName(name string) (V4Endpoint, bool) {
 	for _, endpoint := range V4EndpointCatalog {
 		if endpoint.Name == name {
