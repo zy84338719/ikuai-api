@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.1.1 — 2026-08-01
+
+Documentation and housekeeping on top of v1.1.0; no behaviour change.
+
+### Changed
+- README now documents the v1.1.0 observability features (`WithMetrics`,
+  `WithStructuredLogger`, `SDKVersion`) and the `IsRetryable()` / `RetryAfter`
+  error-model additions.
+- `example/main.go` demonstrates `WithMetrics` + `WithStructuredLogger` and
+  prints collected stats; removed a duplicated code block.
+
+### Removed
+- `internal.NormalizeAddr` and `V4EndpointsByGroup` — exported helpers with
+  no internal or external callers.
+
 ## v1.1.0 — 2026-07-31
 
 Production hardening of the HTTP client layer: observability wiring, retry
