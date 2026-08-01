@@ -162,8 +162,23 @@ client, _ := ikuaiapi.NewClient("https://192.168.1.1",
     ikuaiapi.WithRetry(3),                         // total attempt count
     ikuaiapi.WithRetryDelay(200*time.Millisecond, 5*time.Second),
     ikuaiapi.WithLogger(func(format string, args ...any) { log.Printf(format, args...) }),
+    ikuaiapi.WithMetrics(ikuaiapi.NewMetrics()),           // count requests / latency (v1.1.0+)
+    ikuaiapi.WithStructuredLogger(ikuaiapi.NewDefaultLogger(ikuaiapi.LogLevelInfo)), // leveled logger (v1.1.0+)
 )
 ```
+
+## Observability (v1.1.0+)
+
+- **`WithMetrics(*Metrics)`** wires a request counter/latency collector into
+  every call. Read snapshot stats with `client.Metrics().GetStats()` →
+  `(requestCount, errorCount, avgDuration)`; handy for a `/metrics` endpoint
+  or a health check. Use `Metrics.Reset()` between scrapes.
+- **`WithStructuredLogger(Logger)`** routes retry / timeout / debug events
+  through a leveled `Logger` interface (`Debug/Info/Warn/Error`) instead of
+  the printf-style `WithLogger` callback. `NewDefaultLogger(level)` returns a
+  stdlib-backed one; adapt zap/zerolog by implementing the interface.
+- **`SDKVersion`** is the semantic version string ("1.1.0") for runtime
+  introspection.
 
 ## Error model
 
@@ -171,9 +186,17 @@ Two typed errors come back from every call:
 
 - `*ikuaiapi.APIError` — protocol-level failure: non-zero `code`,
   HTTP 4xx/5xx, or unparseable JSON. Fields: `HTTPStatus`, `Code`,
-  `Message`, `Details` (per-field validation errors).
+  `Message`, `Details` (per-field validation errors), and `RetryAfter`
+  (parsed from the HTTP `Retry-After` header on 429/503, v1.1.0+).
 - `*ikuaiapi.NetworkError` — transport failure: DNS, refused, TLS,
   timeout. Wraps the original `net` / `tls` / `http` error.
+
+Both error types implement **`IsRetryable() bool`** (v1.1.0+), exposing the
+SDK's own retryability judgement so applications can reuse it for custom
+retry loops or circuit breakers: `APIError` is retryable on HTTP 429 / 5xx;
+`NetworkError` is retryable. Note the SDK only auto-retries network errors
+for **idempotent** verbs (GET/HEAD/OPTIONS/DELETE) — writes are never
+auto-retried, since the request may have reached the router.
 
 ```go
 _, err := api.Network().GetNetworkDnsConfig(ctx)

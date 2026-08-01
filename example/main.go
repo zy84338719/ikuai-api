@@ -30,12 +30,14 @@ func main() {
 		log.Fatal("set IKUAI_BASE_URL and IKUAI_TOKEN")
 	}
 
+	// WithMetrics records request count/latency (printable at the end);
+	// WithStructuredLogger routes retry/debug events through a leveled logger.
+	metrics := ikuaiapi.NewMetrics()
 	client, err := ikuaiapi.NewClient(baseURL,
 		ikuaiapi.WithToken(token),
 		ikuaiapi.WithTimeout(15*time.Second),
-		ikuaiapi.WithLogger(func(format string, args ...any) {
-			log.Printf("[ikuai] "+format, args...)
-		}),
+		ikuaiapi.WithMetrics(metrics),
+		ikuaiapi.WithStructuredLogger(ikuaiapi.NewDefaultLogger(ikuaiapi.LogLevelInfo)),
 	)
 	if err != nil {
 		log.Fatalf("new client: %v", err)
@@ -81,11 +83,6 @@ func main() {
 	}
 	fmt.Println("\nlog/arp (first page, desc):")
 	prettyPrint(arp)
-	if err != nil {
-		log.Fatalf("monitoring/clients-online: %v", err)
-	}
-	fmt.Println("\nclients (first page):")
-	prettyPrint(clients)
 
 	// 3. Auth users (paginated list).
 	users, err := api.Auth().ListAuthUsers(ctx,
@@ -150,6 +147,10 @@ func main() {
 		log.Fatalf("delete backup: %v", err)
 	}
 	fmt.Println("\ndelete backup dispatched")
+
+	// Print collected metrics (request count / errors / avg latency).
+	count, errs, avg := metrics.GetStats()
+	fmt.Printf("\nmetrics: requests=%d errors=%d avg_latency=%s\n", count, errs, avg)
 }
 
 func prettyPrint(v any) {
