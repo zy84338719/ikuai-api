@@ -39,7 +39,7 @@ clean:
 	rm -f coverage.out coverage.html
 
 # Run all standard checks
-check: fmt vet test
+check: fmt vet test zero-dep
 	@echo "All checks passed!"
 
 # Show help
@@ -56,3 +56,19 @@ help:
 	@echo "  make build         Build the SDK"
 	@echo "  make example       Run example in dry-run mode"
 	@echo "  make check         Run fmt, vet and test"
+
+# Dependency gate: this SDK may depend on the oekit modules and nothing
+# else. A new third-party require is a design decision, not an accident, so
+# it has to fail loudly rather than slip into a tidy.
+zero-dep:
+	@bad=$$(go list -m all | grep -v '^github.com/zy84338719/ikuai-api' \
+		| grep -v '^github.com/oekit/' \
+		| grep -v '^$$' || true); \
+	if [ -n "$$bad" ]; then \
+		echo "dependency gate failed — only github.com/oekit/* is allowed:"; \
+		echo "$$bad"; exit 1; \
+	fi; \
+	echo "dependency gate ok: no third-party requires; oekit modules:"; \
+		go list -m all | grep '^github.com/oekit/' | sed 's/^/  /'
+
+.PHONY: zero-dep

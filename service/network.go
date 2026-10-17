@@ -43,8 +43,10 @@ type NetworkAcApConfigListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkAcApConfigListOptions) query() map[string]string {
@@ -52,8 +54,8 @@ func (o *NetworkAcApConfigListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -113,8 +115,10 @@ type NetworkAcServicesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkAcServicesListOptions) query() map[string]string {
@@ -122,8 +126,8 @@ func (o *NetworkAcServicesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -187,8 +191,10 @@ type NetworkDhcpAccessControlModeListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkDhcpAccessControlModeListOptions) query() map[string]string {
@@ -196,8 +202,8 @@ func (o *NetworkDhcpAccessControlModeListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -240,8 +246,10 @@ type NetworkDhcpAccessControlRulesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkDhcpAccessControlRulesListOptions) query() map[string]string {
@@ -249,8 +257,8 @@ func (o *NetworkDhcpAccessControlRulesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -337,8 +345,10 @@ type NetworkDhcpServicesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkDhcpServicesListOptions) query() map[string]string {
@@ -346,8 +356,8 @@ func (o *NetworkDhcpServicesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -437,8 +447,10 @@ type NetworkDhcpStaticListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkDhcpStaticListOptions) query() map[string]string {
@@ -446,8 +458,8 @@ func (o *NetworkDhcpStaticListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -506,8 +518,10 @@ type NetworkDhcp6AccessControlModeListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkDhcp6AccessControlModeListOptions) query() map[string]string {
@@ -515,8 +529,8 @@ func (o *NetworkDhcp6AccessControlModeListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -559,8 +573,10 @@ type NetworkDhcp6AccessControlRulesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkDhcp6AccessControlRulesListOptions) query() map[string]string {
@@ -568,8 +584,8 @@ func (o *NetworkDhcp6AccessControlRulesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -639,8 +655,10 @@ type NetworkDmzRulesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkDmzRulesListOptions) query() map[string]string {
@@ -648,8 +666,8 @@ func (o *NetworkDmzRulesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -725,8 +743,10 @@ type NetworkDnatRulesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkDnatRulesListOptions) query() map[string]string {
@@ -734,8 +754,8 @@ func (o *NetworkDnatRulesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -811,8 +831,10 @@ type NetworkDnsConfigListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkDnsConfigListOptions) query() map[string]string {
@@ -820,8 +842,8 @@ func (o *NetworkDnsConfigListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -864,8 +886,10 @@ type NetworkDnsProxyRulesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkDnsProxyRulesListOptions) query() map[string]string {
@@ -873,8 +897,8 @@ func (o *NetworkDnsProxyRulesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -961,8 +985,10 @@ type NetworkNatRulesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkNatRulesListOptions) query() map[string]string {
@@ -970,8 +996,8 @@ func (o *NetworkNatRulesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -1047,8 +1073,10 @@ type NetworkPppoeServicesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkPppoeServicesListOptions) query() map[string]string {
@@ -1056,8 +1084,8 @@ func (o *NetworkPppoeServicesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -1100,8 +1128,10 @@ type NetworkQosIpListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkQosIpListOptions) query() map[string]string {
@@ -1109,8 +1139,8 @@ func (o *NetworkQosIpListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -1186,8 +1216,10 @@ type NetworkQosMacListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkQosMacListOptions) query() map[string]string {
@@ -1195,8 +1227,8 @@ func (o *NetworkQosMacListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -1272,8 +1304,10 @@ type NetworkVlanListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *NetworkVlanListOptions) query() map[string]string {
@@ -1281,8 +1315,8 @@ func (o *NetworkVlanListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter

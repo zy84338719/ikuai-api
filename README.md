@@ -10,26 +10,61 @@ A focused Go SDK for the **iKuai v4.0 REST API** used by iKuai routers
 
 ## Features
 
-- 🚀 **Zero third-party deps** — uses only the Go standard library
-  (`net/http`, `encoding/json`, `context`).
-- 🧰 **151 typed methods** across 13 functional groups, generated
+- 🧩 **Built on the [oekit](https://oekit.github.io) contract** — errors
+  carry an oekit `BizError` so an oekit service's `mw.Fail` understands
+  them without an adapter; logging goes through the `logx` facade with a
+  lazily resolved package logger. Two oekit modules are the only
+  dependencies, and `make zero-dep` fails the build if a third-party
+  require ever appears.
+- 🧰 **157 typed methods** across 12 functional groups, generated
   directly from the v4 endpoint catalog.
+- 🔍 **Per-endpoint query dialects** — iKuai v4 does not speak one query
+  shape. Most collections use `page`/`limit`/`filter`/`order`/`order_by`,
+  but monitoring and auth mix in an uppercase `TYPE`/`LIMIT`/`OFFSET`
+  dialect, a `KEYWORDS`/`FINDS` hybrid, and a `starttime`/`stoptime`
+  window. Every endpoint's real contract is recorded in the catalog, and
+  a typed `Query<Name>` helper is generated for the ones that need it.
+  Sending the wrong shape makes the router silently ignore the query —
+  see [`skills/SKILL.md`](skills/SKILL.md).
+- ✍️ **Write-body conventions encoded** — `enabled` is `"yes"`/`"no"`,
+  selectors are `{"custom":[...],"object":[...]}`, object groups use a
+  `group_value` array, and only a documented allowlist of fields may be
+  JSON numbers. `CoerceBody`, `Enabled`, `AddressValues`, `ObjectGroup`
+  and `UpdatePayload` (read-modify-write) handle all of it.
+- 📋 **Per-endpoint body contracts** — 73 endpoints record their create
+  defaults, update allowlist and required fields. `CreateBody` fills a
+  create payload in and catches a missing required field locally rather
+  than letting it surface as an opaque 3001; `UpdatePayload` applies the
+  right allowlist automatically. Some contracts differ per verb — a DHCP
+  service create writes no `opt_type*` fields while its update must send
+  twelve — and the table records that too. Firmware inconsistencies are
+  reproduced rather than smoothed over — see `skills/writing.md`.
 - 🔁 **Retry with exponential back-off** for transient failures; per
   request and total timeout controlled by the same context.
 - 🧪 **Dry-run mode** — every call returns a JSON preview of the
   request it would have made, no router traffic.
-- 🔍 **Catalog discovery** — iterate all 151 endpoints at runtime with
-  `service.Endpoints()` or `service.Path<Group>()`.
+- 🔍 **Catalog discovery** — iterate all 157 endpoints at runtime with
+  `service.Endpoints()` or `service.Path<Group>()`; `ep.QuerySpec()`
+  decodes an endpoint's paging dialect.
+- 🔐 **Credential management** (`session`) — session file with atomic
+  0600 writes, environment fallback, and a documented precedence.
+- 🖥️ **Response rendering** (`output`) — table for humans, compact JSON
+  for scripts, with column selection, timestamp humanization, and
+  whole-column dropping for narrow terminals.
 - 🛡️ **iKuai-specific quirks handled** — the firmware emits bare `nil`
   instead of `null`; the SDK normalizes that before parsing. Envelope
   fields `data`, `results`, and `rowid` are normalized across
-  endpoints.
+  endpoints. Error codes carry a hint, an actionable remedy, and the oekit
+  business/HTTP code pair (3007 → 401, 10014 → 403, 3001 → 400).
 
 ## Installation
 
 ```bash
 go get github.com/zy84338719/ikuai-api
 ```
+
+Requires Go 1.24+. The only dependencies are `github.com/oekit/logx` and
+`github.com/oekit/pkg`.
 
 ## Quick start
 
@@ -43,6 +78,8 @@ import (
     "log"
     "time"
 
+    "github.com/oekit/logx"
+
     ikuaiapi "github.com/zy84338719/ikuai-api"
     "github.com/zy84338719/ikuai-api/service"
 )
@@ -55,7 +92,7 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-    defer client.Close()
+    defer func() { _ = client.Close(context.Background()) }()
 
     api := service.NewAPIClient(client)
     ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -161,37 +198,54 @@ client, _ := ikuaiapi.NewClient("https://192.168.1.1",
     ikuaiapi.WithDryRun(true),                     // print requests, do not send
     ikuaiapi.WithRetry(3),                         // total attempt count
     ikuaiapi.WithRetryDelay(200*time.Millisecond, 5*time.Second),
-    ikuaiapi.WithLogger(func(format string, args ...any) { log.Printf(format, args...) }),
-    ikuaiapi.WithMetrics(ikuaiapi.NewMetrics()),           // count requests / latency (v1.1.0+)
-    ikuaiapi.WithStructuredLogger(ikuaiapi.NewDefaultLogger(ikuaiapi.LogLevelInfo)), // leveled logger (v1.1.0+)
+    ikuaiapi.WithMetrics(ikuaiapi.NewMetrics()), // count requests / latency
+    ikuaiapi.WithStructuredLogger(logx.NewStdLogger("poller", logx.LevelDebug)), // optional, narrows this client
 )
 ```
 
-## Observability (v1.1.0+)
+## Observability
 
 - **`WithMetrics(*Metrics)`** wires a request counter/latency collector into
   every call. Read snapshot stats with `client.Metrics().GetStats()` →
   `(requestCount, errorCount, avgDuration)`; handy for a `/metrics` endpoint
   or a health check. Use `Metrics.Reset()` between scrapes.
-- **`WithStructuredLogger(Logger)`** routes retry / timeout / debug events
-  through a leveled `Logger` interface (`Debug/Info/Warn/Error`) instead of
-  the printf-style `WithLogger` callback. `NewDefaultLogger(level)` returns a
-  stdlib-backed one; adapt zap/zerolog by implementing the interface.
-- **`SDKVersion`** is the semantic version string ("1.1.0") for runtime
+- **Logging goes through the oekit `logx` facade.** The SDK logs through
+  `logx.Delegating("ikuai-api")`, resolved on every call, so installing a
+  backend once in `main` is enough:
+
+  ```go
+  logx.UseSlog("my-service")              // structured JSON
+  ikuaiapi.SetLogLevel(ikuaiapi.LogLevelInfo)
+  ```
+
+  `WithStructuredLogger(logx.Logger)` narrows the logger for one client
+  without touching the global facade. Events are kv-style and carry the
+  request context, so a trace id attaches automatically. There is no
+  printf-style hook: `WithLogger` and `NewDefaultLogger` were removed in
+  v1.2.0.
+- **`SDKVersion`** is the semantic version string for runtime
   introspection.
 
 ## Error model
 
-Two typed errors come back from every call:
+Two typed errors come back from every call. Router-side failures always
+come back as `*APIError`; SDK-local validation failures carry a 4xxx
+business code and wrap a sentinel from this package (`ErrRequiredField`,
+`ErrInvalidToken`, …), so `errors.Is` can tell them apart from "the
+router said no".
 
 - `*ikuaiapi.APIError` — protocol-level failure: non-zero `code`,
   HTTP 4xx/5xx, or unparseable JSON. Fields: `HTTPStatus`, `Code`,
   `Message`, `Details` (per-field validation errors), and `RetryAfter`
-  (parsed from the HTTP `Retry-After` header on 429/503, v1.1.0+).
+  (parsed from the HTTP `Retry-After` header on 429/503). It embeds an
+  oekit `BizError`, so `errors.As(err, &bizErr)` — and oekit's
+  `mw.Fail` — reads `BizCode` and `HTTPCode` without an adapter.
+  `IsAuthFailure()`, `IsPermissionFailure()`, `IsBadRequest()` and
+  `Remedy()` classify and explain the failure.
 - `*ikuaiapi.NetworkError` — transport failure: DNS, refused, TLS,
   timeout. Wraps the original `net` / `tls` / `http` error.
 
-Both error types implement **`IsRetryable() bool`** (v1.1.0+), exposing the
+Both error types implement **`IsRetryable() bool`**, exposing the
 SDK's own retryability judgement so applications can reuse it for custom
 retry loops or circuit breakers: `APIError` is retryable on HTTP 429 / 5xx;
 `NetworkError` is retryable. Note the SDK only auto-retries network errors
@@ -228,15 +282,19 @@ import needed, so no import cycle), then writes one file per group plus
 ```
 .
 ├── README.md             — this file
-├── go.mod                — zero external dependencies
+├── go.mod                — two oekit modules, nothing else (enforced by make zero-dep)
 ├── auth.go               — token validation helpers
 ├── client.go             — net/http + retry + envelope + sanitization
-├── errors.go             — APIError, NetworkError, error hints
+├── doc.go                — package documentation
+├── errors.go             — APIError (oekit BizError), NetworkError, sentinels
+├── fields.go             — iKuai write-body conventions (see skills/writing.md)
+├── logger.go             — logx.Delegating package logger + level floor
+├── metrics.go            — request counters and latency
 ├── version.go            — Version enum (V4 only)
-├── v4_catalog.go         — the source of truth for all 151 endpoints
-├── logger.go             — optional structured logging
+├── v4_catalog.go         — source of truth: 157 endpoints + query contracts
+├── v4_schemas.go         — per-endpoint body contracts (73 endpoints)
 ├── codegen/              — service-layer generator (run with `go run ./codegen`)
-├── service/              — generated, 13 files, one per group
+├── service/              — generated, one file per group
 │   ├── root.go           — APIClient entry point + Call()
 │   ├── advanced.go
 │   ├── auth.go
@@ -250,6 +308,11 @@ import needed, so no import cycle), then writes one file per group plus
 │   ├── system.go
 │   ├── vpn.go
 │   └── wireless.go
+├── session/              — credential persistence + resolution
+├── output/               — table / JSON response rendering
+├── skills/               — agent-facing guides (SKILL.md, monitoring, writing, rendering)
+├── AGENTS.md             — hard rules for humans and agents
+├── llms.txt              — machine-readable entry point
 ├── internal/             — small helpers shared by core + generated
 ├── example/              — runnable demo (env-driven)
 └── *_test.go             — unit tests for every layer

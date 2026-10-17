@@ -36,15 +36,77 @@ func pathGroupAuth() []V4Endpoint {
 // Methods: GET, DELETE
 //
 // Path: /auth/online-users
+
+// AuthOnlineUsersQueryOptions configures a query against /auth/online-users.
 //
-// Use ListAuthOnlineUsers(ctx, opts...) for paginated reads.
+// The endpoint speaks the lowercase paging with uppercase sort/search dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type AuthOnlineUsersQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Order is the sort direction: asc | desc. Sent as ORDER.
+	Order string
+	// OrderBy is the sort field. Sent as ORDER_BY.
+	OrderBy string
+	// Keywords is optional (sent as "KEYWORDS").
+	Keywords string
+	// Finds is optional (sent as "FINDS").
+	Finds string
+}
+
+func (o *AuthOnlineUsersQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("AuthOnlineUsersQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("AuthOnlineUsersQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("AuthOnlineUsersQueryOptions: PageSize must be greater than 0")
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Order != "" {
+		q["ORDER"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["ORDER_BY"] = o.OrderBy
+	}
+	if o.Keywords != "" {
+		q["KEYWORDS"] = o.Keywords
+	}
+	if o.Finds != "" {
+		q["FINDS"] = o.Finds
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryAuthOnlineUsers runs a query against /auth/online-users using its documented query dialect.
+func (s *AuthService) QueryAuthOnlineUsers(ctx context.Context, opts *AuthOnlineUsersQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/auth/online-users", q)
+}
+
 // AuthOnlineUsersListOptions configures paginated reads of AuthOnlineUsers.
 type AuthOnlineUsersListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *AuthOnlineUsersListOptions) query() map[string]string {
@@ -52,8 +114,8 @@ func (o *AuthOnlineUsersListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -107,8 +169,10 @@ type AuthPackagesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *AuthPackagesListOptions) query() map[string]string {
@@ -116,8 +180,8 @@ func (o *AuthPackagesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -193,8 +257,10 @@ type AuthUsersListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *AuthUsersListOptions) query() map[string]string {
@@ -202,8 +268,8 @@ func (o *AuthUsersListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -279,8 +345,10 @@ type AuthWebServicesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *AuthWebServicesListOptions) query() map[string]string {
@@ -288,8 +356,8 @@ func (o *AuthWebServicesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter

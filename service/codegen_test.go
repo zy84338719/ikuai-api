@@ -83,10 +83,15 @@ func TestListWithPagination(t *testing.T) {
 	if gotQuery == "" {
 		t.Error("expected non-empty query")
 	}
-	for _, want := range []string{"page=1", "page_size=50", "order=desc", "order_by=id"} {
+	// The v4 request contract names the page-size key "limit" (not
+	// "page_size"); sending page_size makes the router ignore paging.
+	for _, want := range []string{"page=1", "limit=50", "order=desc", "order_by=id"} {
 		if !strings.Contains(gotQuery, want) {
 			t.Errorf("query %q missing %q", gotQuery, want)
 		}
+	}
+	if strings.Contains(gotQuery, "page_size") {
+		t.Errorf("query %q must not use the unsupported page_size key", gotQuery)
 	}
 	var list []map[string]any
 	if err := json.Unmarshal(raw, &list); err != nil {

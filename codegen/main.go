@@ -26,6 +26,11 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	// The generator reuses the parent package's query-spec parser so the
+	// catalog grammar has exactly one implementation. The parent package
+	// does not import this directory, so there is no cycle.
+	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
 // V4Endpoint is a copy of the runtime type used purely for codegen.
@@ -35,6 +40,7 @@ type V4Endpoint struct {
 	Methods           []string
 	Load              bool
 	Action            string
+	Query             string
 }
 
 const (
@@ -106,6 +112,7 @@ var (
 	entryRe  = regexp.MustCompile(`\{[^{}]*Group:\s*"([^"]+)"[^{}]*Name:\s*"([^"]+)"[^{}]*Path:\s*"([^"]+)"[^{}]*Methods:\s*\[\]string\{([^}]*)\}[^{}]*\}`)
 	loadRe   = regexp.MustCompile(`Load:\s*true`)
 	actionRe = regexp.MustCompile(`Action:\s*"([^"]+)"`)
+	queryRe  = regexp.MustCompile(`Query:\s*"([^"]*)"`)
 )
 
 func parseCatalog(file string) ([]V4Endpoint, error) {
@@ -137,6 +144,9 @@ func parseCatalog(file string) ([]V4Endpoint, error) {
 		}
 		if am := actionRe.FindStringSubmatch(entry); am != nil {
 			ep.Action = am[1]
+		}
+		if qm := queryRe.FindStringSubmatch(entry); qm != nil {
+			ep.Query = qm[1]
 		}
 		catalog = append(catalog, ep)
 	}
@@ -197,6 +207,9 @@ func renderGroup(buf *bytes.Buffer, group string, eps []V4Endpoint) error {
 			needsStrconv = true
 		}
 		if ep.Load {
+			needsStrconv = true
+		}
+		if ep.Query != "" {
 			needsStrconv = true
 		}
 	}
@@ -342,7 +355,7 @@ func renderEndpoint(buf *bytes.Buffer, groupTitle string, ep V4Endpoint) error {
 
 	fmt.Fprintf(buf, "\n// %s wraps %s %s.\n//\n// Methods: %s\n//\n// Path: %s\n",
 		name, ep.Group, ep.Name, strings.Join(ep.Methods, ", "), ep.Path)
-	if !hasID && verbs["GET"] && !ep.Load {
+	if !hasID && verbs["GET"] && !ep.Load && ep.Query == "" {
 		fmt.Fprintf(buf, "//\n// Use List%s(ctx, opts...) for paginated reads.\n", name)
 	}
 
@@ -359,6 +372,14 @@ func renderEndpoint(buf *bytes.Buffer, groupTitle string, ep V4Endpoint) error {
 		return nil
 	}
 
+	// Endpoints with a non-default query contract get a typed
+	// Query<Name> helper that speaks their dialect. The generic CRUD /
+	// Get helpers are still emitted so existing callers keep working.
+	if ep.Query != "" {
+		if err := renderQuery(buf, groupTitle, ep, name); err != nil {
+			return err
+		}
+	}
 	if len(verbs) == 1 && verbs["GET"] {
 		renderGetOnly(buf, groupTitle, ep, name)
 		return nil
@@ -377,6 +398,240 @@ func renderGetOnly(buf *bytes.Buffer, groupTitle string, ep V4Endpoint, name str
 }
 
 `, groupTitle, name, ep.Path)
+}
+
+// dialectReserved lists the query keys each dialect already emits on its
+// own. Extra fields whose name collides with one of these are dropped from
+// the generated options struct, because the dialect already covers them.
+var dialectReserved = map[ikuaiapi.QueryDialect][]string{
+	ikuaiapi.DialectPaged:  {"page", "limit", "filter", "order", "order_by"},
+	ikuaiapi.DialectLegacy: {"type", "limit", "offset", "order", "order_by"},
+	ikuaiapi.DialectMixed:  {"page", "limit", "order", "order_by"},
+	ikuaiapi.DialectNone:   nil,
+	ikuaiapi.DialectWindow: nil,
+	ikuaiapi.DialectRef:    nil,
+}
+
+// toQueryFieldName maps a query key to an exported Go field name. The
+// router's own casing is preserved on the wire; this only affects the Go
+// side. Acronyms are expanded so the generated API reads naturally.
+func toQueryFieldName(key string) string {
+	switch strings.ToLower(key) {
+	case "ip":
+		return "IP"
+	case "mac":
+		return "MAC"
+	case "ssid":
+		return "SSID"
+	case "apmac":
+		return "APMAC"
+	case "appid":
+		return "AppID"
+	case "appids":
+		return "AppIDs"
+	case "starttime":
+		return "StartTime"
+	case "stoptime":
+		return "StopTime"
+	case "keywords":
+		return "Keywords"
+	case "finds":
+		return "Finds"
+	}
+	lower := strings.ToLower(key)
+	var b strings.Builder
+	upper := true
+	for _, r := range lower {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			if upper {
+				r -= 'a' - 'A'
+			}
+			b.WriteRune(r)
+			upper = false
+			continue
+		}
+		upper = true
+	}
+	return b.String()
+}
+
+// renderQuery emits <Name>QueryOptions plus a Query<Name> method that
+// builds the exact query string the endpoint's dialect expects.
+//
+// The generic List helper always speaks the default page/limit dialect.
+// Endpoints listed in the catalog with a different contract would silently
+// ignore that query string, so they get this typed helper instead.
+func renderQuery(buf *bytes.Buffer, groupTitle string, ep V4Endpoint, name string) error {
+	dialect, required, optional, err := ikuaiapi.ParseQuerySpec(ep.Query)
+	if err != nil {
+		return fmt.Errorf("%s: %w", ep.Path, err)
+	}
+	if dialect == ikuaiapi.DialectLoad {
+		return nil // already covered by the typed Load<Name> helper
+	}
+
+	reserved := map[string]bool{}
+	for _, k := range dialectReserved[dialect] {
+		reserved[strings.ToLower(k)] = true
+	}
+	extras := make([]ikuaiapi.QueryField, 0, len(required)+len(optional))
+	for _, f := range append(append([]ikuaiapi.QueryField{}, required...), optional...) {
+		if reserved[strings.ToLower(f.Name)] {
+			continue
+		}
+		extras = append(extras, f)
+	}
+
+	optsName := name + "QueryOptions"
+	labels := map[ikuaiapi.QueryDialect]string{
+		ikuaiapi.DialectLegacy: "legacy uppercase TYPE/LIMIT/OFFSET dialect",
+		ikuaiapi.DialectMixed:  "lowercase paging with uppercase sort/search dialect",
+		ikuaiapi.DialectNone:   "unpaginated dialect",
+		ikuaiapi.DialectWindow: "starttime/stoptime window dialect",
+		ikuaiapi.DialectRef:    "reverse-lookup dialect: one group name, no paging",
+	}
+
+	fmt.Fprintf(buf, "\n// %s configures a query against %s.\n", optsName, ep.Path)
+	fmt.Fprintf(buf, "//\n// The endpoint speaks the %s.\n", labels[dialect])
+	fmt.Fprintln(buf, "// The generic List helper is NOT usable here: it always sends the")
+	fmt.Fprintln(buf, "// default page/limit paging, which this endpoint ignores.")
+	fmt.Fprintln(buf, "type", optsName, "struct {")
+
+	paged := dialect == ikuaiapi.DialectPaged || dialect == ikuaiapi.DialectMixed || dialect == ikuaiapi.DialectLegacy
+	if paged {
+		fmt.Fprintln(buf, "\t// Page is the 1-based page number.")
+		fmt.Fprintln(buf, "\tPage int")
+		fmt.Fprintln(buf, "\t// PageSize is the number of items per page.")
+		fmt.Fprintln(buf, "\tPageSize int")
+		if dialect == ikuaiapi.DialectPaged {
+			fmt.Fprintln(buf, "\t// Filter uses the iKuai expression syntax, e.g. \"enabled==yes\".")
+			fmt.Fprintln(buf, "\t// \"&\" is AND and \",\" is OR.")
+			fmt.Fprintln(buf, "\tFilter string")
+			fmt.Fprintln(buf, "\t// Order is the sort direction: asc | desc.")
+			fmt.Fprintln(buf, "\tOrder string")
+			fmt.Fprintln(buf, "\t// OrderBy is the sort field.")
+			fmt.Fprintln(buf, "\tOrderBy string")
+		} else {
+			fmt.Fprintln(buf, "\t// Order is the sort direction: asc | desc. Sent as ORDER.")
+			fmt.Fprintln(buf, "\tOrder string")
+			fmt.Fprintln(buf, "\t// OrderBy is the sort field. Sent as ORDER_BY.")
+			fmt.Fprintln(buf, "\tOrderBy string")
+		}
+	}
+	for _, f := range extras {
+		field := toQueryFieldName(f.Name)
+		typ := "string"
+		if f.Numeric {
+			typ = "int64"
+		}
+		req := "optional"
+		if f.Required {
+			req = "required"
+		}
+		fmt.Fprintf(buf, "\t// %s is %s (sent as %q).\n", field, req, f.Name)
+		fmt.Fprintf(buf, "\t%s %s\n", field, typ)
+	}
+	fmt.Fprintln(buf, "}")
+
+	fmt.Fprintf(buf, "\nfunc (o *%s) query() (map[string]string, error) {\n", optsName)
+	fmt.Fprintf(buf, "\tif o == nil {\n\t\treturn nil, ikuaiapi.NewError(%q)\n\t}\n",
+		fmt.Sprintf("%s: options are required", optsName))
+	if paged {
+		fmt.Fprintf(buf, "\tif o.Page < 1 {\n\t\treturn nil, ikuaiapi.NewError(%q)\n\t}\n",
+			optsName+": Page must be greater than 0")
+		fmt.Fprintf(buf, "\tif o.PageSize < 1 {\n\t\treturn nil, ikuaiapi.NewError(%q)\n\t}\n",
+			optsName+": PageSize must be greater than 0")
+	}
+
+	switch dialect {
+	case ikuaiapi.DialectLegacy:
+		fmt.Fprintln(buf, "\toffset := (o.Page - 1) * o.PageSize")
+		fmt.Fprintln(buf, "\tq := map[string]string{")
+		fmt.Fprintln(buf, "\t\t\"TYPE\":   \"data\",")
+		fmt.Fprintln(buf, "\t\t\"LIMIT\":  strconv.Itoa(offset) + \",\" + strconv.Itoa(o.PageSize),")
+		fmt.Fprintln(buf, "\t\t\"OFFSET\": strconv.Itoa(offset),")
+		fmt.Fprintln(buf, "\t}")
+		fmt.Fprintln(buf, "\tif o.Order != \"\" {")
+		fmt.Fprintln(buf, "\t\tq[\"ORDER\"] = o.Order")
+		fmt.Fprintln(buf, "\t}")
+		fmt.Fprintln(buf, "\tif o.OrderBy != \"\" {")
+		fmt.Fprintln(buf, "\t\tq[\"ORDER_BY\"] = o.OrderBy")
+		fmt.Fprintln(buf, "\t}")
+	case ikuaiapi.DialectMixed:
+		fmt.Fprintln(buf, "\tq := map[string]string{")
+		fmt.Fprintln(buf, "\t\t\"page\":  strconv.Itoa(o.Page),")
+		fmt.Fprintln(buf, "\t\t\"limit\": strconv.Itoa(o.PageSize),")
+		fmt.Fprintln(buf, "\t}")
+		fmt.Fprintln(buf, "\tif o.Order != \"\" {")
+		fmt.Fprintln(buf, "\t\tq[\"ORDER\"] = o.Order")
+		fmt.Fprintln(buf, "\t}")
+		fmt.Fprintln(buf, "\tif o.OrderBy != \"\" {")
+		fmt.Fprintln(buf, "\t\tq[\"ORDER_BY\"] = o.OrderBy")
+		fmt.Fprintln(buf, "\t}")
+	case ikuaiapi.DialectPaged:
+		fmt.Fprintln(buf, "\tq := map[string]string{")
+		fmt.Fprintln(buf, "\t\t\"page\":  strconv.Itoa(o.Page),")
+		fmt.Fprintln(buf, "\t\t\"limit\": strconv.Itoa(o.PageSize),")
+		fmt.Fprintln(buf, "\t}")
+		fmt.Fprintln(buf, "\tif o.Filter != \"\" {")
+		fmt.Fprintln(buf, "\t\tq[\"filter\"] = o.Filter")
+		fmt.Fprintln(buf, "\t}")
+		fmt.Fprintln(buf, "\tif o.Order != \"\" {")
+		fmt.Fprintln(buf, "\t\tq[\"order\"] = o.Order")
+		fmt.Fprintln(buf, "\t}")
+		fmt.Fprintln(buf, "\tif o.OrderBy != \"\" {")
+		fmt.Fprintln(buf, "\t\tq[\"order_by\"] = o.OrderBy")
+		fmt.Fprintln(buf, "\t}")
+	default: // DialectNone, DialectWindow
+		fmt.Fprintln(buf, "\tq := map[string]string{}")
+	}
+
+	for _, f := range extras {
+		field := toQueryFieldName(f.Name)
+		switch {
+		case f.Required && f.Numeric:
+			fmt.Fprintf(buf, "\tif o.%s <= 0 {\n\t\treturn nil, ikuaiapi.NewError(%q)\n\t}\n",
+				field, fmt.Sprintf("%s: %s must be greater than 0", optsName, field))
+			fmt.Fprintf(buf, "\tq[%q] = strconv.FormatInt(o.%s, 10)\n", f.Name, field)
+		case f.Required:
+			fmt.Fprintf(buf, "\tif o.%s == \"\" {\n\t\treturn nil, ikuaiapi.NewError(%q)\n\t}\n",
+				field, fmt.Sprintf("%s: %s is required", optsName, field))
+			fmt.Fprintf(buf, "\tq[%q] = o.%s\n", f.Name, field)
+		case f.Numeric:
+			fmt.Fprintln(buf, "\tif o."+field+" != 0 {")
+			fmt.Fprintf(buf, "\t\tq[%q] = strconv.FormatInt(o.%s, 10)\n", f.Name, field)
+			fmt.Fprintln(buf, "\t}")
+		default:
+			fmt.Fprintln(buf, "\tif o."+field+" != \"\" {")
+			fmt.Fprintf(buf, "\t\tq[%q] = o.%s\n", f.Name, field)
+			fmt.Fprintln(buf, "\t}")
+		}
+	}
+	fmt.Fprintln(buf, "\tif len(q) == 0 {")
+	fmt.Fprintln(buf, "\t\treturn nil, nil")
+	fmt.Fprintln(buf, "\t}")
+	fmt.Fprintln(buf, "\treturn q, nil")
+	fmt.Fprintln(buf, "}")
+
+	// A sub-resource query carries the parent identifier before its options.
+	parentDeclStr := ""
+	for _, pp := range parentParams(ep.Path) {
+		parentDeclStr += toGoParam(pp) + " int64, "
+	}
+	queryPath := pathExpr(ep.Path, parentParams(ep.Path), false)
+	fmt.Fprintf(buf, `
+// Query%s runs a query against %s using its documented query dialect.
+func (s *%sService) Query%s(ctx context.Context, %sopts *%s) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, %s, q)
+}
+
+`, name, ep.Path, groupTitle, name, parentDeclStr, optsName, queryPath)
+
+	return nil
 }
 
 func renderPostOnly(buf *bytes.Buffer, groupTitle string, ep V4Endpoint, name string) {
@@ -415,23 +670,23 @@ type %[1]s struct {
 
 func (o *%[1]s) query() (map[string]string, error) {
 	if o == nil {
-		return nil, &ikuaiapi.APIError{Message: "%[1]s: options are required"}
+		return nil, ikuaiapi.NewError("%[1]s: options are required")
 	}
 	switch o.DataType {
 	case "hour", "day", "week", "month":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "%[1]s: DataType must be one of: hour, day, week, month"}
+		return nil, ikuaiapi.NewError("%[1]s: DataType must be one of: hour, day, week, month")
 	}
 	switch o.Math {
 	case "avg", "max":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "%[1]s: Math must be one of: avg, max"}
+		return nil, ikuaiapi.NewError("%[1]s: Math must be one of: avg, max")
 	}
 	if o.StartTime <= 0 || o.EndTime <= 0 {
-		return nil, &ikuaiapi.APIError{Message: "%[1]s: StartTime and EndTime are required (Unix seconds)"}
+		return nil, ikuaiapi.NewError("%[1]s: StartTime and EndTime are required (Unix seconds)")
 	}
 	if o.StartTime >= o.EndTime {
-		return nil, &ikuaiapi.APIError{Message: "%[1]s: StartTime must be less than EndTime"}
+		return nil, ikuaiapi.NewError("%[1]s: StartTime must be less than EndTime")
 	}
 	return map[string]string{
 		"datetype":   o.DataType,
@@ -496,18 +751,156 @@ func stripTrailingVerb(name, verb string) string {
 	return name
 }
 
-// renderCRUD generates the standard 5-method helper struct (List / Get /
-// Create / Update / Patch / Delete) for endpoints that expose a normal
-// CRUD shape. The id placeholder in ep.Path is replaced with ?id= for
-// single-item reads and deletes.
+// pathParamRe matches a path parameter placeholder, e.g. "{tunnel_id}".
+var pathParamRe = regexp.MustCompile(`\{([A-Za-z_][A-Za-z0-9_]*)\}`)
+
+// pathParams returns the names of a path's placeholders, in order.
+func pathParams(p string) []string {
+	var out []string
+	for _, m := range pathParamRe.FindAllStringSubmatch(p, -1) {
+		out = append(out, m[1])
+	}
+	return out
+}
+
+// goInitialisms are the words Go style capitalizes whole, so a path
+// placeholder reads as a Go parameter rather than a mechanical transliteration.
+var goInitialisms = map[string]string{
+	"id": "ID", "url": "URL", "api": "API", "ip": "IP", "mac": "MAC",
+	"uuid": "UUID", "tcp": "TCP", "udp": "UDP", "vlan": "VLAN",
+}
+
+// toGoParam converts a path placeholder to a Go parameter name:
+// "tunnel_id" -> "tunnelID", "peer_id" -> "peerID".
+func toGoParam(s string) string {
+	parts := strings.Split(s, "_")
+	var b strings.Builder
+	for i, p := range parts {
+		if p == "" {
+			continue
+		}
+		if i == 0 {
+			b.WriteString(strings.ToLower(p))
+			continue
+		}
+		lower := strings.ToLower(p)
+		if up, ok := goInitialisms[lower]; ok {
+			b.WriteString(up)
+			continue
+		}
+		b.WriteString(strings.ToUpper(p[:1]))
+		b.WriteString(p[1:])
+	}
+	return b.String()
+}
+
+// idSegmentParam returns the placeholder that occupies the last path
+// segment, if any. When a path ends in a parameter, the item id travels in
+// the path rather than in an ?id= query, so the generated helpers bind it
+// there.
+func idSegmentParam(p string) string {
+	params := pathParams(p)
+	if len(params) == 0 {
+		return ""
+	}
+	last := p[strings.LastIndex(p, "/")+1:]
+	m := pathParamRe.FindStringSubmatch(last)
+	if m == nil {
+		return ""
+	}
+	return m[1]
+}
+
+// pathExpr renders a Go expression that builds the request path from the
+// method's parameters. For a path without placeholders it yields a plain
+// string literal, which keeps every existing endpoint generating exactly
+// what it did before.
+//
+// The trailing placeholder binds to the method's "id" parameter — that is
+// the value Get/Update/Patch/Delete already take — while the leading ones
+// keep their own names.
+func pathExpr(path string, params []string, bindLastToID bool) string {
+	if len(params) == 0 {
+		return fmt.Sprintf("%q", path)
+	}
+	var b strings.Builder
+	rest := path
+	for i, name := range params {
+		loc := pathParamRe.FindStringIndex(rest)
+		if loc == nil {
+			break
+		}
+		b.WriteString(fmt.Sprintf("%q", rest[:loc[0]]))
+		variable := toGoParam(name)
+		if bindLastToID && i == len(params)-1 {
+			variable = "id"
+		}
+		b.WriteString(fmt.Sprintf(" + strconv.FormatInt(%s, 10) + ", variable))
+		rest = rest[loc[1]:]
+	}
+	b.WriteString(fmt.Sprintf("%q", rest))
+	return b.String()
+}
+
+// parentParams returns the leading placeholders — the parent resource ids
+// that appear before the item segment.
+func parentParams(p string) []string {
+	params := pathParams(p)
+	if id := idSegmentParam(p); id != "" {
+		for i, name := range params {
+			if name == id {
+				return params[:i]
+			}
+		}
+	}
+	return params
+}
+
+// renderCRUD generates the standard method block (List / Get / Create /
+// Update / Patch / Delete) for endpoints that expose a normal CRUD shape.
 func renderCRUD(buf *bytes.Buffer, groupTitle string, ep V4Endpoint, name, _ string, verbs map[string]bool) {
-	fmt.Fprintf(buf, `// %[1]sListOptions configures paginated reads of %[1]s.
+	params := pathParams(ep.Path)
+	idInPath := idSegmentParam(ep.Path)
+	parents := parentParams(ep.Path)
+	// parentArgs are the leading path parameters carried by every method.
+	var parentArgs []string
+	var parentDecl []string
+	for _, p := range parents {
+		g := toGoParam(p)
+		parentArgs = append(parentArgs, g)
+		parentDecl = append(parentDecl, g+" int64")
+	}
+	parentDeclStr := strings.Join(parentDecl, ", ")
+	if parentDeclStr != "" {
+		parentDeclStr += ", "
+	}
+	// idDeclStr adds the item identifier for the verbs that target one
+	// resource when that identifier lives in the path.
+	idDeclStr := parentDeclStr
+	if idInPath != "" {
+		idDeclStr += "id int64, "
+	}
+
+	// The item path binds its trailing placeholder to the method's "id".
+	path := pathExpr(ep.Path, params, idInPath != "")
+	// A collection List is only generated for a path without a trailing
+	// placeholder, and then it is the literal path — nothing to bind.
+
+	orderKey, orderByKey := "order", "order_by"
+	sortNote := ""
+	if len(params) > 0 {
+		sortNote += fmt.Sprintf("\n//\n// This endpoint is a sub-resource of %s; the parent identifier is a\n"+
+			"// path parameter rather than a query one.", strings.Join(parents, "_"))
+	}
+	fmt.Fprintf(buf, `// %[1]sListOptions configures paginated reads of %[1]s.%[5]s
 type %[1]sListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *%[1]sListOptions) query() map[string]string {
@@ -515,74 +908,99 @@ func (o *%[1]sListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page": strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
 	}
 	if o.Order != "" {
-		q["order"] = o.Order
+		q[%[2]q] = o.Order
 	}
 	if o.OrderBy != "" {
-		q["order_by"] = o.OrderBy
+		q[%[3]q] = o.OrderBy
 	}
 	return q
 }
 
-`, name)
+`, name, orderKey, orderByKey, "", sortNote)
 
-	if verbs["GET"] {
+	if verbs["GET"] && idInPath == "" {
 		fmt.Fprintf(buf, `// List%[1]s lists items at %[2]s.
 func (s *%[3]sService) List%[1]s(ctx context.Context, opts *%[1]sListOptions) (json.RawMessage, error) {
 	return s.client.Get(ctx, %[2]q, opts.query())
 }
 
-// Get%[1]s fetches one item at %[2]s.
+`, name, ep.Path, groupTitle)
+	}
+
+	// Get one: the id travels in the path when the endpoint is a
+	// sub-resource, and in ?id= otherwise.
+	if verbs["GET"] {
+		if idInPath != "" {
+			fmt.Fprintf(buf, `// Get%[1]s fetches one item at %[2]s.
+func (s *%[3]sService) Get%[1]s(ctx context.Context, %[6]sid int64) (json.RawMessage, error) {
+	return s.client.Get(ctx, %[5]s, nil)
+}
+
+`, name, ep.Path, groupTitle, ep.Path, path, parentDeclStr)
+		} else {
+			fmt.Fprintf(buf, `// Get%[1]s fetches one item at %[2]s.
 func (s *%[3]sService) Get%[1]s(ctx context.Context, id int64) (json.RawMessage, error) {
 	q := map[string]string{"id": strconv.FormatInt(id, 10)}
 	return s.client.Get(ctx, %[2]q, q)
 }
 
 `, name, ep.Path, groupTitle)
+		}
 	}
 
 	if verbs["POST"] {
 		fmt.Fprintf(buf, `// Create%[1]s posts a new item to %[2]s. The router returns a rowid on
 // success which is propagated to the caller.
-func (s *%[3]sService) Create%[1]s(ctx context.Context, body any) (int64, error) {
-	raw, err := s.client.Post(ctx, %[2]q, body)
+func (s *%[3]sService) Create%[1]s(ctx context.Context, %[6]sbody any) (int64, error) {
+	raw, err := s.client.Post(ctx, %[5]s, body)
 	if err != nil {
 		return 0, err
 	}
 	return extractRowID(raw)
 }
 
-`, name, ep.Path, groupTitle)
+`, name, ep.Path, groupTitle, ep.Path, path, parentDeclStr)
 	}
 
 	if verbs["PUT"] {
 		fmt.Fprintf(buf, `// Update%[1]s replaces the resource at %[2]s.
-func (s *%[3]sService) Update%[1]s(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, %[2]q, body)
+func (s *%[3]sService) Update%[1]s(ctx context.Context, %[7]sbody any) error {
+	_, err := s.client.Put(ctx, %[5]s, body)
 	return err
 }
 
-`, name, ep.Path, groupTitle)
+`, name, ep.Path, groupTitle, ep.Path, path, parentDeclStr, idDeclStr)
 	}
 
 	if verbs["PATCH"] {
 		fmt.Fprintf(buf, `// Patch%[1]s partial-updates the resource at %[2]s.
-func (s *%[3]sService) Patch%[1]s(ctx context.Context, body any) error {
-	_, err := s.client.Patch(ctx, %[2]q, body)
+func (s *%[3]sService) Patch%[1]s(ctx context.Context, %[7]sbody any) error {
+	_, err := s.client.Patch(ctx, %[5]s, body)
 	return err
 }
 
-`, name, ep.Path, groupTitle)
+`, name, ep.Path, groupTitle, ep.Path, path, parentDeclStr, idDeclStr)
 	}
 
 	if verbs["DELETE"] {
-		fmt.Fprintf(buf, `// Delete%[1]s removes the resource at %[2]s. iKuai expects the
+		if idInPath != "" {
+			fmt.Fprintf(buf, `// Delete%[1]s removes the resource at %[2]s. The identifier travels
+// in the path, not as an ?id= query parameter.
+func (s *%[3]sService) Delete%[1]s(ctx context.Context, %[6]sid int64) error {
+	_, err := s.client.Delete(ctx, %[5]s, nil)
+	return err
+}
+
+`, name, ep.Path, groupTitle, ep.Path, path, parentDeclStr)
+		} else {
+			fmt.Fprintf(buf, `// Delete%[1]s removes the resource at %[2]s. iKuai expects the
 // resource identifier as the ?id= query parameter, not in the JSON
 // body. Pass Delete%[1]sWithBody to send a custom JSON body instead.
 func (s *%[3]sService) Delete%[1]s(ctx context.Context, id int64) error {
@@ -600,8 +1018,21 @@ func (s *%[3]sService) Delete%[1]sWithBody(ctx context.Context, body any) error 
 }
 
 `, name, ep.Path, groupTitle)
+		}
 	}
 }
+
+// trimIDSegment drops a trailing path parameter segment, yielding the
+// collection path that a list call targets.
+func trimIDSegment(p string) string {
+	i := strings.LastIndex(p, "/")
+	if i < 0 {
+		return p
+	}
+	return p[:i]
+}
+
+var _ = trimIDSegment
 
 // renderRoot writes service/root.go: the APIClient entry point plus
 // small helper functions shared by all generated service files.
@@ -695,10 +1126,10 @@ func (a *APIClient) %[1]s() *%[1]sService { return a.svc%[1]s }
 	fmt.Fprintln(buf, "\t\t\tif ep2, ok2 := ikuaiapi.V4EndpointByGroupName(group, name); ok2 {")
 	fmt.Fprintln(buf, "\t\t\t\tep = ep2")
 	fmt.Fprintln(buf, "\t\t\t} else {")
-	fmt.Fprintln(buf, "\t\t\t\treturn nil, &ikuaiapi.APIError{Message: \"endpoint not found: \" + group + \"/\" + name}")
+	fmt.Fprintln(buf, "\t\t\t\treturn nil, ikuaiapi.NewError(\"endpoint not found: \" + group + \"/\" + name)")
 	fmt.Fprintln(buf, "\t\t\t}")
 	fmt.Fprintln(buf, "\t\t} else {")
-	fmt.Fprintln(buf, "\t\t\treturn nil, &ikuaiapi.APIError{Message: \"endpoint not found: \" + name}")
+	fmt.Fprintln(buf, "\t\t\treturn nil, ikuaiapi.NewError(\"endpoint not found: \" + name)")
 	fmt.Fprintln(buf, "\t\t}")
 	fmt.Fprintln(buf, "\t}")
 	fmt.Fprintln(buf, "\tswitch method {")
@@ -721,7 +1152,7 @@ func (a *APIClient) %[1]s() *%[1]sService { return a.svc%[1]s }
 	fmt.Fprintln(buf, "\t\t}")
 	fmt.Fprintln(buf, "\t\treturn a.client.Delete(ctx, delURL, body)")
 	fmt.Fprintln(buf, "\tdefault:")
-	fmt.Fprintln(buf, "\t\treturn nil, &ikuaiapi.APIError{Message: \"unsupported method: \" + method}")
+	fmt.Fprintln(buf, "\t\treturn nil, ikuaiapi.NewError(\"unsupported method: \" + method)")
 	fmt.Fprintln(buf, "\t}")
 	fmt.Fprintln(buf, "}")
 
@@ -730,10 +1161,24 @@ func (a *APIClient) %[1]s() *%[1]sService { return a.svc%[1]s }
 	fmt.Fprintln(buf, "\n// PageInfo mirrors the pagination metadata iKuai returns with list")
 	fmt.Fprintln(buf, "// endpoints. It is exposed so callers can drive follow-up pages")
 	fmt.Fprintln(buf, "// without having to declare a local struct.")
+	fmt.Fprintln(buf, "//")
+	fmt.Fprintln(buf, "// Firmware revisions disagree on the page-size key they echo back:")
+	fmt.Fprintln(buf, "// some return \"page_size\", others \"limit\" (the key the v4")
+	fmt.Fprintln(buf, "// request contract actually accepts). Both are captured; use")
+	fmt.Fprintln(buf, "// Size rather than reading the fields directly.")
 	fmt.Fprintln(buf, "type PageInfo struct {")
 	fmt.Fprintln(buf, "\tPage     int `json:\"page\"`")
 	fmt.Fprintln(buf, "\tPageSize int `json:\"page_size\"`")
+	fmt.Fprintln(buf, "\tLimit    int `json:\"limit\"`")
 	fmt.Fprintln(buf, "\tTotal    int `json:\"total\"`")
+	fmt.Fprintln(buf, "}")
+	fmt.Fprintln(buf, "\n// Size returns the echoed page size, preferring page_size and falling")
+	fmt.Fprintln(buf, "// back to limit. It returns 0 when the router sent neither.")
+	fmt.Fprintln(buf, "func (p PageInfo) Size() int {")
+	fmt.Fprintln(buf, "\tif p.PageSize > 0 {")
+	fmt.Fprintln(buf, "\t\treturn p.PageSize")
+	fmt.Fprintln(buf, "\t}")
+	fmt.Fprintln(buf, "\treturn p.Limit")
 	fmt.Fprintln(buf, "}")
 
 	// FormatURLValues is exported for callers building query strings by

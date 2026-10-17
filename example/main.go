@@ -19,6 +19,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/oekit/logx"
+
 	ikuaiapi "github.com/zy84338719/ikuai-api"
 	"github.com/zy84338719/ikuai-api/service"
 )
@@ -30,19 +32,29 @@ func main() {
 		log.Fatal("set IKUAI_BASE_URL and IKUAI_TOKEN")
 	}
 
-	// WithMetrics records request count/latency (printable at the end);
-	// WithStructuredLogger routes retry/debug events through a leveled logger.
+	// The SDK logs through the oekit logx facade. Installing a backend here
+	// is all it takes to get structured JSON output; the SDK itself never
+	// picks a backend for its consumer.
+	logx.UseSlog("ikuai-example")
+	ikuaiapi.SetLogLevel(ikuaiapi.LogLevelInfo)
+
+	// WithMetrics records request count/latency (printable at the end).
 	metrics := ikuaiapi.NewMetrics()
 	client, err := ikuaiapi.NewClient(baseURL,
 		ikuaiapi.WithToken(token),
 		ikuaiapi.WithTimeout(15*time.Second),
 		ikuaiapi.WithMetrics(metrics),
-		ikuaiapi.WithStructuredLogger(ikuaiapi.NewDefaultLogger(ikuaiapi.LogLevelInfo)),
 	)
 	if err != nil {
 		log.Fatalf("new client: %v", err)
 	}
-	defer client.Close()
+	// Close takes a context and is safe to call more than once, so a
+	// deferred Close next to an explicit shutdown is harmless.
+	defer func() {
+		if cerr := client.Close(context.Background()); cerr != nil {
+			log.Printf("close: %v", cerr)
+		}
+	}()
 
 	if err := ikuaiapi.ValidateToken(token); err != nil {
 		log.Fatalf("token: %v", err)

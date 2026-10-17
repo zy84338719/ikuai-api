@@ -1,0 +1,102 @@
+# ikuai-api
+
+> Go SDK for the iKuai v4.0 REST API — routers running iKuai OS 4.x.
+> 157 endpoints · typed query helpers per dialect · per-endpoint body contracts.
+
+ikuai-api 是 iKuai 路由器 v4 本地管理 API 的 Go SDK。它把「固件到底要什么」这类隐性知识编码进目录与 schema，而不是留给调用方去试错。
+
+## 快速开始
+
+```go
+client, err := ikuaiapi.NewClient("https://192.168.1.1",
+    ikuaiapi.WithToken(token),
+    ikuaiapi.WithTimeout(15*time.Second),
+)
+if err != nil {
+    return err
+}
+defer client.Close(context.Background())
+
+api := service.NewAPIClient(client)
+sys, err := api.Monitoring().GetMonitoringSystem(ctx)
+```
+
+## 三个必须知道的契约
+
+### 1. 分页参数叫 `limit`，不叫 `page_size`
+
+`page_size` 会被路由器**静默忽略**——分页形同虚设，调用方拿到的是未分页结果却毫无察觉。
+
+### 2. 各端点的查询方言不同
+
+| 方言 | 端点 | query |
+|---|---|---|
+| paged | 多数集合 | `page` `limit` `filter` `order` `order_by` |
+| legacy | `/monitoring/downstream` `/cameras` `/switch` | `TYPE=data` `LIMIT="off,cnt"` `OFFSET` `ORDER_BY` |
+| mixed | `/auth/online-users` | 小写 `page`/`limit` + 大写 `KEYWORDS`/`FINDS`/`ORDER_BY` |
+| window | `protocols*` `clients/protocols*` `/log/url-visits` | `starttime`/`stoptime`（无下划线） |
+| none | `ssid-clients` `channel-clients` `wireless-traffic` 等 | 仅端点自有选择器 |
+| load | `cpu` `memory` `disk` `network` 等 | `datetype` `start_time` `end_time` `math`（有下划线） |
+
+发错形状同样被静默忽略。非 paged 端点用生成的 `Query<Name>` 方法。
+
+### 3. `security` 与 `advanced-service` 两组排序键相反
+
+这两组要 `order=字段`、`order_by=方向`。SDK 自动翻译，`Order` 始终是方向、`OrderBy` 始终是字段。
+
+## 写操作
+
+```go
+body, err := ikuaiapi.CreateBody("/security/acl-rules", map[string]any{
+    "tagname": "block_ssh", "action": "drop", "protocol": "tcp",
+    "dst_port": ikuaiapi.AddressValues("22"),
+})
+// 默认值已补齐（enabled=yes prio=50 dir=forward 未动的选择器是空 pair
+// time 是全周全天窗口），必填字段缺失在本地报错而不是回一个 3001
+
+updated, err := ikuaiapi.UpdatePayload(ctx, client, "/network/nat/rules", id,
+    map[string]any{"nat_addr": "203.0.113.5"}, nil) // nil = 用该端点的 update 白名单
+```
+
+`enabled` 是字符串 `"yes"`/`"no"`；选择器是 `{"custom":[],"object":[]}` 不是数组；只有白名单内约 130 个字段能转数字。
+
+## 错误（oekit 契约）
+
+每个 `APIError` 内嵌 oekit 的 `BizError`，所以在你的 oekit 服务里 `mw.Fail` 能直接识别：
+
+| iKuai 码 | 含义 | HTTPCode | 判定 |
+|---|---|---|---|
+| 3001 | 参数错误 | 400 | `IsBadRequest()` |
+| 3007 | token 失效 | 401 | `IsAuthFailure()` |
+| 1008 | 会话过期 | 401 | `IsAuthFailure()` |
+| 10014 | 权限不足 | 403 | `IsPermissionFailure()` |
+| 4xxx | SDK 本地校验（未发出） | 400 | — |
+
+SDK 本地错误用 4xxx 段，与「路由器拒绝」区分开。
+
+## 日志与可观测
+
+```go
+logx.UseSlog("my-service")   // 装后端即可，SDK 自动跟随
+ikuaiapi.SetLogLevel(ikuaiapi.LogLevelInfo)
+```
+
+包级 logger 用 `logx.Delegating("ikuai-api")` 懒解析——SDK 不替消费方决定后端和 service name。
+
+## 文档
+
+- [`skills/SKILL.md`](skills/SKILL.md) — 能力地图、方言表、错误码
+- [`skills/monitoring.md`](skills/monitoring.md) — 各监控端点用哪个查询方法
+- [`skills/writing.md`](skills/writing.md) — 写操作约定、body 契约、固件不一致清单
+- [`skills/rendering.md`](skills/rendering.md) — 输出格式化
+- [`AGENTS.md`](AGENTS.md) — 给 AI Agent 的硬规则
+- [`CHANGELOG.md`](CHANGELOG.md) — 变更记录
+
+## 已知缺口
+
+- VPN 服务端配置在 catalog 是 `/vpn/pptp`，实机验证过的独立客户端用 `/vpn/pptp/services`；这些端点 404 时优先查这里。
+
+
+## License
+
+MIT

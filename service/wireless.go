@@ -43,8 +43,10 @@ type WirelessAccessControlRulesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *WirelessAccessControlRulesListOptions) query() map[string]string {
@@ -52,8 +54,8 @@ func (o *WirelessAccessControlRulesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -129,8 +131,10 @@ type WirelessVlanRulesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *WirelessVlanRulesListOptions) query() map[string]string {
@@ -138,8 +142,8 @@ func (o *WirelessVlanRulesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter

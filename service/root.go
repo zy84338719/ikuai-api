@@ -119,10 +119,10 @@ func (a *APIClient) Call(ctx context.Context, group, name, method string, body a
 			if ep2, ok2 := ikuaiapi.V4EndpointByGroupName(group, name); ok2 {
 				ep = ep2
 			} else {
-				return nil, &ikuaiapi.APIError{Message: "endpoint not found: " + group + "/" + name}
+				return nil, ikuaiapi.NewError("endpoint not found: " + group + "/" + name)
 			}
 		} else {
-			return nil, &ikuaiapi.APIError{Message: "endpoint not found: " + name}
+			return nil, ikuaiapi.NewError("endpoint not found: " + name)
 		}
 	}
 	switch method {
@@ -145,17 +145,32 @@ func (a *APIClient) Call(ctx context.Context, group, name, method string, body a
 		}
 		return a.client.Delete(ctx, delURL, body)
 	default:
-		return nil, &ikuaiapi.APIError{Message: "unsupported method: " + method}
+		return nil, ikuaiapi.NewError("unsupported method: " + method)
 	}
 }
 
 // PageInfo mirrors the pagination metadata iKuai returns with list
 // endpoints. It is exposed so callers can drive follow-up pages
 // without having to declare a local struct.
+//
+// Firmware revisions disagree on the page-size key they echo back:
+// some return "page_size", others "limit" (the key the v4
+// request contract actually accepts). Both are captured; use
+// Size rather than reading the fields directly.
 type PageInfo struct {
 	Page     int `json:"page"`
 	PageSize int `json:"page_size"`
+	Limit    int `json:"limit"`
 	Total    int `json:"total"`
+}
+
+// Size returns the echoed page size, preferring page_size and falling
+// back to limit. It returns 0 when the router sent neither.
+func (p PageInfo) Size() int {
+	if p.PageSize > 0 {
+		return p.PageSize
+	}
+	return p.Limit
 }
 
 // FormatURLValues is exposed for callers that build query strings

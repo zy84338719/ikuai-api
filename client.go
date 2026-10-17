@@ -1,26 +1,3 @@
-// Package ikuaiapi provides a Go SDK for interacting with iKuai routers
-// using the local v4.0 REST API.
-//
-// The SDK uses the Go standard library net/http with a small custom layer
-// (retry + timeout + sanitization) and exposes a typed service layer per
-// functional area (system, network, firewall, monitor, ...).
-//
-// Authentication uses a Bearer token obtained from the router web UI
-// (System → Auth → API Token). iKuai OS v4.x exposes all router
-// configuration under /api/v4.0/*.
-//
-// Basic usage:
-//
-//	client, err := ikuaiapi.NewClient("https://192.168.1.1",
-//	    ikuaiapi.WithToken("<router-api-token>"),
-//	)
-//	if err != nil {
-//	    log.Fatal(err)
-//	}
-//	defer client.Close()
-//
-//	api := service.NewAPIClient(client)
-//	iface, err := api.Network().GetInterfaces(ctx)
 package ikuaiapi
 
 import (
@@ -29,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"math"
 	"math/rand"
@@ -39,6 +15,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/oekit/logx"
+	oekerrors "github.com/oekit/pkg/errors"
 )
 
 // V4APIBase is the canonical root for all iKuai v4 REST endpoints.
@@ -71,16 +50,15 @@ type Client struct {
 	// router. Read methods return the preview as a JSON object, write
 	// methods return without executing.
 	DryRun bool
-	// Logger, if set, receives short human-readable status lines.
-	Logger func(format string, args ...any)
 
 	timeout    time.Duration
 	retryMax   int
 	retryBase  time.Duration
 	retryMaxD  time.Duration
 	apiBaseURL *url.URL
-	metrics    *Metrics         // optional request counters/latency
-	slogger    Logger           // optional structured logger
+	metrics    *Metrics    // optional request counters/latency
+	slogger    logx.Logger // optional structured logger
+	closeOnce  closeOnce   // guards Close against repeated calls
 }
 
 // ClientOption configures a Client at construction time.
@@ -164,16 +142,13 @@ func WithRetryDelay(base, max time.Duration) ClientOption {
 	}
 }
 
-// WithLogger sets a logging callback. The callback is invoked once per
-// request with a short status line. Prefer WithStructuredLogger for new code.
-func WithLogger(fn func(format string, args ...any)) ClientOption {
-	return func(c *Client) { c.Logger = fn }
-}
-
-// WithStructuredLogger attaches a leveled, structured Logger (see logger.go).
-// When set, retry / timeout / token-failure events are emitted through it
-// instead of the printf-style Logger callback.
-func WithStructuredLogger(l Logger) ClientOption {
+// WithStructuredLogger attaches a structured logger for this client only.
+//
+// The default is the package-level Delegating logger (see logger.go),
+// which follows whatever logx.SetDefault installed. Attaching a logger
+// here narrows it to this client — useful in a library that serves several
+// routers with different verbosity — without touching the global facade.
+func WithStructuredLogger(l logx.Logger) ClientOption {
 	return func(c *Client) { c.slogger = l }
 }
 
@@ -192,11 +167,11 @@ func (c *Client) Metrics() *Metrics { return c.metrics }
 func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
 	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
 	if baseURL == "" {
-		return nil, errors.New("ikuaiapi: baseURL is required")
+		return nil, ErrNotConfigured
 	}
 	apiBase, err := url.Parse(baseURL + V4APIBase)
 	if err != nil {
-		return nil, fmt.Errorf("ikuaiapi: parse baseURL: %w", err)
+		return nil, oekerrors.Wrap(err, "ikuaiapi: parse baseURL")
 	}
 	c := &Client{
 		BaseURL: baseURL,
@@ -220,13 +195,31 @@ func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
 	return c, nil
 }
 
-// Close releases the underlying transport. Safe to call multiple times.
-func (c *Client) Close() {
-	if c.HTTPClient != nil && c.HTTPClient.Transport != nil {
-		if t, ok := c.HTTPClient.Transport.(*http.Transport); ok {
-			t.CloseIdleConnections()
+// Close releases the underlying transport and makes the client unusable.
+//
+// It follows the oekit lifecycle contract: the ctx is accepted so a caller
+// can bound the shutdown, the error is returned rather than swallowed, and
+// repeated or concurrent calls are safe — a second Close returns the first
+// one's result without doing the work again.
+//
+// Close does not cancel in-flight requests; it closes idle connections so
+// the process can exit promptly. To bound a request, pass a context with a
+// deadline to the call itself.
+func (c *Client) Close(ctx context.Context) error {
+	c.closeOnce.once.Do(func() {
+		if c.HTTPClient == nil {
+			return
 		}
-	}
+		transport, ok := c.HTTPClient.Transport.(interface{ CloseIdleConnections() })
+		if !ok {
+			return
+		}
+		transport.CloseIdleConnections()
+		if err := ctx.Err(); err != nil {
+			c.closeOnce.err = oekerrors.Wrap(err, "ikuai-api: close")
+		}
+	})
+	return c.closeOnce.err
 }
 
 // SanitizeNil replaces bare `nil` tokens in JSON value positions with
@@ -288,7 +281,7 @@ type envelope struct {
 func (c *Client) check(resp *http.Response) (json.RawMessage, error) {
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, &APIError{HTTPStatus: resp.StatusCode, Message: "read response body: " + err.Error()}
+		return nil, NewError("read response body: "+err.Error(), WithHTTPStatus(resp.StatusCode), WithCause(err))
 	}
 	body := SanitizeNil(raw)
 
@@ -299,28 +292,21 @@ func (c *Client) check(resp *http.Response) (json.RawMessage, error) {
 		if env.Message != "" {
 			msg = env.Message
 		}
-		if hint, ok := errorHints[env.Code]; ok {
-			msg = msg + " (" + hint + ")"
-		}
 		var detailsEnv struct {
 			Details []APIErrorDetail `json:"details"`
 		}
 		_ = json.Unmarshal(body, &detailsEnv)
-		return nil, &APIError{
-			HTTPStatus: resp.StatusCode,
-			Code:       env.Code,
-			Message:    msg,
-			Details:    detailsEnv.Details,
-			RetryAfter: parseRetryAfter(resp.Header.Get("Retry-After")),
-		}
+		return nil, NewError(msg,
+			WithHTTPStatus(resp.StatusCode),
+			WithCode(env.Code),
+			WithDetails(detailsEnv.Details),
+			WithRetryAfter(parseRetryAfter(resp.Header.Get("Retry-After"))),
+		)
 	}
 
 	var env envelope
 	if err := json.Unmarshal(body, &env); err != nil {
-		return nil, &APIError{
-			HTTPStatus: resp.StatusCode,
-			Message:    "non-JSON response: " + string(body),
-		}
+		return nil, NewError("non-JSON response: "+string(body), WithHTTPStatus(resp.StatusCode))
 	}
 
 	if env.Code != 0 && env.Code != 20000 {
@@ -328,19 +314,15 @@ func (c *Client) check(resp *http.Response) (json.RawMessage, error) {
 		if msg == "" {
 			msg = "request failed"
 		}
-		if hint, ok := errorHints[env.Code]; ok {
-			msg = msg + " (" + hint + ")"
-		}
 		var detailsEnv struct {
 			Details []APIErrorDetail `json:"details"`
 		}
 		_ = json.Unmarshal(body, &detailsEnv)
-		return nil, &APIError{
-			HTTPStatus: resp.StatusCode,
-			Code:       env.Code,
-			Message:    msg,
-			Details:    detailsEnv.Details,
-		}
+		return nil, NewError(msg,
+			WithHTTPStatus(resp.StatusCode),
+			WithCode(env.Code),
+			WithDetails(detailsEnv.Details),
+		)
 	}
 
 	if c.RawMode {
@@ -402,29 +384,24 @@ func (c *Client) fullURL(p string) (string, error) {
 	return u.String(), nil
 }
 
-func (c *Client) log(format string, args ...any) {
-	if c.Logger != nil {
-		c.Logger(format, args...)
+// logCtx emits a structured event at the given level, carrying the context
+// so logx can attach a trace id, and falling back to the package logger when
+// no per-client logger is attached.
+func (c *Client) logCtx(ctx context.Context, level LogLevel, msg string, kv ...any) {
+	l := c.slogger
+	if l == nil {
+		l = log()
 	}
-}
-
-// logf logs at the given structured level. Falls back to the printf Logger
-// when no structured logger is attached.
-func (c *Client) logf(level LogLevel, msg string, args ...any) {
-	if c.slogger != nil {
-		switch level {
-		case LogLevelDebug:
-			c.slogger.Debug(msg, args...)
-		case LogLevelInfo:
-			c.slogger.Info(msg, args...)
-		case LogLevelWarn:
-			c.slogger.Warn(msg, args...)
-		default:
-			c.slogger.Error(msg, args...)
-		}
-		return
+	switch level {
+	case LogLevelDebug:
+		l.CtxDebug(ctx, msg, kv...)
+	case LogLevelInfo:
+		l.CtxInfo(ctx, msg, kv...)
+	case LogLevelWarn:
+		l.CtxWarn(ctx, msg, kv...)
+	default:
+		l.CtxError(ctx, msg, kv...)
 	}
-	c.log(msg, args...)
 }
 
 // Do executes a typed REST call and decodes the result into out (which
@@ -462,7 +439,7 @@ func (c *Client) Do(ctx context.Context, method, p string, body, out any) error 
 		return nil
 	}
 	if err := json.Unmarshal(payload, out); err != nil {
-		return &APIError{HTTPStatus: 200, Message: "decode response: " + err.Error()}
+		return NewError("decode response: "+err.Error(), WithHTTPStatus(200), WithCause(err))
 	}
 	return nil
 }
@@ -577,7 +554,9 @@ func (c *Client) doWithRetry(ctx context.Context, method, fullURL string, body a
 		if apiErr, ok := isAPIError(err); ok && apiErr.RetryAfter > 0 {
 			delay = apiErr.RetryAfter
 		}
-		c.logf(LogLevelWarn, "retry %d/%d after %s: %v", attempt+1, c.retryMax, delay, err)
+		c.logCtx(ctx, LogLevelWarn, "retrying request",
+			"attempt", attempt+1, "max_attempts", c.retryMax,
+			"delay", delay.String(), "err", err)
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
@@ -653,7 +632,7 @@ func (c *Client) doOnce(ctx context.Context, method, fullURL string, body any) (
 	if body != nil {
 		b, err := json.Marshal(body)
 		if err != nil {
-			return nil, &APIError{Message: "encode request body: " + err.Error()}
+			return nil, NewError("encode request body: "+err.Error(), WithCause(err))
 		}
 		bodyBytes = b
 	} else {
@@ -668,11 +647,11 @@ func (c *Client) doOnce(ctx context.Context, method, fullURL string, body any) (
 	}
 	req, err := http.NewRequestWithContext(reqCtx, method, fullURL, bytes.NewReader(bodyBytes))
 	if err != nil {
-		return nil, &APIError{Message: "build request: " + err.Error()}
+		return nil, NewError("build request: "+err.Error(), WithCause(err))
 	}
 	req.Header = c.headers()
 
-	c.logf(LogLevelDebug, "%s %s", method, fullURL)
+	c.logCtx(reqCtx, LogLevelDebug, "sending request", "method", method, "url", fullURL)
 	start := time.Now()
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {

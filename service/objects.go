@@ -43,8 +43,10 @@ type ObjectsDomainObjectsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *ObjectsDomainObjectsListOptions) query() map[string]string {
@@ -52,8 +54,8 @@ func (o *ObjectsDomainObjectsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -111,6 +113,50 @@ func (s *ObjectsService) DeleteObjectsDomainObjectsWithBody(ctx context.Context,
 	return err
 }
 
+// ObjectsDomainObjectsRef wraps objects domain-objects-ref.
+//
+// Methods: GET
+//
+// Path: /domain-objects/ref
+
+// ObjectsDomainObjectsRefQueryOptions configures a query against /domain-objects/ref.
+//
+// The endpoint speaks the reverse-lookup dialect: one group name, no paging.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type ObjectsDomainObjectsRefQueryOptions struct {
+	// GroupName is required (sent as "group_name").
+	GroupName string
+}
+
+func (o *ObjectsDomainObjectsRefQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("ObjectsDomainObjectsRefQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.GroupName == "" {
+		return nil, ikuaiapi.NewError("ObjectsDomainObjectsRefQueryOptions: GroupName is required")
+	}
+	q["group_name"] = o.GroupName
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryObjectsDomainObjectsRef runs a query against /domain-objects/ref using its documented query dialect.
+func (s *ObjectsService) QueryObjectsDomainObjectsRef(ctx context.Context, opts *ObjectsDomainObjectsRefQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/domain-objects/ref", q)
+}
+
+func (s *ObjectsService) GetObjectsDomainObjectsRef(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/domain-objects/ref", nil)
+}
+
 // ObjectsIpObjects wraps objects ip-objects.
 //
 // Methods: GET, POST, PUT, DELETE
@@ -123,8 +169,10 @@ type ObjectsIpObjectsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *ObjectsIpObjectsListOptions) query() map[string]string {
@@ -132,8 +180,8 @@ func (o *ObjectsIpObjectsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -191,29 +239,75 @@ func (s *ObjectsService) DeleteObjectsIpObjectsWithBody(ctx context.Context, bod
 	return err
 }
 
-// ObjectsIpv6Objects wraps objects ipv6-objects.
+// ObjectsIpObjectsRef wraps objects ip-objects-ref.
+//
+// Methods: GET
+//
+// Path: /ip-objects/ref
+
+// ObjectsIpObjectsRefQueryOptions configures a query against /ip-objects/ref.
+//
+// The endpoint speaks the reverse-lookup dialect: one group name, no paging.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type ObjectsIpObjectsRefQueryOptions struct {
+	// GroupName is required (sent as "group_name").
+	GroupName string
+}
+
+func (o *ObjectsIpObjectsRefQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("ObjectsIpObjectsRefQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.GroupName == "" {
+		return nil, ikuaiapi.NewError("ObjectsIpObjectsRefQueryOptions: GroupName is required")
+	}
+	q["group_name"] = o.GroupName
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryObjectsIpObjectsRef runs a query against /ip-objects/ref using its documented query dialect.
+func (s *ObjectsService) QueryObjectsIpObjectsRef(ctx context.Context, opts *ObjectsIpObjectsRefQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/ip-objects/ref", q)
+}
+
+func (s *ObjectsService) GetObjectsIpObjectsRef(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/ip-objects/ref", nil)
+}
+
+// ObjectsIp6Objects wraps objects ip6-objects.
 //
 // Methods: GET, POST, PUT, DELETE
 //
-// Path: /ipv6-objects
+// Path: /ip6-objects
 //
-// Use ListObjectsIpv6Objects(ctx, opts...) for paginated reads.
-// ObjectsIpv6ObjectsListOptions configures paginated reads of ObjectsIpv6Objects.
-type ObjectsIpv6ObjectsListOptions struct {
+// Use ListObjectsIp6Objects(ctx, opts...) for paginated reads.
+// ObjectsIp6ObjectsListOptions configures paginated reads of ObjectsIp6Objects.
+type ObjectsIp6ObjectsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
-func (o *ObjectsIpv6ObjectsListOptions) query() map[string]string {
+func (o *ObjectsIp6ObjectsListOptions) query() map[string]string {
 	if o == nil {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -227,48 +321,92 @@ func (o *ObjectsIpv6ObjectsListOptions) query() map[string]string {
 	return q
 }
 
-// ListObjectsIpv6Objects lists items at /ipv6-objects.
-func (s *ObjectsService) ListObjectsIpv6Objects(ctx context.Context, opts *ObjectsIpv6ObjectsListOptions) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/ipv6-objects", opts.query())
+// ListObjectsIp6Objects lists items at /ip6-objects.
+func (s *ObjectsService) ListObjectsIp6Objects(ctx context.Context, opts *ObjectsIp6ObjectsListOptions) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/ip6-objects", opts.query())
 }
 
-// GetObjectsIpv6Objects fetches one item at /ipv6-objects.
-func (s *ObjectsService) GetObjectsIpv6Objects(ctx context.Context, id int64) (json.RawMessage, error) {
+// GetObjectsIp6Objects fetches one item at /ip6-objects.
+func (s *ObjectsService) GetObjectsIp6Objects(ctx context.Context, id int64) (json.RawMessage, error) {
 	q := map[string]string{"id": strconv.FormatInt(id, 10)}
-	return s.client.Get(ctx, "/ipv6-objects", q)
+	return s.client.Get(ctx, "/ip6-objects", q)
 }
 
-// CreateObjectsIpv6Objects posts a new item to /ipv6-objects. The router returns a rowid on
+// CreateObjectsIp6Objects posts a new item to /ip6-objects. The router returns a rowid on
 // success which is propagated to the caller.
-func (s *ObjectsService) CreateObjectsIpv6Objects(ctx context.Context, body any) (int64, error) {
-	raw, err := s.client.Post(ctx, "/ipv6-objects", body)
+func (s *ObjectsService) CreateObjectsIp6Objects(ctx context.Context, body any) (int64, error) {
+	raw, err := s.client.Post(ctx, "/ip6-objects", body)
 	if err != nil {
 		return 0, err
 	}
 	return extractRowID(raw)
 }
 
-// UpdateObjectsIpv6Objects replaces the resource at /ipv6-objects.
-func (s *ObjectsService) UpdateObjectsIpv6Objects(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, "/ipv6-objects", body)
+// UpdateObjectsIp6Objects replaces the resource at /ip6-objects.
+func (s *ObjectsService) UpdateObjectsIp6Objects(ctx context.Context, body any) error {
+	_, err := s.client.Put(ctx, "/ip6-objects", body)
 	return err
 }
 
-// DeleteObjectsIpv6Objects removes the resource at /ipv6-objects. iKuai expects the
+// DeleteObjectsIp6Objects removes the resource at /ip6-objects. iKuai expects the
 // resource identifier as the ?id= query parameter, not in the JSON
-// body. Pass DeleteObjectsIpv6ObjectsWithBody to send a custom JSON body instead.
-func (s *ObjectsService) DeleteObjectsIpv6Objects(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/ipv6-objects"+"?id="+strconv.FormatInt(id, 10), nil)
+// body. Pass DeleteObjectsIp6ObjectsWithBody to send a custom JSON body instead.
+func (s *ObjectsService) DeleteObjectsIp6Objects(ctx context.Context, id int64) error {
+	_, err := s.client.Delete(ctx, "/ip6-objects"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
 
-// DeleteObjectsIpv6ObjectsWithBody removes the resource at /ipv6-objects with a custom
+// DeleteObjectsIp6ObjectsWithBody removes the resource at /ip6-objects with a custom
 // JSON body. iKuai also accepts a few DELETE requests that carry
 // parameters in the body (e.g. /system/backup?srcfile=… which the
-// wrapper DeleteObjectsIpv6Objects cannot model directly).
-func (s *ObjectsService) DeleteObjectsIpv6ObjectsWithBody(ctx context.Context, body any) error {
-	_, err := s.client.Delete(ctx, "/ipv6-objects", body)
+// wrapper DeleteObjectsIp6Objects cannot model directly).
+func (s *ObjectsService) DeleteObjectsIp6ObjectsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/ip6-objects", body)
 	return err
+}
+
+// ObjectsIp6ObjectsRef wraps objects ip6-objects-ref.
+//
+// Methods: GET
+//
+// Path: /ip6-objects/ref
+
+// ObjectsIp6ObjectsRefQueryOptions configures a query against /ip6-objects/ref.
+//
+// The endpoint speaks the reverse-lookup dialect: one group name, no paging.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type ObjectsIp6ObjectsRefQueryOptions struct {
+	// GroupName is required (sent as "group_name").
+	GroupName string
+}
+
+func (o *ObjectsIp6ObjectsRefQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("ObjectsIp6ObjectsRefQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.GroupName == "" {
+		return nil, ikuaiapi.NewError("ObjectsIp6ObjectsRefQueryOptions: GroupName is required")
+	}
+	q["group_name"] = o.GroupName
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryObjectsIp6ObjectsRef runs a query against /ip6-objects/ref using its documented query dialect.
+func (s *ObjectsService) QueryObjectsIp6ObjectsRef(ctx context.Context, opts *ObjectsIp6ObjectsRefQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/ip6-objects/ref", q)
+}
+
+func (s *ObjectsService) GetObjectsIp6ObjectsRef(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/ip6-objects/ref", nil)
 }
 
 // ObjectsMacObjects wraps objects mac-objects.
@@ -283,8 +421,10 @@ type ObjectsMacObjectsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *ObjectsMacObjectsListOptions) query() map[string]string {
@@ -292,8 +432,8 @@ func (o *ObjectsMacObjectsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -351,6 +491,50 @@ func (s *ObjectsService) DeleteObjectsMacObjectsWithBody(ctx context.Context, bo
 	return err
 }
 
+// ObjectsMacObjectsRef wraps objects mac-objects-ref.
+//
+// Methods: GET
+//
+// Path: /mac-objects/ref
+
+// ObjectsMacObjectsRefQueryOptions configures a query against /mac-objects/ref.
+//
+// The endpoint speaks the reverse-lookup dialect: one group name, no paging.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type ObjectsMacObjectsRefQueryOptions struct {
+	// GroupName is required (sent as "group_name").
+	GroupName string
+}
+
+func (o *ObjectsMacObjectsRefQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("ObjectsMacObjectsRefQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.GroupName == "" {
+		return nil, ikuaiapi.NewError("ObjectsMacObjectsRefQueryOptions: GroupName is required")
+	}
+	q["group_name"] = o.GroupName
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryObjectsMacObjectsRef runs a query against /mac-objects/ref using its documented query dialect.
+func (s *ObjectsService) QueryObjectsMacObjectsRef(ctx context.Context, opts *ObjectsMacObjectsRefQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/mac-objects/ref", q)
+}
+
+func (s *ObjectsService) GetObjectsMacObjectsRef(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/mac-objects/ref", nil)
+}
+
 // ObjectsPortObjects wraps objects port-objects.
 //
 // Methods: GET, POST, PUT, DELETE
@@ -363,8 +547,10 @@ type ObjectsPortObjectsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *ObjectsPortObjectsListOptions) query() map[string]string {
@@ -372,8 +558,8 @@ func (o *ObjectsPortObjectsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -431,29 +617,75 @@ func (s *ObjectsService) DeleteObjectsPortObjectsWithBody(ctx context.Context, b
 	return err
 }
 
-// ObjectsProtocolObjects wraps objects protocol-objects.
+// ObjectsPortObjectsRef wraps objects port-objects-ref.
+//
+// Methods: GET
+//
+// Path: /port-objects/ref
+
+// ObjectsPortObjectsRefQueryOptions configures a query against /port-objects/ref.
+//
+// The endpoint speaks the reverse-lookup dialect: one group name, no paging.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type ObjectsPortObjectsRefQueryOptions struct {
+	// GroupName is required (sent as "group_name").
+	GroupName string
+}
+
+func (o *ObjectsPortObjectsRefQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("ObjectsPortObjectsRefQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.GroupName == "" {
+		return nil, ikuaiapi.NewError("ObjectsPortObjectsRefQueryOptions: GroupName is required")
+	}
+	q["group_name"] = o.GroupName
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryObjectsPortObjectsRef runs a query against /port-objects/ref using its documented query dialect.
+func (s *ObjectsService) QueryObjectsPortObjectsRef(ctx context.Context, opts *ObjectsPortObjectsRefQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/port-objects/ref", q)
+}
+
+func (s *ObjectsService) GetObjectsPortObjectsRef(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/port-objects/ref", nil)
+}
+
+// ObjectsProtoObjects wraps objects proto-objects.
 //
 // Methods: GET, POST, PUT, DELETE
 //
-// Path: /protocol-objects
+// Path: /proto-objects
 //
-// Use ListObjectsProtocolObjects(ctx, opts...) for paginated reads.
-// ObjectsProtocolObjectsListOptions configures paginated reads of ObjectsProtocolObjects.
-type ObjectsProtocolObjectsListOptions struct {
+// Use ListObjectsProtoObjects(ctx, opts...) for paginated reads.
+// ObjectsProtoObjectsListOptions configures paginated reads of ObjectsProtoObjects.
+type ObjectsProtoObjectsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
-func (o *ObjectsProtocolObjectsListOptions) query() map[string]string {
+func (o *ObjectsProtoObjectsListOptions) query() map[string]string {
 	if o == nil {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -467,48 +699,92 @@ func (o *ObjectsProtocolObjectsListOptions) query() map[string]string {
 	return q
 }
 
-// ListObjectsProtocolObjects lists items at /protocol-objects.
-func (s *ObjectsService) ListObjectsProtocolObjects(ctx context.Context, opts *ObjectsProtocolObjectsListOptions) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/protocol-objects", opts.query())
+// ListObjectsProtoObjects lists items at /proto-objects.
+func (s *ObjectsService) ListObjectsProtoObjects(ctx context.Context, opts *ObjectsProtoObjectsListOptions) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/proto-objects", opts.query())
 }
 
-// GetObjectsProtocolObjects fetches one item at /protocol-objects.
-func (s *ObjectsService) GetObjectsProtocolObjects(ctx context.Context, id int64) (json.RawMessage, error) {
+// GetObjectsProtoObjects fetches one item at /proto-objects.
+func (s *ObjectsService) GetObjectsProtoObjects(ctx context.Context, id int64) (json.RawMessage, error) {
 	q := map[string]string{"id": strconv.FormatInt(id, 10)}
-	return s.client.Get(ctx, "/protocol-objects", q)
+	return s.client.Get(ctx, "/proto-objects", q)
 }
 
-// CreateObjectsProtocolObjects posts a new item to /protocol-objects. The router returns a rowid on
+// CreateObjectsProtoObjects posts a new item to /proto-objects. The router returns a rowid on
 // success which is propagated to the caller.
-func (s *ObjectsService) CreateObjectsProtocolObjects(ctx context.Context, body any) (int64, error) {
-	raw, err := s.client.Post(ctx, "/protocol-objects", body)
+func (s *ObjectsService) CreateObjectsProtoObjects(ctx context.Context, body any) (int64, error) {
+	raw, err := s.client.Post(ctx, "/proto-objects", body)
 	if err != nil {
 		return 0, err
 	}
 	return extractRowID(raw)
 }
 
-// UpdateObjectsProtocolObjects replaces the resource at /protocol-objects.
-func (s *ObjectsService) UpdateObjectsProtocolObjects(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, "/protocol-objects", body)
+// UpdateObjectsProtoObjects replaces the resource at /proto-objects.
+func (s *ObjectsService) UpdateObjectsProtoObjects(ctx context.Context, body any) error {
+	_, err := s.client.Put(ctx, "/proto-objects", body)
 	return err
 }
 
-// DeleteObjectsProtocolObjects removes the resource at /protocol-objects. iKuai expects the
+// DeleteObjectsProtoObjects removes the resource at /proto-objects. iKuai expects the
 // resource identifier as the ?id= query parameter, not in the JSON
-// body. Pass DeleteObjectsProtocolObjectsWithBody to send a custom JSON body instead.
-func (s *ObjectsService) DeleteObjectsProtocolObjects(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/protocol-objects"+"?id="+strconv.FormatInt(id, 10), nil)
+// body. Pass DeleteObjectsProtoObjectsWithBody to send a custom JSON body instead.
+func (s *ObjectsService) DeleteObjectsProtoObjects(ctx context.Context, id int64) error {
+	_, err := s.client.Delete(ctx, "/proto-objects"+"?id="+strconv.FormatInt(id, 10), nil)
 	return err
 }
 
-// DeleteObjectsProtocolObjectsWithBody removes the resource at /protocol-objects with a custom
+// DeleteObjectsProtoObjectsWithBody removes the resource at /proto-objects with a custom
 // JSON body. iKuai also accepts a few DELETE requests that carry
 // parameters in the body (e.g. /system/backup?srcfile=… which the
-// wrapper DeleteObjectsProtocolObjects cannot model directly).
-func (s *ObjectsService) DeleteObjectsProtocolObjectsWithBody(ctx context.Context, body any) error {
-	_, err := s.client.Delete(ctx, "/protocol-objects", body)
+// wrapper DeleteObjectsProtoObjects cannot model directly).
+func (s *ObjectsService) DeleteObjectsProtoObjectsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/proto-objects", body)
 	return err
+}
+
+// ObjectsProtoObjectsRef wraps objects proto-objects-ref.
+//
+// Methods: GET
+//
+// Path: /proto-objects/ref
+
+// ObjectsProtoObjectsRefQueryOptions configures a query against /proto-objects/ref.
+//
+// The endpoint speaks the reverse-lookup dialect: one group name, no paging.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type ObjectsProtoObjectsRefQueryOptions struct {
+	// GroupName is required (sent as "group_name").
+	GroupName string
+}
+
+func (o *ObjectsProtoObjectsRefQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("ObjectsProtoObjectsRefQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.GroupName == "" {
+		return nil, ikuaiapi.NewError("ObjectsProtoObjectsRefQueryOptions: GroupName is required")
+	}
+	q["group_name"] = o.GroupName
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryObjectsProtoObjectsRef runs a query against /proto-objects/ref using its documented query dialect.
+func (s *ObjectsService) QueryObjectsProtoObjectsRef(ctx context.Context, opts *ObjectsProtoObjectsRefQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/proto-objects/ref", q)
+}
+
+func (s *ObjectsService) GetObjectsProtoObjectsRef(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/proto-objects/ref", nil)
 }
 
 // ObjectsTimeObjects wraps objects time-objects.
@@ -523,8 +799,10 @@ type ObjectsTimeObjectsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *ObjectsTimeObjectsListOptions) query() map[string]string {
@@ -532,8 +810,8 @@ func (o *ObjectsTimeObjectsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -589,6 +867,50 @@ func (s *ObjectsService) DeleteObjectsTimeObjects(ctx context.Context, id int64)
 func (s *ObjectsService) DeleteObjectsTimeObjectsWithBody(ctx context.Context, body any) error {
 	_, err := s.client.Delete(ctx, "/time-objects", body)
 	return err
+}
+
+// ObjectsTimeObjectsRef wraps objects time-objects-ref.
+//
+// Methods: GET
+//
+// Path: /time-objects/ref
+
+// ObjectsTimeObjectsRefQueryOptions configures a query against /time-objects/ref.
+//
+// The endpoint speaks the reverse-lookup dialect: one group name, no paging.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type ObjectsTimeObjectsRefQueryOptions struct {
+	// GroupName is required (sent as "group_name").
+	GroupName string
+}
+
+func (o *ObjectsTimeObjectsRefQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("ObjectsTimeObjectsRefQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.GroupName == "" {
+		return nil, ikuaiapi.NewError("ObjectsTimeObjectsRefQueryOptions: GroupName is required")
+	}
+	q["group_name"] = o.GroupName
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryObjectsTimeObjectsRef runs a query against /time-objects/ref using its documented query dialect.
+func (s *ObjectsService) QueryObjectsTimeObjectsRef(ctx context.Context, opts *ObjectsTimeObjectsRefQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/time-objects/ref", q)
+}
+
+func (s *ObjectsService) GetObjectsTimeObjectsRef(ctx context.Context) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/time-objects/ref", nil)
 }
 
 // Field hints for this group (iKuai firmware field names):

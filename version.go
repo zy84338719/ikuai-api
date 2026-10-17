@@ -2,7 +2,7 @@
 package ikuaiapi
 
 // SDKVersion is the semantic version of this SDK.
-const SDKVersion = "1.1.1"
+const SDKVersion = "1.2.0"
 
 // Version enumerates the iKuai API generations the SDK recognises.
 type Version int

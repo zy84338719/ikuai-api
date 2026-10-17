@@ -36,8 +36,51 @@ func pathGroupMonitoring() []V4Endpoint {
 // Methods: GET
 //
 // Path: /monitoring/app-protocols/history-load
+
+// MonitoringAppProtocolsHistoryLoadQueryOptions configures a query against /monitoring/app-protocols/history-load.
 //
-// Use ListMonitoringAppProtocolsHistoryLoad(ctx, opts...) for paginated reads.
+// The endpoint speaks the starttime/stoptime window dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringAppProtocolsHistoryLoadQueryOptions struct {
+	// AppIDs is required (sent as "appids").
+	AppIDs string
+	// StartTime is optional (sent as "starttime").
+	StartTime int64
+	// StopTime is optional (sent as "stoptime").
+	StopTime int64
+}
+
+func (o *MonitoringAppProtocolsHistoryLoadQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringAppProtocolsHistoryLoadQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.AppIDs == "" {
+		return nil, ikuaiapi.NewError("MonitoringAppProtocolsHistoryLoadQueryOptions: AppIDs is required")
+	}
+	q["appids"] = o.AppIDs
+	if o.StartTime != 0 {
+		q["starttime"] = strconv.FormatInt(o.StartTime, 10)
+	}
+	if o.StopTime != 0 {
+		q["stoptime"] = strconv.FormatInt(o.StopTime, 10)
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringAppProtocolsHistoryLoad runs a query against /monitoring/app-protocols/history-load using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringAppProtocolsHistoryLoad(ctx context.Context, opts *MonitoringAppProtocolsHistoryLoadQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/app-protocols/history-load", q)
+}
+
 func (s *MonitoringService) GetMonitoringAppProtocolsHistoryLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/app-protocols/history-load", nil)
 }
@@ -58,8 +101,41 @@ func (s *MonitoringService) GetMonitoringAppProtocolsLoad(ctx context.Context) (
 // Methods: GET
 //
 // Path: /monitoring/app-protocols/terminal-load
+
+// MonitoringAppProtocolsTerminalLoadQueryOptions configures a query against /monitoring/app-protocols/terminal-load.
 //
-// Use ListMonitoringAppProtocolsTerminalLoad(ctx, opts...) for paginated reads.
+// The endpoint speaks the unpaginated dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringAppProtocolsTerminalLoadQueryOptions struct {
+	// AppID is required (sent as "appid").
+	AppID int64
+}
+
+func (o *MonitoringAppProtocolsTerminalLoadQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringAppProtocolsTerminalLoadQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.AppID <= 0 {
+		return nil, ikuaiapi.NewError("MonitoringAppProtocolsTerminalLoadQueryOptions: AppID must be greater than 0")
+	}
+	q["appid"] = strconv.FormatInt(o.AppID, 10)
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringAppProtocolsTerminalLoad runs a query against /monitoring/app-protocols/terminal-load using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringAppProtocolsTerminalLoad(ctx context.Context, opts *MonitoringAppProtocolsTerminalLoadQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/app-protocols/terminal-load", q)
+}
+
 func (s *MonitoringService) GetMonitoringAppProtocolsTerminalLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/app-protocols/terminal-load", nil)
 }
@@ -80,8 +156,70 @@ func (s *MonitoringService) GetMonitoringAppTrafficSummary(ctx context.Context) 
 // Methods: GET
 //
 // Path: /monitoring/cameras
+
+// MonitoringCamerasQueryOptions configures a query against /monitoring/cameras.
 //
-// Use ListMonitoringCameras(ctx, opts...) for paginated reads.
+// The endpoint speaks the legacy uppercase TYPE/LIMIT/OFFSET dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringCamerasQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Order is the sort direction: asc | desc. Sent as ORDER.
+	Order string
+	// OrderBy is the sort field. Sent as ORDER_BY.
+	OrderBy string
+	// Status is optional (sent as "status").
+	Status string
+	// Keywords is optional (sent as "KEYWORDS").
+	Keywords string
+}
+
+func (o *MonitoringCamerasQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringCamerasQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("MonitoringCamerasQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("MonitoringCamerasQueryOptions: PageSize must be greater than 0")
+	}
+	offset := (o.Page - 1) * o.PageSize
+	q := map[string]string{
+		"TYPE":   "data",
+		"LIMIT":  strconv.Itoa(offset) + "," + strconv.Itoa(o.PageSize),
+		"OFFSET": strconv.Itoa(offset),
+	}
+	if o.Order != "" {
+		q["ORDER"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["ORDER_BY"] = o.OrderBy
+	}
+	if o.Status != "" {
+		q["status"] = o.Status
+	}
+	if o.Keywords != "" {
+		q["KEYWORDS"] = o.Keywords
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringCameras runs a query against /monitoring/cameras using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringCameras(ctx context.Context, opts *MonitoringCamerasQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/cameras", q)
+}
+
 func (s *MonitoringService) GetMonitoringCameras(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/cameras", nil)
 }
@@ -91,8 +229,40 @@ func (s *MonitoringService) GetMonitoringCameras(ctx context.Context) (json.RawM
 // Methods: GET
 //
 // Path: /monitoring/channel-clients
+
+// MonitoringChannelClientsQueryOptions configures a query against /monitoring/channel-clients.
 //
-// Use ListMonitoringChannelClients(ctx, opts...) for paginated reads.
+// The endpoint speaks the unpaginated dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringChannelClientsQueryOptions struct {
+	// Channel is optional (sent as "channel").
+	Channel int64
+}
+
+func (o *MonitoringChannelClientsQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringChannelClientsQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.Channel != 0 {
+		q["channel"] = strconv.FormatInt(o.Channel, 10)
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringChannelClients runs a query against /monitoring/channel-clients using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringChannelClients(ctx context.Context, opts *MonitoringChannelClientsQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/channel-clients", q)
+}
+
 func (s *MonitoringService) GetMonitoringChannelClients(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/channel-clients", nil)
 }
@@ -102,8 +272,76 @@ func (s *MonitoringService) GetMonitoringChannelClients(ctx context.Context) (js
 // Methods: GET
 //
 // Path: /monitoring/clients/app-protocols/load
+
+// MonitoringClientsAppProtocolsLoadQueryOptions configures a query against /monitoring/clients/app-protocols/load.
 //
-// Use ListMonitoringClientsAppProtocolsLoad(ctx, opts...) for paginated reads.
+// The endpoint speaks the .
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringClientsAppProtocolsLoadQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Filter uses the iKuai expression syntax, e.g. "enabled==yes".
+	// "&" is AND and "," is OR.
+	Filter string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
+	// IP is required (sent as "ip").
+	IP string
+	// MAC is required (sent as "mac").
+	MAC string
+}
+
+func (o *MonitoringClientsAppProtocolsLoadQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringClientsAppProtocolsLoadQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("MonitoringClientsAppProtocolsLoadQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("MonitoringClientsAppProtocolsLoadQueryOptions: PageSize must be greater than 0")
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Filter != "" {
+		q["filter"] = o.Filter
+	}
+	if o.Order != "" {
+		q["order"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["order_by"] = o.OrderBy
+	}
+	if o.IP == "" {
+		return nil, ikuaiapi.NewError("MonitoringClientsAppProtocolsLoadQueryOptions: IP is required")
+	}
+	q["ip"] = o.IP
+	if o.MAC == "" {
+		return nil, ikuaiapi.NewError("MonitoringClientsAppProtocolsLoadQueryOptions: MAC is required")
+	}
+	q["mac"] = o.MAC
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringClientsAppProtocolsLoad runs a query against /monitoring/clients/app-protocols/load using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringClientsAppProtocolsLoad(ctx context.Context, opts *MonitoringClientsAppProtocolsLoadQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/clients/app-protocols/load", q)
+}
+
 func (s *MonitoringService) GetMonitoringClientsAppProtocolsLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients/app-protocols/load", nil)
 }
@@ -113,8 +351,74 @@ func (s *MonitoringService) GetMonitoringClientsAppProtocolsLoad(ctx context.Con
 // Methods: GET
 //
 // Path: /monitoring/clients-ip6-offline
+
+// MonitoringClientsIp6OfflineQueryOptions configures a query against /monitoring/clients-ip6-offline.
 //
-// Use ListMonitoringClientsIp6Offline(ctx, opts...) for paginated reads.
+// The endpoint speaks the .
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringClientsIp6OfflineQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Filter uses the iKuai expression syntax, e.g. "enabled==yes".
+	// "&" is AND and "," is OR.
+	Filter string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
+	// Key is optional (sent as "key").
+	Key string
+	// Pattern is optional (sent as "pattern").
+	Pattern string
+}
+
+func (o *MonitoringClientsIp6OfflineQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringClientsIp6OfflineQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("MonitoringClientsIp6OfflineQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("MonitoringClientsIp6OfflineQueryOptions: PageSize must be greater than 0")
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Filter != "" {
+		q["filter"] = o.Filter
+	}
+	if o.Order != "" {
+		q["order"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["order_by"] = o.OrderBy
+	}
+	if o.Key != "" {
+		q["key"] = o.Key
+	}
+	if o.Pattern != "" {
+		q["pattern"] = o.Pattern
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringClientsIp6Offline runs a query against /monitoring/clients-ip6-offline using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringClientsIp6Offline(ctx context.Context, opts *MonitoringClientsIp6OfflineQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/clients-ip6-offline", q)
+}
+
 func (s *MonitoringService) GetMonitoringClientsIp6Offline(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients-ip6-offline", nil)
 }
@@ -124,8 +428,74 @@ func (s *MonitoringService) GetMonitoringClientsIp6Offline(ctx context.Context) 
 // Methods: GET
 //
 // Path: /monitoring/clients-ip6-online
+
+// MonitoringClientsIp6OnlineQueryOptions configures a query against /monitoring/clients-ip6-online.
 //
-// Use ListMonitoringClientsIp6Online(ctx, opts...) for paginated reads.
+// The endpoint speaks the .
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringClientsIp6OnlineQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Filter uses the iKuai expression syntax, e.g. "enabled==yes".
+	// "&" is AND and "," is OR.
+	Filter string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
+	// Key is optional (sent as "key").
+	Key string
+	// Pattern is optional (sent as "pattern").
+	Pattern string
+}
+
+func (o *MonitoringClientsIp6OnlineQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringClientsIp6OnlineQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("MonitoringClientsIp6OnlineQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("MonitoringClientsIp6OnlineQueryOptions: PageSize must be greater than 0")
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Filter != "" {
+		q["filter"] = o.Filter
+	}
+	if o.Order != "" {
+		q["order"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["order_by"] = o.OrderBy
+	}
+	if o.Key != "" {
+		q["key"] = o.Key
+	}
+	if o.Pattern != "" {
+		q["pattern"] = o.Pattern
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringClientsIp6Online runs a query against /monitoring/clients-ip6-online using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringClientsIp6Online(ctx context.Context, opts *MonitoringClientsIp6OnlineQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/clients-ip6-online", q)
+}
+
 func (s *MonitoringService) GetMonitoringClientsIp6Online(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients-ip6-online", nil)
 }
@@ -135,8 +505,74 @@ func (s *MonitoringService) GetMonitoringClientsIp6Online(ctx context.Context) (
 // Methods: GET
 //
 // Path: /monitoring/clients-offline
+
+// MonitoringClientsOfflineQueryOptions configures a query against /monitoring/clients-offline.
 //
-// Use ListMonitoringClientsOffline(ctx, opts...) for paginated reads.
+// The endpoint speaks the .
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringClientsOfflineQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Filter uses the iKuai expression syntax, e.g. "enabled==yes".
+	// "&" is AND and "," is OR.
+	Filter string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
+	// Key is optional (sent as "key").
+	Key string
+	// Pattern is optional (sent as "pattern").
+	Pattern string
+}
+
+func (o *MonitoringClientsOfflineQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringClientsOfflineQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("MonitoringClientsOfflineQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("MonitoringClientsOfflineQueryOptions: PageSize must be greater than 0")
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Filter != "" {
+		q["filter"] = o.Filter
+	}
+	if o.Order != "" {
+		q["order"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["order_by"] = o.OrderBy
+	}
+	if o.Key != "" {
+		q["key"] = o.Key
+	}
+	if o.Pattern != "" {
+		q["pattern"] = o.Pattern
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringClientsOffline runs a query against /monitoring/clients-offline using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringClientsOffline(ctx context.Context, opts *MonitoringClientsOfflineQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/clients-offline", q)
+}
+
 func (s *MonitoringService) GetMonitoringClientsOffline(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients-offline", nil)
 }
@@ -146,8 +582,74 @@ func (s *MonitoringService) GetMonitoringClientsOffline(ctx context.Context) (js
 // Methods: GET
 //
 // Path: /monitoring/clients-online
+
+// MonitoringClientsOnlineQueryOptions configures a query against /monitoring/clients-online.
 //
-// Use ListMonitoringClientsOnline(ctx, opts...) for paginated reads.
+// The endpoint speaks the .
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringClientsOnlineQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Filter uses the iKuai expression syntax, e.g. "enabled==yes".
+	// "&" is AND and "," is OR.
+	Filter string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
+	// Key is optional (sent as "key").
+	Key string
+	// Pattern is optional (sent as "pattern").
+	Pattern string
+}
+
+func (o *MonitoringClientsOnlineQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringClientsOnlineQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("MonitoringClientsOnlineQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("MonitoringClientsOnlineQueryOptions: PageSize must be greater than 0")
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Filter != "" {
+		q["filter"] = o.Filter
+	}
+	if o.Order != "" {
+		q["order"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["order_by"] = o.OrderBy
+	}
+	if o.Key != "" {
+		q["key"] = o.Key
+	}
+	if o.Pattern != "" {
+		q["pattern"] = o.Pattern
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringClientsOnline runs a query against /monitoring/clients-online using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringClientsOnline(ctx context.Context, opts *MonitoringClientsOnlineQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/clients-online", q)
+}
+
 func (s *MonitoringService) GetMonitoringClientsOnline(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients-online", nil)
 }
@@ -157,8 +659,57 @@ func (s *MonitoringService) GetMonitoringClientsOnline(ctx context.Context) (jso
 // Methods: GET
 //
 // Path: /monitoring/clients/protocols
+
+// MonitoringClientsProtocolsQueryOptions configures a query against /monitoring/clients/protocols.
 //
-// Use ListMonitoringClientsProtocols(ctx, opts...) for paginated reads.
+// The endpoint speaks the starttime/stoptime window dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringClientsProtocolsQueryOptions struct {
+	// IP is required (sent as "ip").
+	IP string
+	// MAC is required (sent as "mac").
+	MAC string
+	// StartTime is optional (sent as "starttime").
+	StartTime int64
+	// StopTime is optional (sent as "stoptime").
+	StopTime int64
+}
+
+func (o *MonitoringClientsProtocolsQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringClientsProtocolsQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.IP == "" {
+		return nil, ikuaiapi.NewError("MonitoringClientsProtocolsQueryOptions: IP is required")
+	}
+	q["ip"] = o.IP
+	if o.MAC == "" {
+		return nil, ikuaiapi.NewError("MonitoringClientsProtocolsQueryOptions: MAC is required")
+	}
+	q["mac"] = o.MAC
+	if o.StartTime != 0 {
+		q["starttime"] = strconv.FormatInt(o.StartTime, 10)
+	}
+	if o.StopTime != 0 {
+		q["stoptime"] = strconv.FormatInt(o.StopTime, 10)
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringClientsProtocols runs a query against /monitoring/clients/protocols using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringClientsProtocols(ctx context.Context, opts *MonitoringClientsProtocolsQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/clients/protocols", q)
+}
+
 func (s *MonitoringService) GetMonitoringClientsProtocols(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients/protocols", nil)
 }
@@ -168,8 +719,57 @@ func (s *MonitoringService) GetMonitoringClientsProtocols(ctx context.Context) (
 // Methods: GET
 //
 // Path: /monitoring/clients/protocols/history-load
+
+// MonitoringClientsProtocolsHistoryLoadQueryOptions configures a query against /monitoring/clients/protocols/history-load.
 //
-// Use ListMonitoringClientsProtocolsHistoryLoad(ctx, opts...) for paginated reads.
+// The endpoint speaks the starttime/stoptime window dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringClientsProtocolsHistoryLoadQueryOptions struct {
+	// IP is required (sent as "ip").
+	IP string
+	// MAC is required (sent as "mac").
+	MAC string
+	// StartTime is optional (sent as "starttime").
+	StartTime int64
+	// StopTime is optional (sent as "stoptime").
+	StopTime int64
+}
+
+func (o *MonitoringClientsProtocolsHistoryLoadQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringClientsProtocolsHistoryLoadQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.IP == "" {
+		return nil, ikuaiapi.NewError("MonitoringClientsProtocolsHistoryLoadQueryOptions: IP is required")
+	}
+	q["ip"] = o.IP
+	if o.MAC == "" {
+		return nil, ikuaiapi.NewError("MonitoringClientsProtocolsHistoryLoadQueryOptions: MAC is required")
+	}
+	q["mac"] = o.MAC
+	if o.StartTime != 0 {
+		q["starttime"] = strconv.FormatInt(o.StartTime, 10)
+	}
+	if o.StopTime != 0 {
+		q["stoptime"] = strconv.FormatInt(o.StopTime, 10)
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringClientsProtocolsHistoryLoad runs a query against /monitoring/clients/protocols/history-load using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringClientsProtocolsHistoryLoad(ctx context.Context, opts *MonitoringClientsProtocolsHistoryLoadQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/clients/protocols/history-load", q)
+}
+
 func (s *MonitoringService) GetMonitoringClientsProtocolsHistoryLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients/protocols/history-load", nil)
 }
@@ -179,8 +779,47 @@ func (s *MonitoringService) GetMonitoringClientsProtocolsHistoryLoad(ctx context
 // Methods: GET
 //
 // Path: /monitoring/clients-traffic-load
+
+// MonitoringClientsTrafficLoadQueryOptions configures a query against /monitoring/clients-traffic-load.
 //
-// Use ListMonitoringClientsTrafficLoad(ctx, opts...) for paginated reads.
+// The endpoint speaks the unpaginated dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringClientsTrafficLoadQueryOptions struct {
+	// IP is required (sent as "ip").
+	IP string
+	// MAC is required (sent as "mac").
+	MAC string
+}
+
+func (o *MonitoringClientsTrafficLoadQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringClientsTrafficLoadQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.IP == "" {
+		return nil, ikuaiapi.NewError("MonitoringClientsTrafficLoadQueryOptions: IP is required")
+	}
+	q["ip"] = o.IP
+	if o.MAC == "" {
+		return nil, ikuaiapi.NewError("MonitoringClientsTrafficLoadQueryOptions: MAC is required")
+	}
+	q["mac"] = o.MAC
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringClientsTrafficLoad runs a query against /monitoring/clients-traffic-load using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringClientsTrafficLoad(ctx context.Context, opts *MonitoringClientsTrafficLoadQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/clients-traffic-load", q)
+}
+
 func (s *MonitoringService) GetMonitoringClientsTrafficLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/clients-traffic-load", nil)
 }
@@ -201,10 +840,58 @@ func (s *MonitoringService) GetMonitoringClientsTrafficSummary(ctx context.Conte
 // Methods: GET
 //
 // Path: /monitoring/connections
+// MonitoringConnectionsLoadOptions configures a load query against /monitoring/connections.
+// All fields are required; the router rejects partial queries.
 //
-// Use ListMonitoringConnections(ctx, opts...) for paginated reads.
-func (s *MonitoringService) GetMonitoringConnections(ctx context.Context) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/monitoring/connections", nil)
+// DataType selects the time bucket. iKuai accepts one of
+// "hour", "day", "week", "month".
+//
+// Math is the aggregation. iKuai accepts one of "avg", "max".
+//
+// StartTime / EndTime are Unix epoch seconds. StartTime must be
+// strictly less than EndTime.
+type MonitoringConnectionsLoadOptions struct {
+	DataType  string
+	StartTime int64
+	EndTime   int64
+	Math      string
+}
+
+func (o *MonitoringConnectionsLoadOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringConnectionsLoadOptions: options are required")
+	}
+	switch o.DataType {
+	case "hour", "day", "week", "month":
+	default:
+		return nil, ikuaiapi.NewError("MonitoringConnectionsLoadOptions: DataType must be one of: hour, day, week, month")
+	}
+	switch o.Math {
+	case "avg", "max":
+	default:
+		return nil, ikuaiapi.NewError("MonitoringConnectionsLoadOptions: Math must be one of: avg, max")
+	}
+	if o.StartTime <= 0 || o.EndTime <= 0 {
+		return nil, ikuaiapi.NewError("MonitoringConnectionsLoadOptions: StartTime and EndTime are required (Unix seconds)")
+	}
+	if o.StartTime >= o.EndTime {
+		return nil, ikuaiapi.NewError("MonitoringConnectionsLoadOptions: StartTime must be less than EndTime")
+	}
+	return map[string]string{
+		"datetype":   o.DataType,
+		"start_time": strconv.FormatInt(o.StartTime, 10),
+		"end_time":   strconv.FormatInt(o.EndTime, 10),
+		"math":       o.Math,
+	}, nil
+}
+
+// LoadConnections runs a typed load query against /monitoring/connections.
+func (s *MonitoringService) LoadConnections(ctx context.Context, opts *MonitoringConnectionsLoadOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/connections", q)
 }
 
 // MonitoringCpu wraps monitoring cpu.
@@ -231,23 +918,23 @@ type MonitoringCpuLoadOptions struct {
 
 func (o *MonitoringCpuLoadOptions) query() (map[string]string, error) {
 	if o == nil {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringCpuLoadOptions: options are required"}
+		return nil, ikuaiapi.NewError("MonitoringCpuLoadOptions: options are required")
 	}
 	switch o.DataType {
 	case "hour", "day", "week", "month":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "MonitoringCpuLoadOptions: DataType must be one of: hour, day, week, month"}
+		return nil, ikuaiapi.NewError("MonitoringCpuLoadOptions: DataType must be one of: hour, day, week, month")
 	}
 	switch o.Math {
 	case "avg", "max":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "MonitoringCpuLoadOptions: Math must be one of: avg, max"}
+		return nil, ikuaiapi.NewError("MonitoringCpuLoadOptions: Math must be one of: avg, max")
 	}
 	if o.StartTime <= 0 || o.EndTime <= 0 {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringCpuLoadOptions: StartTime and EndTime are required (Unix seconds)"}
+		return nil, ikuaiapi.NewError("MonitoringCpuLoadOptions: StartTime and EndTime are required (Unix seconds)")
 	}
 	if o.StartTime >= o.EndTime {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringCpuLoadOptions: StartTime must be less than EndTime"}
+		return nil, ikuaiapi.NewError("MonitoringCpuLoadOptions: StartTime must be less than EndTime")
 	}
 	return map[string]string{
 		"datetype":   o.DataType,
@@ -290,23 +977,23 @@ type MonitoringCputempLoadOptions struct {
 
 func (o *MonitoringCputempLoadOptions) query() (map[string]string, error) {
 	if o == nil {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringCputempLoadOptions: options are required"}
+		return nil, ikuaiapi.NewError("MonitoringCputempLoadOptions: options are required")
 	}
 	switch o.DataType {
 	case "hour", "day", "week", "month":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "MonitoringCputempLoadOptions: DataType must be one of: hour, day, week, month"}
+		return nil, ikuaiapi.NewError("MonitoringCputempLoadOptions: DataType must be one of: hour, day, week, month")
 	}
 	switch o.Math {
 	case "avg", "max":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "MonitoringCputempLoadOptions: Math must be one of: avg, max"}
+		return nil, ikuaiapi.NewError("MonitoringCputempLoadOptions: Math must be one of: avg, max")
 	}
 	if o.StartTime <= 0 || o.EndTime <= 0 {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringCputempLoadOptions: StartTime and EndTime are required (Unix seconds)"}
+		return nil, ikuaiapi.NewError("MonitoringCputempLoadOptions: StartTime and EndTime are required (Unix seconds)")
 	}
 	if o.StartTime >= o.EndTime {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringCputempLoadOptions: StartTime must be less than EndTime"}
+		return nil, ikuaiapi.NewError("MonitoringCputempLoadOptions: StartTime must be less than EndTime")
 	}
 	return map[string]string{
 		"datetype":   o.DataType,
@@ -349,23 +1036,23 @@ type MonitoringDiskLoadOptions struct {
 
 func (o *MonitoringDiskLoadOptions) query() (map[string]string, error) {
 	if o == nil {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringDiskLoadOptions: options are required"}
+		return nil, ikuaiapi.NewError("MonitoringDiskLoadOptions: options are required")
 	}
 	switch o.DataType {
 	case "hour", "day", "week", "month":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "MonitoringDiskLoadOptions: DataType must be one of: hour, day, week, month"}
+		return nil, ikuaiapi.NewError("MonitoringDiskLoadOptions: DataType must be one of: hour, day, week, month")
 	}
 	switch o.Math {
 	case "avg", "max":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "MonitoringDiskLoadOptions: Math must be one of: avg, max"}
+		return nil, ikuaiapi.NewError("MonitoringDiskLoadOptions: Math must be one of: avg, max")
 	}
 	if o.StartTime <= 0 || o.EndTime <= 0 {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringDiskLoadOptions: StartTime and EndTime are required (Unix seconds)"}
+		return nil, ikuaiapi.NewError("MonitoringDiskLoadOptions: StartTime and EndTime are required (Unix seconds)")
 	}
 	if o.StartTime >= o.EndTime {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringDiskLoadOptions: StartTime must be less than EndTime"}
+		return nil, ikuaiapi.NewError("MonitoringDiskLoadOptions: StartTime must be less than EndTime")
 	}
 	return map[string]string{
 		"datetype":   o.DataType,
@@ -389,8 +1076,70 @@ func (s *MonitoringService) LoadDisk(ctx context.Context, opts *MonitoringDiskLo
 // Methods: GET
 //
 // Path: /monitoring/downstream
+
+// MonitoringDownstreamQueryOptions configures a query against /monitoring/downstream.
 //
-// Use ListMonitoringDownstream(ctx, opts...) for paginated reads.
+// The endpoint speaks the legacy uppercase TYPE/LIMIT/OFFSET dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringDownstreamQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Order is the sort direction: asc | desc. Sent as ORDER.
+	Order string
+	// OrderBy is the sort field. Sent as ORDER_BY.
+	OrderBy string
+	// Status is optional (sent as "status").
+	Status string
+	// Device is optional (sent as "device").
+	Device string
+}
+
+func (o *MonitoringDownstreamQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringDownstreamQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("MonitoringDownstreamQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("MonitoringDownstreamQueryOptions: PageSize must be greater than 0")
+	}
+	offset := (o.Page - 1) * o.PageSize
+	q := map[string]string{
+		"TYPE":   "data",
+		"LIMIT":  strconv.Itoa(offset) + "," + strconv.Itoa(o.PageSize),
+		"OFFSET": strconv.Itoa(offset),
+	}
+	if o.Order != "" {
+		q["ORDER"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["ORDER_BY"] = o.OrderBy
+	}
+	if o.Status != "" {
+		q["status"] = o.Status
+	}
+	if o.Device != "" {
+		q["device"] = o.Device
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringDownstream runs a query against /monitoring/downstream using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringDownstream(ctx context.Context, opts *MonitoringDownstreamQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/downstream", q)
+}
+
 func (s *MonitoringService) GetMonitoringDownstream(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/downstream", nil)
 }
@@ -400,8 +1149,41 @@ func (s *MonitoringService) GetMonitoringDownstream(ctx context.Context) (json.R
 // Methods: GET
 //
 // Path: /monitoring/flow-shunting
+
+// MonitoringFlowShuntingQueryOptions configures a query against /monitoring/flow-shunting.
 //
-// Use ListMonitoringFlowShunting(ctx, opts...) for paginated reads.
+// The endpoint speaks the unpaginated dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringFlowShuntingQueryOptions struct {
+	// Type is required (sent as "TYPE").
+	Type string
+}
+
+func (o *MonitoringFlowShuntingQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringFlowShuntingQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.Type == "" {
+		return nil, ikuaiapi.NewError("MonitoringFlowShuntingQueryOptions: Type is required")
+	}
+	q["TYPE"] = o.Type
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringFlowShunting runs a query against /monitoring/flow-shunting using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringFlowShunting(ctx context.Context, opts *MonitoringFlowShuntingQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/flow-shunting", q)
+}
+
 func (s *MonitoringService) GetMonitoringFlowShunting(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/flow-shunting", nil)
 }
@@ -485,23 +1267,23 @@ type MonitoringMemoryLoadOptions struct {
 
 func (o *MonitoringMemoryLoadOptions) query() (map[string]string, error) {
 	if o == nil {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringMemoryLoadOptions: options are required"}
+		return nil, ikuaiapi.NewError("MonitoringMemoryLoadOptions: options are required")
 	}
 	switch o.DataType {
 	case "hour", "day", "week", "month":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "MonitoringMemoryLoadOptions: DataType must be one of: hour, day, week, month"}
+		return nil, ikuaiapi.NewError("MonitoringMemoryLoadOptions: DataType must be one of: hour, day, week, month")
 	}
 	switch o.Math {
 	case "avg", "max":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "MonitoringMemoryLoadOptions: Math must be one of: avg, max"}
+		return nil, ikuaiapi.NewError("MonitoringMemoryLoadOptions: Math must be one of: avg, max")
 	}
 	if o.StartTime <= 0 || o.EndTime <= 0 {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringMemoryLoadOptions: StartTime and EndTime are required (Unix seconds)"}
+		return nil, ikuaiapi.NewError("MonitoringMemoryLoadOptions: StartTime and EndTime are required (Unix seconds)")
 	}
 	if o.StartTime >= o.EndTime {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringMemoryLoadOptions: StartTime must be less than EndTime"}
+		return nil, ikuaiapi.NewError("MonitoringMemoryLoadOptions: StartTime must be less than EndTime")
 	}
 	return map[string]string{
 		"datetype":   o.DataType,
@@ -525,10 +1307,58 @@ func (s *MonitoringService) LoadMemory(ctx context.Context, opts *MonitoringMemo
 // Methods: GET
 //
 // Path: /monitoring/network
+// MonitoringNetworkLoadOptions configures a load query against /monitoring/network.
+// All fields are required; the router rejects partial queries.
 //
-// Use ListMonitoringNetwork(ctx, opts...) for paginated reads.
-func (s *MonitoringService) GetMonitoringNetwork(ctx context.Context) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/monitoring/network", nil)
+// DataType selects the time bucket. iKuai accepts one of
+// "hour", "day", "week", "month".
+//
+// Math is the aggregation. iKuai accepts one of "avg", "max".
+//
+// StartTime / EndTime are Unix epoch seconds. StartTime must be
+// strictly less than EndTime.
+type MonitoringNetworkLoadOptions struct {
+	DataType  string
+	StartTime int64
+	EndTime   int64
+	Math      string
+}
+
+func (o *MonitoringNetworkLoadOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringNetworkLoadOptions: options are required")
+	}
+	switch o.DataType {
+	case "hour", "day", "week", "month":
+	default:
+		return nil, ikuaiapi.NewError("MonitoringNetworkLoadOptions: DataType must be one of: hour, day, week, month")
+	}
+	switch o.Math {
+	case "avg", "max":
+	default:
+		return nil, ikuaiapi.NewError("MonitoringNetworkLoadOptions: Math must be one of: avg, max")
+	}
+	if o.StartTime <= 0 || o.EndTime <= 0 {
+		return nil, ikuaiapi.NewError("MonitoringNetworkLoadOptions: StartTime and EndTime are required (Unix seconds)")
+	}
+	if o.StartTime >= o.EndTime {
+		return nil, ikuaiapi.NewError("MonitoringNetworkLoadOptions: StartTime must be less than EndTime")
+	}
+	return map[string]string{
+		"datetype":   o.DataType,
+		"start_time": strconv.FormatInt(o.StartTime, 10),
+		"end_time":   strconv.FormatInt(o.EndTime, 10),
+		"math":       o.Math,
+	}, nil
+}
+
+// LoadNetwork runs a typed load query against /monitoring/network.
+func (s *MonitoringService) LoadNetwork(ctx context.Context, opts *MonitoringNetworkLoadOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/network", q)
 }
 
 // MonitoringProtocols wraps monitoring protocols.
@@ -536,8 +1366,45 @@ func (s *MonitoringService) GetMonitoringNetwork(ctx context.Context) (json.RawM
 // Methods: GET
 //
 // Path: /monitoring/protocols
+
+// MonitoringProtocolsQueryOptions configures a query against /monitoring/protocols.
 //
-// Use ListMonitoringProtocols(ctx, opts...) for paginated reads.
+// The endpoint speaks the starttime/stoptime window dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringProtocolsQueryOptions struct {
+	// StartTime is optional (sent as "starttime").
+	StartTime int64
+	// StopTime is optional (sent as "stoptime").
+	StopTime int64
+}
+
+func (o *MonitoringProtocolsQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringProtocolsQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.StartTime != 0 {
+		q["starttime"] = strconv.FormatInt(o.StartTime, 10)
+	}
+	if o.StopTime != 0 {
+		q["stoptime"] = strconv.FormatInt(o.StopTime, 10)
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringProtocols runs a query against /monitoring/protocols using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringProtocols(ctx context.Context, opts *MonitoringProtocolsQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/protocols", q)
+}
+
 func (s *MonitoringService) GetMonitoringProtocols(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/protocols", nil)
 }
@@ -547,8 +1414,45 @@ func (s *MonitoringService) GetMonitoringProtocols(ctx context.Context) (json.Ra
 // Methods: GET
 //
 // Path: /monitoring/protocols/history-load
+
+// MonitoringProtocolsHistoryLoadQueryOptions configures a query against /monitoring/protocols/history-load.
 //
-// Use ListMonitoringProtocolsHistoryLoad(ctx, opts...) for paginated reads.
+// The endpoint speaks the starttime/stoptime window dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringProtocolsHistoryLoadQueryOptions struct {
+	// StartTime is optional (sent as "starttime").
+	StartTime int64
+	// StopTime is optional (sent as "stoptime").
+	StopTime int64
+}
+
+func (o *MonitoringProtocolsHistoryLoadQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringProtocolsHistoryLoadQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.StartTime != 0 {
+		q["starttime"] = strconv.FormatInt(o.StartTime, 10)
+	}
+	if o.StopTime != 0 {
+		q["stoptime"] = strconv.FormatInt(o.StopTime, 10)
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringProtocolsHistoryLoad runs a query against /monitoring/protocols/history-load using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringProtocolsHistoryLoad(ctx context.Context, opts *MonitoringProtocolsHistoryLoadQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/protocols/history-load", q)
+}
+
 func (s *MonitoringService) GetMonitoringProtocolsHistoryLoad(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/protocols/history-load", nil)
 }
@@ -558,8 +1462,40 @@ func (s *MonitoringService) GetMonitoringProtocolsHistoryLoad(ctx context.Contex
 // Methods: GET
 //
 // Path: /monitoring/ssid-clients
+
+// MonitoringSsidClientsQueryOptions configures a query against /monitoring/ssid-clients.
 //
-// Use ListMonitoringSsidClients(ctx, opts...) for paginated reads.
+// The endpoint speaks the unpaginated dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringSsidClientsQueryOptions struct {
+	// SSID is optional (sent as "ssid").
+	SSID string
+}
+
+func (o *MonitoringSsidClientsQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringSsidClientsQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.SSID != "" {
+		q["ssid"] = o.SSID
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringSsidClients runs a query against /monitoring/ssid-clients using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringSsidClients(ctx context.Context, opts *MonitoringSsidClientsQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/ssid-clients", q)
+}
+
 func (s *MonitoringService) GetMonitoringSsidClients(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/ssid-clients", nil)
 }
@@ -569,8 +1505,70 @@ func (s *MonitoringService) GetMonitoringSsidClients(ctx context.Context) (json.
 // Methods: GET
 //
 // Path: /monitoring/switch
+
+// MonitoringSwitchQueryOptions configures a query against /monitoring/switch.
 //
-// Use ListMonitoringSwitch(ctx, opts...) for paginated reads.
+// The endpoint speaks the legacy uppercase TYPE/LIMIT/OFFSET dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringSwitchQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Order is the sort direction: asc | desc. Sent as ORDER.
+	Order string
+	// OrderBy is the sort field. Sent as ORDER_BY.
+	OrderBy string
+	// Status is optional (sent as "status").
+	Status string
+	// Device is optional (sent as "device").
+	Device string
+}
+
+func (o *MonitoringSwitchQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringSwitchQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("MonitoringSwitchQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("MonitoringSwitchQueryOptions: PageSize must be greater than 0")
+	}
+	offset := (o.Page - 1) * o.PageSize
+	q := map[string]string{
+		"TYPE":   "data",
+		"LIMIT":  strconv.Itoa(offset) + "," + strconv.Itoa(o.PageSize),
+		"OFFSET": strconv.Itoa(offset),
+	}
+	if o.Order != "" {
+		q["ORDER"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["ORDER_BY"] = o.OrderBy
+	}
+	if o.Status != "" {
+		q["status"] = o.Status
+	}
+	if o.Device != "" {
+		q["device"] = o.Device
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringSwitch runs a query against /monitoring/switch using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringSwitch(ctx context.Context, opts *MonitoringSwitchQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/switch", q)
+}
+
 func (s *MonitoringService) GetMonitoringSwitch(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/switch", nil)
 }
@@ -610,23 +1608,23 @@ type MonitoringTerminalsLoadOptions struct {
 
 func (o *MonitoringTerminalsLoadOptions) query() (map[string]string, error) {
 	if o == nil {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringTerminalsLoadOptions: options are required"}
+		return nil, ikuaiapi.NewError("MonitoringTerminalsLoadOptions: options are required")
 	}
 	switch o.DataType {
 	case "hour", "day", "week", "month":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "MonitoringTerminalsLoadOptions: DataType must be one of: hour, day, week, month"}
+		return nil, ikuaiapi.NewError("MonitoringTerminalsLoadOptions: DataType must be one of: hour, day, week, month")
 	}
 	switch o.Math {
 	case "avg", "max":
 	default:
-		return nil, &ikuaiapi.APIError{Message: "MonitoringTerminalsLoadOptions: Math must be one of: avg, max"}
+		return nil, ikuaiapi.NewError("MonitoringTerminalsLoadOptions: Math must be one of: avg, max")
 	}
 	if o.StartTime <= 0 || o.EndTime <= 0 {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringTerminalsLoadOptions: StartTime and EndTime are required (Unix seconds)"}
+		return nil, ikuaiapi.NewError("MonitoringTerminalsLoadOptions: StartTime and EndTime are required (Unix seconds)")
 	}
 	if o.StartTime >= o.EndTime {
-		return nil, &ikuaiapi.APIError{Message: "MonitoringTerminalsLoadOptions: StartTime must be less than EndTime"}
+		return nil, ikuaiapi.NewError("MonitoringTerminalsLoadOptions: StartTime must be less than EndTime")
 	}
 	return map[string]string{
 		"datetype":   o.DataType,
@@ -672,8 +1670,40 @@ func (s *MonitoringService) GetMonitoringWirelessStatistics(ctx context.Context)
 // Methods: GET
 //
 // Path: /monitoring/wireless-traffic
+
+// MonitoringWirelessTrafficQueryOptions configures a query against /monitoring/wireless-traffic.
 //
-// Use ListMonitoringWirelessTraffic(ctx, opts...) for paginated reads.
+// The endpoint speaks the unpaginated dialect.
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type MonitoringWirelessTrafficQueryOptions struct {
+	// APMAC is optional (sent as "apmac").
+	APMAC string
+}
+
+func (o *MonitoringWirelessTrafficQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("MonitoringWirelessTrafficQueryOptions: options are required")
+	}
+	q := map[string]string{}
+	if o.APMAC != "" {
+		q["apmac"] = o.APMAC
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryMonitoringWirelessTraffic runs a query against /monitoring/wireless-traffic using its documented query dialect.
+func (s *MonitoringService) QueryMonitoringWirelessTraffic(ctx context.Context, opts *MonitoringWirelessTrafficQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/monitoring/wireless-traffic", q)
+}
+
 func (s *MonitoringService) GetMonitoringWirelessTraffic(ctx context.Context) (json.RawMessage, error) {
 	return s.client.Get(ctx, "/monitoring/wireless-traffic", nil)
 }

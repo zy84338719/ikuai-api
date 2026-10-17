@@ -2,6 +2,7 @@ package ikuaiapi
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
@@ -49,8 +50,22 @@ func TestValidateToken(t *testing.T) {
 	if err := ValidateToken("xx"); err == nil {
 		t.Error("short token should fail")
 	}
-	if err := ValidateToken(strings.Repeat("z", 32)); err == nil {
-		t.Error("non-hex token should fail")
+	// A real router issues a base64 token, not hex: it decodes to a UUID
+	// prefix. Verified on hardware, where such a token authenticated on
+	// every endpoint while the old hex-only check rejected it.
+	base64Token := base64.RawStdEncoding.EncodeToString([]byte("0123456789abcdef01234567"))
+	if len(base64Token) != 32 {
+		t.Fatalf("test fixture should be 32 chars, got %d", len(base64Token))
+	}
+	if err := ValidateToken(base64Token); err != nil {
+		t.Errorf("a base64 token must validate, got %v", err)
+	}
+	// 32 characters in neither alphabet is a copy-paste accident.
+	if err := ValidateToken(strings.Repeat("!", 32)); err == nil {
+		t.Error("a token with no valid character should fail")
+	}
+	if err := ValidateToken(strings.Repeat("z z", 16)); err == nil {
+		t.Error("a token containing whitespace should fail")
 	}
 }
 
@@ -68,7 +83,7 @@ func TestNewClient(t *testing.T) {
 	if c.HTTPClient == nil {
 		t.Error("HTTPClient should be set")
 	}
-	c.Close()
+	c.Close(context.Background())
 }
 
 func TestNewClientRequiresBaseURL(t *testing.T) {

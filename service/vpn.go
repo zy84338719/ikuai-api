@@ -35,7 +35,7 @@ func pathGroupVpn() []V4Endpoint {
 //
 // Methods: GET, PUT
 //
-// Path: /vpn/ikev2
+// Path: /vpn/ikev2/services
 //
 // Use ListVpnIkev2(ctx, opts...) for paginated reads.
 // VpnIkev2ListOptions configures paginated reads of VpnIkev2.
@@ -43,8 +43,10 @@ type VpnIkev2ListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *VpnIkev2ListOptions) query() map[string]string {
@@ -52,8 +54,8 @@ func (o *VpnIkev2ListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -67,20 +69,20 @@ func (o *VpnIkev2ListOptions) query() map[string]string {
 	return q
 }
 
-// ListVpnIkev2 lists items at /vpn/ikev2.
+// ListVpnIkev2 lists items at /vpn/ikev2/services.
 func (s *VpnService) ListVpnIkev2(ctx context.Context, opts *VpnIkev2ListOptions) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/vpn/ikev2", opts.query())
+	return s.client.Get(ctx, "/vpn/ikev2/services", opts.query())
 }
 
-// GetVpnIkev2 fetches one item at /vpn/ikev2.
+// GetVpnIkev2 fetches one item at /vpn/ikev2/services.
 func (s *VpnService) GetVpnIkev2(ctx context.Context, id int64) (json.RawMessage, error) {
 	q := map[string]string{"id": strconv.FormatInt(id, 10)}
-	return s.client.Get(ctx, "/vpn/ikev2", q)
+	return s.client.Get(ctx, "/vpn/ikev2/services", q)
 }
 
-// UpdateVpnIkev2 replaces the resource at /vpn/ikev2.
+// UpdateVpnIkev2 replaces the resource at /vpn/ikev2/services.
 func (s *VpnService) UpdateVpnIkev2(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, "/vpn/ikev2", body)
+	_, err := s.client.Put(ctx, "/vpn/ikev2/services", body)
 	return err
 }
 
@@ -96,8 +98,10 @@ type VpnIkev2ClientsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *VpnIkev2ClientsListOptions) query() map[string]string {
@@ -105,8 +109,8 @@ func (o *VpnIkev2ClientsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -182,8 +186,10 @@ type VpnIpsecClientsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *VpnIpsecClientsListOptions) query() map[string]string {
@@ -191,8 +197,8 @@ func (o *VpnIpsecClientsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -260,7 +266,7 @@ func (s *VpnService) DeleteVpnIpsecClientsWithBody(ctx context.Context, body any
 //
 // Methods: GET, PUT
 //
-// Path: /vpn/l2tp
+// Path: /vpn/l2tp/services
 //
 // Use ListVpnL2Tp(ctx, opts...) for paginated reads.
 // VpnL2TpListOptions configures paginated reads of VpnL2Tp.
@@ -268,8 +274,10 @@ type VpnL2TpListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *VpnL2TpListOptions) query() map[string]string {
@@ -277,8 +285,8 @@ func (o *VpnL2TpListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -292,20 +300,20 @@ func (o *VpnL2TpListOptions) query() map[string]string {
 	return q
 }
 
-// ListVpnL2Tp lists items at /vpn/l2tp.
+// ListVpnL2Tp lists items at /vpn/l2tp/services.
 func (s *VpnService) ListVpnL2Tp(ctx context.Context, opts *VpnL2TpListOptions) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/vpn/l2tp", opts.query())
+	return s.client.Get(ctx, "/vpn/l2tp/services", opts.query())
 }
 
-// GetVpnL2Tp fetches one item at /vpn/l2tp.
+// GetVpnL2Tp fetches one item at /vpn/l2tp/services.
 func (s *VpnService) GetVpnL2Tp(ctx context.Context, id int64) (json.RawMessage, error) {
 	q := map[string]string{"id": strconv.FormatInt(id, 10)}
-	return s.client.Get(ctx, "/vpn/l2tp", q)
+	return s.client.Get(ctx, "/vpn/l2tp/services", q)
 }
 
-// UpdateVpnL2Tp replaces the resource at /vpn/l2tp.
+// UpdateVpnL2Tp replaces the resource at /vpn/l2tp/services.
 func (s *VpnService) UpdateVpnL2Tp(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, "/vpn/l2tp", body)
+	_, err := s.client.Put(ctx, "/vpn/l2tp/services", body)
 	return err
 }
 
@@ -321,8 +329,10 @@ type VpnL2TpClientsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *VpnL2TpClientsListOptions) query() map[string]string {
@@ -330,8 +340,8 @@ func (o *VpnL2TpClientsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -399,7 +409,7 @@ func (s *VpnService) DeleteVpnL2TpClientsWithBody(ctx context.Context, body any)
 //
 // Methods: GET, PUT
 //
-// Path: /vpn/openvpn
+// Path: /vpn/openvpn/services
 //
 // Use ListVpnOpenvpn(ctx, opts...) for paginated reads.
 // VpnOpenvpnListOptions configures paginated reads of VpnOpenvpn.
@@ -407,8 +417,10 @@ type VpnOpenvpnListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *VpnOpenvpnListOptions) query() map[string]string {
@@ -416,8 +428,8 @@ func (o *VpnOpenvpnListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -431,20 +443,20 @@ func (o *VpnOpenvpnListOptions) query() map[string]string {
 	return q
 }
 
-// ListVpnOpenvpn lists items at /vpn/openvpn.
+// ListVpnOpenvpn lists items at /vpn/openvpn/services.
 func (s *VpnService) ListVpnOpenvpn(ctx context.Context, opts *VpnOpenvpnListOptions) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/vpn/openvpn", opts.query())
+	return s.client.Get(ctx, "/vpn/openvpn/services", opts.query())
 }
 
-// GetVpnOpenvpn fetches one item at /vpn/openvpn.
+// GetVpnOpenvpn fetches one item at /vpn/openvpn/services.
 func (s *VpnService) GetVpnOpenvpn(ctx context.Context, id int64) (json.RawMessage, error) {
 	q := map[string]string{"id": strconv.FormatInt(id, 10)}
-	return s.client.Get(ctx, "/vpn/openvpn", q)
+	return s.client.Get(ctx, "/vpn/openvpn/services", q)
 }
 
-// UpdateVpnOpenvpn replaces the resource at /vpn/openvpn.
+// UpdateVpnOpenvpn replaces the resource at /vpn/openvpn/services.
 func (s *VpnService) UpdateVpnOpenvpn(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, "/vpn/openvpn", body)
+	_, err := s.client.Put(ctx, "/vpn/openvpn/services", body)
 	return err
 }
 
@@ -460,8 +472,10 @@ type VpnOpenvpnClientsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *VpnOpenvpnClientsListOptions) query() map[string]string {
@@ -469,8 +483,8 @@ func (o *VpnOpenvpnClientsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -538,7 +552,7 @@ func (s *VpnService) DeleteVpnOpenvpnClientsWithBody(ctx context.Context, body a
 //
 // Methods: GET, PUT
 //
-// Path: /vpn/pptp
+// Path: /vpn/pptp/services
 //
 // Use ListVpnPptp(ctx, opts...) for paginated reads.
 // VpnPptpListOptions configures paginated reads of VpnPptp.
@@ -546,8 +560,10 @@ type VpnPptpListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *VpnPptpListOptions) query() map[string]string {
@@ -555,8 +571,8 @@ func (o *VpnPptpListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -570,20 +586,20 @@ func (o *VpnPptpListOptions) query() map[string]string {
 	return q
 }
 
-// ListVpnPptp lists items at /vpn/pptp.
+// ListVpnPptp lists items at /vpn/pptp/services.
 func (s *VpnService) ListVpnPptp(ctx context.Context, opts *VpnPptpListOptions) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/vpn/pptp", opts.query())
+	return s.client.Get(ctx, "/vpn/pptp/services", opts.query())
 }
 
-// GetVpnPptp fetches one item at /vpn/pptp.
+// GetVpnPptp fetches one item at /vpn/pptp/services.
 func (s *VpnService) GetVpnPptp(ctx context.Context, id int64) (json.RawMessage, error) {
 	q := map[string]string{"id": strconv.FormatInt(id, 10)}
-	return s.client.Get(ctx, "/vpn/pptp", q)
+	return s.client.Get(ctx, "/vpn/pptp/services", q)
 }
 
-// UpdateVpnPptp replaces the resource at /vpn/pptp.
+// UpdateVpnPptp replaces the resource at /vpn/pptp/services.
 func (s *VpnService) UpdateVpnPptp(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, "/vpn/pptp", body)
+	_, err := s.client.Put(ctx, "/vpn/pptp/services", body)
 	return err
 }
 
@@ -599,8 +615,10 @@ type VpnPptpClientsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *VpnPptpClientsListOptions) query() map[string]string {
@@ -608,8 +626,8 @@ func (o *VpnPptpClientsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -685,8 +703,10 @@ type VpnWireguardListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *VpnWireguardListOptions) query() map[string]string {
@@ -694,8 +714,8 @@ func (o *VpnWireguardListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -757,6 +777,199 @@ func (s *VpnService) DeleteVpnWireguard(ctx context.Context, id int64) error {
 func (s *VpnService) DeleteVpnWireguardWithBody(ctx context.Context, body any) error {
 	_, err := s.client.Delete(ctx, "/vpn/wireguard", body)
 	return err
+}
+
+// VpnWireguardPeer wraps vpn wireguard-peer.
+//
+// Methods: GET, PUT, PATCH, DELETE
+//
+// Path: /vpn/wireguard/{tunnel_id}/peers/{peer_id}
+//
+// Use ListVpnWireguardPeer(ctx, opts...) for paginated reads.
+// VpnWireguardPeerListOptions configures paginated reads of VpnWireguardPeer.
+//
+// This endpoint is a sub-resource of tunnel_id; the parent identifier is a
+// path parameter rather than a query one.
+type VpnWireguardPeerListOptions struct {
+	Page     int
+	PageSize int
+	Filter   string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
+}
+
+func (o *VpnWireguardPeerListOptions) query() map[string]string {
+	if o == nil {
+		return nil
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Filter != "" {
+		q["filter"] = o.Filter
+	}
+	if o.Order != "" {
+		q["order"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["order_by"] = o.OrderBy
+	}
+	return q
+}
+
+// GetVpnWireguardPeer fetches one item at /vpn/wireguard/{tunnel_id}/peers/{peer_id}.
+func (s *VpnService) GetVpnWireguardPeer(ctx context.Context, tunnelID int64, id int64) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/vpn/wireguard/"+strconv.FormatInt(tunnelID, 10)+"/peers/"+strconv.FormatInt(id, 10)+"", nil)
+}
+
+// UpdateVpnWireguardPeer replaces the resource at /vpn/wireguard/{tunnel_id}/peers/{peer_id}.
+func (s *VpnService) UpdateVpnWireguardPeer(ctx context.Context, tunnelID int64, id int64, body any) error {
+	_, err := s.client.Put(ctx, "/vpn/wireguard/"+strconv.FormatInt(tunnelID, 10)+"/peers/"+strconv.FormatInt(id, 10)+"", body)
+	return err
+}
+
+// PatchVpnWireguardPeer partial-updates the resource at /vpn/wireguard/{tunnel_id}/peers/{peer_id}.
+func (s *VpnService) PatchVpnWireguardPeer(ctx context.Context, tunnelID int64, id int64, body any) error {
+	_, err := s.client.Patch(ctx, "/vpn/wireguard/"+strconv.FormatInt(tunnelID, 10)+"/peers/"+strconv.FormatInt(id, 10)+"", body)
+	return err
+}
+
+// DeleteVpnWireguardPeer removes the resource at /vpn/wireguard/{tunnel_id}/peers/{peer_id}. The identifier travels
+// in the path, not as an ?id= query parameter.
+func (s *VpnService) DeleteVpnWireguardPeer(ctx context.Context, tunnelID int64, id int64) error {
+	_, err := s.client.Delete(ctx, "/vpn/wireguard/"+strconv.FormatInt(tunnelID, 10)+"/peers/"+strconv.FormatInt(id, 10)+"", nil)
+	return err
+}
+
+// VpnWireguardPeers wraps vpn wireguard-peers.
+//
+// Methods: GET, POST
+//
+// Path: /vpn/wireguard/{tunnel_id}/peers
+
+// VpnWireguardPeersQueryOptions configures a query against /vpn/wireguard/{tunnel_id}/peers.
+//
+// The endpoint speaks the .
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type VpnWireguardPeersQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Filter uses the iKuai expression syntax, e.g. "enabled==yes".
+	// "&" is AND and "," is OR.
+	Filter string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
+	// Key is optional (sent as "key").
+	Key string
+	// Pattern is optional (sent as "pattern").
+	Pattern string
+}
+
+func (o *VpnWireguardPeersQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("VpnWireguardPeersQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("VpnWireguardPeersQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("VpnWireguardPeersQueryOptions: PageSize must be greater than 0")
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Filter != "" {
+		q["filter"] = o.Filter
+	}
+	if o.Order != "" {
+		q["order"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["order_by"] = o.OrderBy
+	}
+	if o.Key != "" {
+		q["key"] = o.Key
+	}
+	if o.Pattern != "" {
+		q["pattern"] = o.Pattern
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryVpnWireguardPeers runs a query against /vpn/wireguard/{tunnel_id}/peers using its documented query dialect.
+func (s *VpnService) QueryVpnWireguardPeers(ctx context.Context, tunnelID int64, opts *VpnWireguardPeersQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/vpn/wireguard/"+strconv.FormatInt(tunnelID, 10)+"/peers", q)
+}
+
+// VpnWireguardPeersListOptions configures paginated reads of VpnWireguardPeers.
+//
+// This endpoint is a sub-resource of tunnel_id; the parent identifier is a
+// path parameter rather than a query one.
+type VpnWireguardPeersListOptions struct {
+	Page     int
+	PageSize int
+	Filter   string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
+}
+
+func (o *VpnWireguardPeersListOptions) query() map[string]string {
+	if o == nil {
+		return nil
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Filter != "" {
+		q["filter"] = o.Filter
+	}
+	if o.Order != "" {
+		q["order"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["order_by"] = o.OrderBy
+	}
+	return q
+}
+
+// ListVpnWireguardPeers lists items at /vpn/wireguard/{tunnel_id}/peers.
+func (s *VpnService) ListVpnWireguardPeers(ctx context.Context, opts *VpnWireguardPeersListOptions) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/vpn/wireguard/{tunnel_id}/peers", opts.query())
+}
+
+// GetVpnWireguardPeers fetches one item at /vpn/wireguard/{tunnel_id}/peers.
+func (s *VpnService) GetVpnWireguardPeers(ctx context.Context, id int64) (json.RawMessage, error) {
+	q := map[string]string{"id": strconv.FormatInt(id, 10)}
+	return s.client.Get(ctx, "/vpn/wireguard/{tunnel_id}/peers", q)
+}
+
+// CreateVpnWireguardPeers posts a new item to /vpn/wireguard/{tunnel_id}/peers. The router returns a rowid on
+// success which is propagated to the caller.
+func (s *VpnService) CreateVpnWireguardPeers(ctx context.Context, tunnelID int64, body any) (int64, error) {
+	raw, err := s.client.Post(ctx, "/vpn/wireguard/"+strconv.FormatInt(tunnelID, 10)+"/peers", body)
+	if err != nil {
+		return 0, err
+	}
+	return extractRowID(raw)
 }
 
 // Field hints for this group (iKuai firmware field names):

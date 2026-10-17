@@ -31,326 +31,6 @@ func pathGroupSystem() []V4Endpoint {
 	return out
 }
 
-// SystemAcClients wraps system ac-clients.
-//
-// Methods: GET, POST, PUT, DELETE
-//
-// Path: /clients
-//
-// Use ListSystemAcClients(ctx, opts...) for paginated reads.
-// SystemAcClientsListOptions configures paginated reads of SystemAcClients.
-type SystemAcClientsListOptions struct {
-	Page     int
-	PageSize int
-	Filter   string
-	Order    string
-	OrderBy  string
-}
-
-func (o *SystemAcClientsListOptions) query() map[string]string {
-	if o == nil {
-		return nil
-	}
-	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
-	}
-	if o.Filter != "" {
-		q["filter"] = o.Filter
-	}
-	if o.Order != "" {
-		q["order"] = o.Order
-	}
-	if o.OrderBy != "" {
-		q["order_by"] = o.OrderBy
-	}
-	return q
-}
-
-// ListSystemAcClients lists items at /clients.
-func (s *SystemService) ListSystemAcClients(ctx context.Context, opts *SystemAcClientsListOptions) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/clients", opts.query())
-}
-
-// GetSystemAcClients fetches one item at /clients.
-func (s *SystemService) GetSystemAcClients(ctx context.Context, id int64) (json.RawMessage, error) {
-	q := map[string]string{"id": strconv.FormatInt(id, 10)}
-	return s.client.Get(ctx, "/clients", q)
-}
-
-// CreateSystemAcClients posts a new item to /clients. The router returns a rowid on
-// success which is propagated to the caller.
-func (s *SystemService) CreateSystemAcClients(ctx context.Context, body any) (int64, error) {
-	raw, err := s.client.Post(ctx, "/clients", body)
-	if err != nil {
-		return 0, err
-	}
-	return extractRowID(raw)
-}
-
-// UpdateSystemAcClients replaces the resource at /clients.
-func (s *SystemService) UpdateSystemAcClients(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, "/clients", body)
-	return err
-}
-
-// DeleteSystemAcClients removes the resource at /clients. iKuai expects the
-// resource identifier as the ?id= query parameter, not in the JSON
-// body. Pass DeleteSystemAcClientsWithBody to send a custom JSON body instead.
-func (s *SystemService) DeleteSystemAcClients(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/clients"+"?id="+strconv.FormatInt(id, 10), nil)
-	return err
-}
-
-// DeleteSystemAcClientsWithBody removes the resource at /clients with a custom
-// JSON body. iKuai also accepts a few DELETE requests that carry
-// parameters in the body (e.g. /system/backup?srcfile=… which the
-// wrapper DeleteSystemAcClients cannot model directly).
-func (s *SystemService) DeleteSystemAcClientsWithBody(ctx context.Context, body any) error {
-	_, err := s.client.Delete(ctx, "/clients", body)
-	return err
-}
-
-// SystemAcPeers wraps system ac-peers.
-//
-// Methods: GET, POST, PUT, DELETE
-//
-// Path: /peers
-//
-// Use ListSystemAcPeers(ctx, opts...) for paginated reads.
-// SystemAcPeersListOptions configures paginated reads of SystemAcPeers.
-type SystemAcPeersListOptions struct {
-	Page     int
-	PageSize int
-	Filter   string
-	Order    string
-	OrderBy  string
-}
-
-func (o *SystemAcPeersListOptions) query() map[string]string {
-	if o == nil {
-		return nil
-	}
-	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
-	}
-	if o.Filter != "" {
-		q["filter"] = o.Filter
-	}
-	if o.Order != "" {
-		q["order"] = o.Order
-	}
-	if o.OrderBy != "" {
-		q["order_by"] = o.OrderBy
-	}
-	return q
-}
-
-// ListSystemAcPeers lists items at /peers.
-func (s *SystemService) ListSystemAcPeers(ctx context.Context, opts *SystemAcPeersListOptions) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/peers", opts.query())
-}
-
-// GetSystemAcPeers fetches one item at /peers.
-func (s *SystemService) GetSystemAcPeers(ctx context.Context, id int64) (json.RawMessage, error) {
-	q := map[string]string{"id": strconv.FormatInt(id, 10)}
-	return s.client.Get(ctx, "/peers", q)
-}
-
-// CreateSystemAcPeers posts a new item to /peers. The router returns a rowid on
-// success which is propagated to the caller.
-func (s *SystemService) CreateSystemAcPeers(ctx context.Context, body any) (int64, error) {
-	raw, err := s.client.Post(ctx, "/peers", body)
-	if err != nil {
-		return 0, err
-	}
-	return extractRowID(raw)
-}
-
-// UpdateSystemAcPeers replaces the resource at /peers.
-func (s *SystemService) UpdateSystemAcPeers(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, "/peers", body)
-	return err
-}
-
-// DeleteSystemAcPeers removes the resource at /peers. iKuai expects the
-// resource identifier as the ?id= query parameter, not in the JSON
-// body. Pass DeleteSystemAcPeersWithBody to send a custom JSON body instead.
-func (s *SystemService) DeleteSystemAcPeers(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/peers"+"?id="+strconv.FormatInt(id, 10), nil)
-	return err
-}
-
-// DeleteSystemAcPeersWithBody removes the resource at /peers with a custom
-// JSON body. iKuai also accepts a few DELETE requests that carry
-// parameters in the body (e.g. /system/backup?srcfile=… which the
-// wrapper DeleteSystemAcPeers cannot model directly).
-func (s *SystemService) DeleteSystemAcPeersWithBody(ctx context.Context, body any) error {
-	_, err := s.client.Delete(ctx, "/peers", body)
-	return err
-}
-
-// SystemAcRef wraps system ac-ref.
-//
-// Methods: GET, POST, PUT, DELETE
-//
-// Path: /ref
-//
-// Use ListSystemAcRef(ctx, opts...) for paginated reads.
-// SystemAcRefListOptions configures paginated reads of SystemAcRef.
-type SystemAcRefListOptions struct {
-	Page     int
-	PageSize int
-	Filter   string
-	Order    string
-	OrderBy  string
-}
-
-func (o *SystemAcRefListOptions) query() map[string]string {
-	if o == nil {
-		return nil
-	}
-	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
-	}
-	if o.Filter != "" {
-		q["filter"] = o.Filter
-	}
-	if o.Order != "" {
-		q["order"] = o.Order
-	}
-	if o.OrderBy != "" {
-		q["order_by"] = o.OrderBy
-	}
-	return q
-}
-
-// ListSystemAcRef lists items at /ref.
-func (s *SystemService) ListSystemAcRef(ctx context.Context, opts *SystemAcRefListOptions) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/ref", opts.query())
-}
-
-// GetSystemAcRef fetches one item at /ref.
-func (s *SystemService) GetSystemAcRef(ctx context.Context, id int64) (json.RawMessage, error) {
-	q := map[string]string{"id": strconv.FormatInt(id, 10)}
-	return s.client.Get(ctx, "/ref", q)
-}
-
-// CreateSystemAcRef posts a new item to /ref. The router returns a rowid on
-// success which is propagated to the caller.
-func (s *SystemService) CreateSystemAcRef(ctx context.Context, body any) (int64, error) {
-	raw, err := s.client.Post(ctx, "/ref", body)
-	if err != nil {
-		return 0, err
-	}
-	return extractRowID(raw)
-}
-
-// UpdateSystemAcRef replaces the resource at /ref.
-func (s *SystemService) UpdateSystemAcRef(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, "/ref", body)
-	return err
-}
-
-// DeleteSystemAcRef removes the resource at /ref. iKuai expects the
-// resource identifier as the ?id= query parameter, not in the JSON
-// body. Pass DeleteSystemAcRefWithBody to send a custom JSON body instead.
-func (s *SystemService) DeleteSystemAcRef(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/ref"+"?id="+strconv.FormatInt(id, 10), nil)
-	return err
-}
-
-// DeleteSystemAcRefWithBody removes the resource at /ref with a custom
-// JSON body. iKuai also accepts a few DELETE requests that carry
-// parameters in the body (e.g. /system/backup?srcfile=… which the
-// wrapper DeleteSystemAcRef cannot model directly).
-func (s *SystemService) DeleteSystemAcRefWithBody(ctx context.Context, body any) error {
-	_, err := s.client.Delete(ctx, "/ref", body)
-	return err
-}
-
-// SystemAcServices wraps system ac-services.
-//
-// Methods: GET, POST, PUT, DELETE
-//
-// Path: /services
-//
-// Use ListSystemAcServices(ctx, opts...) for paginated reads.
-// SystemAcServicesListOptions configures paginated reads of SystemAcServices.
-type SystemAcServicesListOptions struct {
-	Page     int
-	PageSize int
-	Filter   string
-	Order    string
-	OrderBy  string
-}
-
-func (o *SystemAcServicesListOptions) query() map[string]string {
-	if o == nil {
-		return nil
-	}
-	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
-	}
-	if o.Filter != "" {
-		q["filter"] = o.Filter
-	}
-	if o.Order != "" {
-		q["order"] = o.Order
-	}
-	if o.OrderBy != "" {
-		q["order_by"] = o.OrderBy
-	}
-	return q
-}
-
-// ListSystemAcServices lists items at /services.
-func (s *SystemService) ListSystemAcServices(ctx context.Context, opts *SystemAcServicesListOptions) (json.RawMessage, error) {
-	return s.client.Get(ctx, "/services", opts.query())
-}
-
-// GetSystemAcServices fetches one item at /services.
-func (s *SystemService) GetSystemAcServices(ctx context.Context, id int64) (json.RawMessage, error) {
-	q := map[string]string{"id": strconv.FormatInt(id, 10)}
-	return s.client.Get(ctx, "/services", q)
-}
-
-// CreateSystemAcServices posts a new item to /services. The router returns a rowid on
-// success which is propagated to the caller.
-func (s *SystemService) CreateSystemAcServices(ctx context.Context, body any) (int64, error) {
-	raw, err := s.client.Post(ctx, "/services", body)
-	if err != nil {
-		return 0, err
-	}
-	return extractRowID(raw)
-}
-
-// UpdateSystemAcServices replaces the resource at /services.
-func (s *SystemService) UpdateSystemAcServices(ctx context.Context, body any) error {
-	_, err := s.client.Put(ctx, "/services", body)
-	return err
-}
-
-// DeleteSystemAcServices removes the resource at /services. iKuai expects the
-// resource identifier as the ?id= query parameter, not in the JSON
-// body. Pass DeleteSystemAcServicesWithBody to send a custom JSON body instead.
-func (s *SystemService) DeleteSystemAcServices(ctx context.Context, id int64) error {
-	_, err := s.client.Delete(ctx, "/services"+"?id="+strconv.FormatInt(id, 10), nil)
-	return err
-}
-
-// DeleteSystemAcServicesWithBody removes the resource at /services with a custom
-// JSON body. iKuai also accepts a few DELETE requests that carry
-// parameters in the body (e.g. /system/backup?srcfile=… which the
-// wrapper DeleteSystemAcServices cannot model directly).
-func (s *SystemService) DeleteSystemAcServicesWithBody(ctx context.Context, body any) error {
-	_, err := s.client.Delete(ctx, "/services", body)
-	return err
-}
-
 // SystemAlg wraps system alg.
 //
 // Methods: GET, PUT
@@ -363,8 +43,10 @@ type SystemAlgListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemAlgListOptions) query() map[string]string {
@@ -372,8 +54,8 @@ func (o *SystemAlgListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -416,8 +98,10 @@ type SystemBackupListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemBackupListOptions) query() map[string]string {
@@ -425,8 +109,8 @@ func (o *SystemBackupListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -490,8 +174,10 @@ type SystemBackupAutoListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemBackupAutoListOptions) query() map[string]string {
@@ -499,8 +185,8 @@ func (o *SystemBackupAutoListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -581,8 +267,10 @@ type SystemBasicConfigListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemBasicConfigListOptions) query() map[string]string {
@@ -590,8 +278,8 @@ func (o *SystemBasicConfigListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -645,8 +333,10 @@ type SystemCpufreqListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemCpufreqListOptions) query() map[string]string {
@@ -654,8 +344,8 @@ func (o *SystemCpufreqListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -696,8 +386,10 @@ type SystemCpufreqModeListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemCpufreqModeListOptions) query() map[string]string {
@@ -705,8 +397,8 @@ func (o *SystemCpufreqModeListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -760,8 +452,10 @@ type SystemKernelParamsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemKernelParamsListOptions) query() map[string]string {
@@ -769,8 +463,8 @@ func (o *SystemKernelParamsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -813,8 +507,10 @@ type SystemRebootSchedulesListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemRebootSchedulesListOptions) query() map[string]string {
@@ -822,8 +518,8 @@ func (o *SystemRebootSchedulesListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -899,8 +595,10 @@ type SystemRemoteAccessListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemRemoteAccessListOptions) query() map[string]string {
@@ -908,8 +606,8 @@ func (o *SystemRemoteAccessListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -952,8 +650,10 @@ type SystemUpgradeListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemUpgradeListOptions) query() map[string]string {
@@ -961,8 +661,8 @@ func (o *SystemUpgradeListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -1042,8 +742,10 @@ type SystemVrrpConfigListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemVrrpConfigListOptions) query() map[string]string {
@@ -1051,8 +753,8 @@ func (o *SystemVrrpConfigListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -1116,8 +818,10 @@ type SystemWebAdminAccountsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemWebAdminAccountsListOptions) query() map[string]string {
@@ -1125,8 +829,8 @@ func (o *SystemWebAdminAccountsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -1196,8 +900,10 @@ type SystemWebAdminGroupsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemWebAdminGroupsListOptions) query() map[string]string {
@@ -1205,8 +911,8 @@ func (o *SystemWebAdminGroupsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -1274,8 +980,10 @@ type SystemWebAdminPasswordListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *SystemWebAdminPasswordListOptions) query() map[string]string {
@@ -1283,8 +991,8 @@ func (o *SystemWebAdminPasswordListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter

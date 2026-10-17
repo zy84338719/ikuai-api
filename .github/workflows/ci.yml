@@ -1,38 +1,66 @@
-name: CI
+name: ci
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
-
-# Cancel superseded runs on the same ref.
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  build-test:
-    name: Build, Vet & Test
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: ["1.24"]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Download deps
-        run: go mod download
-
-      - name: Build
-        run: go build ./...
+          go-version: ${{ matrix.go-version }}
 
       - name: Vet
         run: go vet ./...
 
       - name: Test
-        run: go test -race -count=1 ./...
+        run: go test -race ./...
+
+      - name: Build
+        run: go build ./...
+
+  # This SDK talks to a router and nothing else. A third-party require has
+  # to be a deliberate decision, so it fails here instead of arriving by
+  # accident through a "helpful" upgrade.
+  dependency-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Only oekit modules are allowed
+        run: make zero-dep
+
+      - name: go.mod is tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+
+  # The service layer is generated. Regenerating must be a no-op, otherwise
+  # the checked-in code and the contract tables have drifted.
+  generated-code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Regenerate and diff
+        run: |
+          go run ./codegen
+          gofmt -w service/
+          git diff --exit-code -- service/

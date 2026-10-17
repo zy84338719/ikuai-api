@@ -43,8 +43,10 @@ type LogArpListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *LogArpListOptions) query() map[string]string {
@@ -52,8 +54,8 @@ func (o *LogArpListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -107,8 +109,10 @@ type LogAuthListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *LogAuthListOptions) query() map[string]string {
@@ -116,8 +120,8 @@ func (o *LogAuthListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -171,8 +175,10 @@ type LogDdnsListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *LogDdnsListOptions) query() map[string]string {
@@ -180,8 +186,8 @@ func (o *LogDdnsListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -235,8 +241,10 @@ type LogDhcpListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *LogDhcpListOptions) query() map[string]string {
@@ -244,8 +252,8 @@ func (o *LogDhcpListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -299,8 +307,10 @@ type LogNoticeListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *LogNoticeListOptions) query() map[string]string {
@@ -308,8 +318,8 @@ func (o *LogNoticeListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -363,8 +373,10 @@ type LogPppoeListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *LogPppoeListOptions) query() map[string]string {
@@ -372,8 +384,8 @@ func (o *LogPppoeListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -427,8 +439,10 @@ type LogSystemListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *LogSystemListOptions) query() map[string]string {
@@ -436,8 +450,8 @@ func (o *LogSystemListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -479,6 +493,143 @@ func (s *LogService) DeleteLogSystemWithBody(ctx context.Context, body any) erro
 	return err
 }
 
+// LogUrlVisits wraps log url-visits.
+//
+// Methods: GET, DELETE
+//
+// Path: /log/url-visits
+
+// LogUrlVisitsQueryOptions configures a query against /log/url-visits.
+//
+// The endpoint speaks the .
+// The generic List helper is NOT usable here: it always sends the
+// default page/limit paging, which this endpoint ignores.
+type LogUrlVisitsQueryOptions struct {
+	// Page is the 1-based page number.
+	Page int
+	// PageSize is the number of items per page.
+	PageSize int
+	// Filter uses the iKuai expression syntax, e.g. "enabled==yes".
+	// "&" is AND and "," is OR.
+	Filter string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
+	// Pattern is optional (sent as "pattern").
+	Pattern string
+	// StartTime is optional (sent as "starttime").
+	StartTime int64
+	// StopTime is optional (sent as "stoptime").
+	StopTime int64
+}
+
+func (o *LogUrlVisitsQueryOptions) query() (map[string]string, error) {
+	if o == nil {
+		return nil, ikuaiapi.NewError("LogUrlVisitsQueryOptions: options are required")
+	}
+	if o.Page < 1 {
+		return nil, ikuaiapi.NewError("LogUrlVisitsQueryOptions: Page must be greater than 0")
+	}
+	if o.PageSize < 1 {
+		return nil, ikuaiapi.NewError("LogUrlVisitsQueryOptions: PageSize must be greater than 0")
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Filter != "" {
+		q["filter"] = o.Filter
+	}
+	if o.Order != "" {
+		q["order"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["order_by"] = o.OrderBy
+	}
+	if o.Pattern != "" {
+		q["pattern"] = o.Pattern
+	}
+	if o.StartTime != 0 {
+		q["starttime"] = strconv.FormatInt(o.StartTime, 10)
+	}
+	if o.StopTime != 0 {
+		q["stoptime"] = strconv.FormatInt(o.StopTime, 10)
+	}
+	if len(q) == 0 {
+		return nil, nil
+	}
+	return q, nil
+}
+
+// QueryLogUrlVisits runs a query against /log/url-visits using its documented query dialect.
+func (s *LogService) QueryLogUrlVisits(ctx context.Context, opts *LogUrlVisitsQueryOptions) (json.RawMessage, error) {
+	q, err := opts.query()
+	if err != nil {
+		return nil, err
+	}
+	return s.client.Get(ctx, "/log/url-visits", q)
+}
+
+// LogUrlVisitsListOptions configures paginated reads of LogUrlVisits.
+type LogUrlVisitsListOptions struct {
+	Page     int
+	PageSize int
+	Filter   string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
+}
+
+func (o *LogUrlVisitsListOptions) query() map[string]string {
+	if o == nil {
+		return nil
+	}
+	q := map[string]string{
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
+	}
+	if o.Filter != "" {
+		q["filter"] = o.Filter
+	}
+	if o.Order != "" {
+		q["order"] = o.Order
+	}
+	if o.OrderBy != "" {
+		q["order_by"] = o.OrderBy
+	}
+	return q
+}
+
+// ListLogUrlVisits lists items at /log/url-visits.
+func (s *LogService) ListLogUrlVisits(ctx context.Context, opts *LogUrlVisitsListOptions) (json.RawMessage, error) {
+	return s.client.Get(ctx, "/log/url-visits", opts.query())
+}
+
+// GetLogUrlVisits fetches one item at /log/url-visits.
+func (s *LogService) GetLogUrlVisits(ctx context.Context, id int64) (json.RawMessage, error) {
+	q := map[string]string{"id": strconv.FormatInt(id, 10)}
+	return s.client.Get(ctx, "/log/url-visits", q)
+}
+
+// DeleteLogUrlVisits removes the resource at /log/url-visits. iKuai expects the
+// resource identifier as the ?id= query parameter, not in the JSON
+// body. Pass DeleteLogUrlVisitsWithBody to send a custom JSON body instead.
+func (s *LogService) DeleteLogUrlVisits(ctx context.Context, id int64) error {
+	_, err := s.client.Delete(ctx, "/log/url-visits"+"?id="+strconv.FormatInt(id, 10), nil)
+	return err
+}
+
+// DeleteLogUrlVisitsWithBody removes the resource at /log/url-visits with a custom
+// JSON body. iKuai also accepts a few DELETE requests that carry
+// parameters in the body (e.g. /system/backup?srcfile=… which the
+// wrapper DeleteLogUrlVisits cannot model directly).
+func (s *LogService) DeleteLogUrlVisitsWithBody(ctx context.Context, body any) error {
+	_, err := s.client.Delete(ctx, "/log/url-visits", body)
+	return err
+}
+
 // LogWebActivity wraps log web-activity.
 //
 // Methods: GET, DELETE
@@ -491,8 +642,10 @@ type LogWebActivityListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *LogWebActivityListOptions) query() map[string]string {
@@ -500,8 +653,8 @@ func (o *LogWebActivityListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
@@ -555,8 +708,10 @@ type LogWirelessListOptions struct {
 	Page     int
 	PageSize int
 	Filter   string
-	Order    string
-	OrderBy  string
+	// Order is the sort direction: asc | desc.
+	Order string
+	// OrderBy is the sort field.
+	OrderBy string
 }
 
 func (o *LogWirelessListOptions) query() map[string]string {
@@ -564,8 +719,8 @@ func (o *LogWirelessListOptions) query() map[string]string {
 		return nil
 	}
 	q := map[string]string{
-		"page":      strconv.Itoa(o.Page),
-		"page_size": strconv.Itoa(o.PageSize),
+		"page":  strconv.Itoa(o.Page),
+		"limit": strconv.Itoa(o.PageSize),
 	}
 	if o.Filter != "" {
 		q["filter"] = o.Filter
