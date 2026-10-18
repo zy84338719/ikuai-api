@@ -4,6 +4,10 @@
 test:
 	go test ./...
 
+# Run tests with the race detector
+race:
+	go test -race ./...
+
 # Run tests with coverage
 test-coverage:
 	go test -coverprofile=coverage.out ./...
