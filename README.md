@@ -39,8 +39,10 @@ A focused Go SDK for the **iKuai v4.0 REST API** used by iKuai routers
   service create writes no `opt_type*` fields while its update must send
   twelve — and the table records that too. Firmware inconsistencies are
   reproduced rather than smoothed over — see `skills/writing.md`.
-- 🔁 **Retry with exponential back-off** for transient failures; per
-  request and total timeout controlled by the same context.
+- 🔁 **Retry with exponential back-off** for transient failures. The jitter
+  is one-sided: a retry never fires *earlier* than its exponential
+  baseline, so back-off cannot collapse into a retry storm against a
+  struggling router.
 - 🧪 **Dry-run mode** — every call returns a JSON preview of the
   request it would have made, no router traffic.
 - 🔍 **Catalog discovery** — iterate all 157 endpoints at runtime with

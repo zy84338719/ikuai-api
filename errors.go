@@ -1,11 +1,13 @@
 package ikuaiapi
 
 import (
-	"errors"
 	"strings"
 	"sync"
 	"time"
 
+	// oekit's errors package carries New/As/Is/Unwrap with the standard
+	// library's shapes, so sentinels and matching both come from one import.
+	// Two error packages in one process break BizError recognition.
 	oekerrors "github.com/oekit/pkg/errors"
 )
 
@@ -352,26 +354,26 @@ func (e *NetworkError) IsRetryable() bool { return true }
 
 // ErrInvalidToken is returned when a token fails format validation. It is a
 // sentinel so callers can match it with errors.Is.
-var ErrInvalidToken = errors.New("ikuaiapi: invalid token")
+var ErrInvalidToken = oekerrors.New("ikuaiapi: invalid token")
 
 // ErrNotConfigured is returned when a client is constructed without a base
 // URL, which is the one value with no sensible default.
-var ErrNotConfigured = errors.New("ikuaiapi: baseURL is required")
+var ErrNotConfigured = oekerrors.New("ikuaiapi: baseURL is required")
 
 // Sentinel errors for the SDK's own pre-flight validation. Router-side
 // failures always come back as *APIError.
 var (
 	// ErrRequiredField reports a missing required body field.
-	ErrRequiredField = errors.New("ikuaiapi: required field missing")
+	ErrRequiredField = oekerrors.New("ikuaiapi: required field missing")
 	// ErrUnknownObjectGroup reports an object group name the SDK does not
 	// know how to encode.
-	ErrUnknownObjectGroup = errors.New("ikuaiapi: unknown object group")
+	ErrUnknownObjectGroup = oekerrors.New("ikuaiapi: unknown object group")
 	// ErrNoSchema reports that no body contract is recorded for a path.
-	ErrNoSchema = errors.New("ikuaiapi: no schema recorded for path")
+	ErrNoSchema = oekerrors.New("ikuaiapi: no schema recorded for path")
 	// ErrEmptyResponse reports a response with nothing to decode.
-	ErrEmptyResponse = errors.New("ikuaiapi: empty response")
+	ErrEmptyResponse = oekerrors.New("ikuaiapi: empty response")
 	// ErrNoObject reports a response that decoded but held no object.
-	ErrNoObject = errors.New("ikuaiapi: response contains no object")
+	ErrNoObject = oekerrors.New("ikuaiapi: response contains no object")
 )
 
 func writeInt(b *strings.Builder, n int) {
@@ -401,7 +403,7 @@ func isAPIError(err error) (*APIError, bool) {
 		return nil, false
 	}
 	var e *APIError
-	if errors.As(err, &e) {
+	if oekerrors.As(err, &e) {
 		return e, true
 	}
 	return nil, false
@@ -412,7 +414,7 @@ func isNetworkError(err error) (*NetworkError, bool) {
 		return nil, false
 	}
 	var e *NetworkError
-	if errors.As(err, &e) {
+	if oekerrors.As(err, &e) {
 		return e, true
 	}
 	return nil, false

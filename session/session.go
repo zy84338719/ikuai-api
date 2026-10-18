@@ -14,13 +14,13 @@ package session
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
+	oekerrors "github.com/oekit/pkg/errors"
 	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
@@ -92,7 +92,7 @@ func Load() (*Session, error) {
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
+		if oekerrors.Is(err, os.ErrNotExist) {
 			return &Session{}, nil
 		}
 		return nil, fmt.Errorf("ikuai session: read %s: %w", path, err)
@@ -114,7 +114,7 @@ func Load() (*Session, error) {
 func (s *Session) Save() error {
 	path := Path()
 	if path == "" {
-		return errors.New("ikuai session: no writable config path; set " + PathEnv)
+		return oekerrors.New("ikuai session: no writable config path; set " + PathEnv)
 	}
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
@@ -134,7 +134,7 @@ func Clear() error {
 	if path == "" {
 		return nil
 	}
-	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err := os.Remove(path); err != nil && !oekerrors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("ikuai session: clear %s: %w", path, err)
 	}
 	return nil
@@ -241,10 +241,10 @@ func firstEnv(names []string) string {
 func NormalizeBaseURL(raw string) (normalized string, changed bool, err error) {
 	input := strings.TrimSpace(raw)
 	if input == "" {
-		return "", false, errors.New("ikuai session: missing router host")
+		return "", false, oekerrors.New("ikuai session: missing router host")
 	}
 	if strings.ContainsAny(input, " \t\r\n") {
-		return "", false, errors.New("ikuai session: router host must not contain whitespace")
+		return "", false, oekerrors.New("ikuai session: router host must not contain whitespace")
 	}
 
 	candidate := input
@@ -254,7 +254,7 @@ func NormalizeBaseURL(raw string) (normalized string, changed bool, err error) {
 	case hasPrefixFold(input, "https://"):
 		candidate = "https://" + input[len("https://"):]
 	case strings.Contains(input, "://"):
-		return "", false, errors.New("ikuai session: only http or https router URLs are supported")
+		return "", false, oekerrors.New("ikuai session: only http or https router URLs are supported")
 	default:
 		candidate = "https://" + input
 	}
@@ -264,13 +264,13 @@ func NormalizeBaseURL(raw string) (normalized string, changed bool, err error) {
 		return "", false, fmt.Errorf("ikuai session: invalid router host: %w", perr)
 	}
 	if parsed.User != nil {
-		return "", false, errors.New("ikuai session: router URL must not embed a username or password")
+		return "", false, oekerrors.New("ikuai session: router URL must not embed a username or password")
 	}
 	if parsed.Host == "" || parsed.Hostname() == "" {
-		return "", false, errors.New("ikuai session: missing router host")
+		return "", false, oekerrors.New("ikuai session: missing router host")
 	}
 	if strings.ContainsAny(parsed.Host, " \t\r\n") {
-		return "", false, errors.New("ikuai session: invalid router host")
+		return "", false, oekerrors.New("ikuai session: invalid router host")
 	}
 
 	out := "https://" + parsed.Host

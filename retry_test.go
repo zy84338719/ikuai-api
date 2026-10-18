@@ -3,6 +3,7 @@ package ikuaiapi
 import (
 	"context"
 	"errors"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -217,5 +218,46 @@ func TestParseRetryAfter(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("parseRetryAfter(%q) = %v, want %v", tt.in, got, tt.want)
 		}
+	}
+}
+
+// TestBackoffNeverShorterThanBaseline locks the property the retry policy
+// exists for: a retry scheduled for a 4-second back-off must never fire
+// early. A symmetric jitter can hand back 0, which turns an exponential
+// back-off into a busy loop exactly when a router is struggling.
+func TestBackoffNeverShorterThanBaseline(t *testing.T) {
+	base := 40 * time.Millisecond
+	max := 2 * time.Second
+
+	for attempt := 1; attempt <= 6; attempt++ {
+		want := time.Duration(float64(base) * math.Pow(2, float64(attempt-1)))
+		if want > max {
+			want = max
+		}
+		for i := 0; i < 200; i++ {
+			got := backoffDelay(attempt, base, max)
+			if got < want {
+				t.Fatalf("attempt %d: got %s, want at least the %s baseline",
+					attempt, got, want)
+			}
+			// Jitter is capped, so a client cannot drift arbitrarily far.
+			if got > want+time.Duration(float64(want)*retryJitterDeviation)+time.Millisecond {
+				t.Fatalf("attempt %d: got %s, beyond the %.0f%% jitter ceiling over %s",
+					attempt, got, retryJitterDeviation*100, want)
+			}
+		}
+	}
+}
+
+// TestBackoffSpreadsClients proves the jitter still does its job: two clients
+// that fail together must not retry in lockstep.
+func TestBackoffSpreadsClients(t *testing.T) {
+	seen := map[time.Duration]bool{}
+	for i := 0; i < 50; i++ {
+		seen[backoffDelay(3, 50*time.Millisecond, 2*time.Second)] = true
+	}
+	if len(seen) < 20 {
+		t.Errorf("jitter produced only %d distinct delays out of 50; retries would resynchronise",
+			len(seen))
 	}
 }

@@ -1,5 +1,50 @@
 # Changelog
 
+## v1.3.0 — 2026-10-18
+
+Adopts the oekit v0.13 / v0.7 releases. One change is visible to callers;
+the rest brings this SDK into line with a rule it was previously working
+around.
+
+### Fixed
+
+- **Retry back-off could fire before its own baseline.** The delay was
+  fully jittered into [0, d], so a retry scheduled for a 4-second back-off
+  could fire three milliseconds later. Under a failing router — the one
+  moment back-off exists for — every client doing that at once turns into a
+  retry storm exactly when the device can least absorb it. The jitter is now
+  one-sided via `mathx.Unstable.UpwardDuration`, giving [d, d*(1+0.25)]:
+  never earlier than the exponential baseline, still spread enough that
+  clients do not resynchronise. `TestBackoffNeverShorterThanBaseline` locks
+  the lower bound; `TestBackoffSpreadsClients` locks the upper purpose.
+
+### Changed
+
+- **Dependencies**: `oekit/pkg` v0.11.0 → v0.13.0, `oekit/logx` v0.6.0 →
+  v0.7.0. No breaking API change affects this SDK; logx's one breaking
+  change (`ParseLogLevel` now returns an error) is on no path used here.
+
+- **One errors package in the process.** `oekit/pkg/errors` v0.12.0 added
+  `New`/`As`/`Is`/`Unwrap` with the standard library's shapes, which removes
+  the reason this SDK still imported the standard library alongside it. The
+  sentinels and every match now go through the oekit package, so the "same
+  process, one errors package" rule holds without a caveat. The `errors.Is`
+  and `errors.As` contracts callers already rely on are unchanged.
+
+### Not adopted
+
+- `pkg/jsonrepair` was evaluated and rejected. It repairs LLM output —
+  stripping markdown fences and extracting an object out of prose — which is
+  the wrong behaviour for a router response. The firmware emits well-formed
+  JSON apart from the bare `nil` tokens `SanitizeNil` already handles;
+  letting a repairer normalise the payload would obscure a malformed
+  response rather than surface it.
+
+### Documentation
+
+- `doc.go` documents redacting SDK logs by key through `logx.WithFilter`,
+  for callers whose URLs are themselves sensitive.
+
 ## v1.2.0 — 2026-10-18
 
 Two independent bodies of work landed here.

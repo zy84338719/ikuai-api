@@ -74,11 +74,20 @@
 //
 // # Logging
 //
-// The SDK logs through the oekit logx facade with a lazily resolved
-// package logger, so it never picks a backend or a service name on behalf
-// of its consumer: call logx.SetDefault, logx.UseSlog, or install an
-// hlog backend in main, and this package follows. SetLogLevel controls the
-// floor for the SDK's own events.
+// The SDK logs through the oekit logx facade with a lazily resolved package
+// logger, so it never picks a backend or a service name on behalf of its
+// consumer: call logx.SetDefault, logx.UseSlog, or install an hlog backend
+// in main, and this package follows. SetLogLevel controls the floor for the
+// SDK's own events.
+//
+// What it emits is request metadata — method, URL, retry count, delay — and
+// never the bearer token. If a URL is itself sensitive on your network, wrap
+// the facade before installing it and redact by key:
+//
+//	logx.SetDefault(logx.WithFilter(logx.UseSlog("svc")).
+//
+//	    logx.FilterKey("url"), logx.FilterKey("path"),
+//	)
 //
 // # Observability
 //

@@ -5,10 +5,8 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"io"
 	"math"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"path"
@@ -18,6 +16,7 @@ import (
 
 	"github.com/oekit/logx"
 	oekerrors "github.com/oekit/pkg/errors"
+	"github.com/oekit/pkg/mathx"
 )
 
 // V4APIBase is the canonical root for all iKuai v4 REST endpoints.
@@ -573,21 +572,30 @@ func shouldRetry(err error, idempotent bool) bool {
 	if err == nil {
 		return false
 	}
-	if errors.Is(err, context.Canceled) {
+	if oekerrors.Is(err, context.Canceled) {
 		return false
 	}
 	var netErr *NetworkError
-	if errors.As(err, &netErr) {
+	if oekerrors.As(err, &netErr) {
 		// Only retry transport failures on idempotent verbs.
 		return idempotent
 	}
 	var apiErr *APIError
-	if errors.As(err, &apiErr) {
+	if oekerrors.As(err, &apiErr) {
 		return apiErr.IsRetryable()
 	}
 	return false
 }
 
+// backoffDelay returns how long to wait before attempt+1.
+//
+// The jitter is deliberately one-sided. A symmetric or full jitter picks a
+// value anywhere in [0, d], which means a retry scheduled for a 4-second
+// back-off can fire after 3 milliseconds — and when a router is failing
+// under load, every client doing that at once turns into a retry storm
+// precisely when the device is least able to absorb it. mathx.Unstable's
+// upward jitter keeps the delay in [d, d*(1+dev)]: never earlier than the
+// exponential baseline, still spread enough that clients do not resynchronise.
 func backoffDelay(attempt int, base, max time.Duration) time.Duration {
 	if base <= 0 {
 		base = defaultRetryBaseDelay
@@ -599,12 +607,19 @@ func backoffDelay(attempt int, base, max time.Duration) time.Duration {
 	if d > max {
 		d = max
 	}
-	// Full jitter (0..d).
-	if d > 0 {
-		d = time.Duration(rand.Int63n(int64(d) + 1)) //nolint:gosec
+	if d <= 0 {
+		return 0
 	}
-	return d
+	return retryJitter.UpwardDuration(d)
 }
+
+// retryJitter spreads concurrent clients' back-off without ever pulling a
+// retry earlier than its exponential baseline. The deviation is modest: it
+// buys desynchronisation without materially inflating the wait.
+var retryJitter = mathx.NewUnstable(retryJitterDeviation)
+
+// retryJitterDeviation is the fraction added to the baseline at most.
+const retryJitterDeviation = 0.25
 
 // parseRetryAfter parses an HTTP Retry-After header value, which may be either
 // a delta-seconds integer or an HTTP-date. Returns 0 when the header is absent
