@@ -17,3 +17,7 @@
 # Go workspace files
 go.work
 go.work.sum
+
+# Git bundles. A bundle taken before a history rewrite carries whatever the
+# old commits contained — credentials included — so it must never be staged.
+*.bundle
