@@ -16,6 +16,7 @@ import (
 
 	"github.com/oekit/logx"
 	oekerrors "github.com/oekit/pkg/errors"
+	"github.com/oekit/pkg/httpjson"
 	"github.com/oekit/pkg/mathx"
 )
 
@@ -549,9 +550,12 @@ func (c *Client) doWithRetry(ctx context.Context, method, fullURL string, body a
 			break
 		}
 		delay := backoffDelay(attempt, c.retryBase, c.retryMaxD)
-		// Honour a server-advised Retry-After when present (429/503).
+		// Honour a server-advised Retry-After (429/503), clamped by the oekit
+		// rule: a hint is trusted only when it is ≤ MaxServerRetryAfter (5min)
+		// or shorter than our own curve — a pathological header can't park a
+		// client for hours and a retry storm can't resynchronise.
 		if apiErr, ok := isAPIError(err); ok && apiErr.RetryAfter > 0 {
-			delay = apiErr.RetryAfter
+			delay = httpjson.SelectRetryDelay(delay, apiErr.RetryAfter)
 		}
 		c.logCtx(ctx, LogLevelWarn, "retrying request",
 			"attempt", attempt+1, "max_attempts", c.retryMax,

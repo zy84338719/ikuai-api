@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.3.1 — 2026-10-26
+
+Dependency refresh plus one behavioural fix found while aligning with the
+current oekit releases.
+
+### Changed
+
+- **Dependencies**: `oekit/logx` v0.7.0 → v0.7.1, `oekit/pkg` v0.13.0 →
+  v0.28.0. No API change on any path this SDK uses.
+
+- **Retry-After hints are now clamped** by `oekit/pkg/httpjson.SelectRetryDelay`
+  instead of being trusted unconditionally. A hint is adopted only when it is
+  ≤ MaxServerRetryAfter (5 minutes) or shorter than the local exponential
+  curve; `APIError.RetryAfter` still carries the raw hint for callers that
+  want to make their own call. Previously a pathological header such as
+  `Retry-After: 86400` would park a retrying client for a day. A regression
+  test locks both directions of the clamp.
+
 ## v1.3.0 — 2026-10-18
 
 Adopts the oekit v0.13 / v0.7 releases. One change is visible to callers;

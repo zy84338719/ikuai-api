@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+
+	"github.com/oekit/pkg/httpjson"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -259,5 +261,36 @@ func TestBackoffSpreadsClients(t *testing.T) {
 	if len(seen) < 20 {
 		t.Errorf("jitter produced only %d distinct delays out of 50; retries would resynchronise",
 			len(seen))
+	}
+}
+
+// TestRetryAfterClampedByOekitRule locks the oekit SelectRetryDelay clamp: a
+// huge server hint (e.g. Retry-After: 86400) must NOT park the client — the
+// local exponential curve wins over untrusted hints beyond the 5min ceiling.
+func TestRetryAfterClampedByOekitRule(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Retry-After", "86400") // 24h — pathological
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte(`{"code":0,"message":"slow down"}`))
+	}))
+	defer srv.Close()
+
+	c, _ := NewClient(srv.URL, WithRetry(1)) // no retry; inspect the raw error
+	_, err := c.Get(context.Background(), "/x", nil)
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.RetryAfter != 24*time.Hour {
+		t.Fatalf("RetryAfter field should carry the raw hint, got %v", apiErr.RetryAfter)
+	}
+	// The clamp: local curve (capped at retryMaxD) must win over the 24h hint.
+	local := 5 * time.Second
+	if got := httpjson.SelectRetryDelay(local, apiErr.RetryAfter); got != local {
+		t.Errorf("SelectRetryDelay(local=%v, hint=24h) = %v, want local", local, got)
+	}
+	// And a hint inside the trusted window still wins.
+	if got := httpjson.SelectRetryDelay(local, 3*time.Second); got != 3*time.Second {
+		t.Errorf("SelectRetryDelay(local=%v, hint=3s) = %v, want hint", local, got)
 	}
 }
