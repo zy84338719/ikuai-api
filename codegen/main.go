@@ -23,8 +23,13 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"go/ast"
+	"go/format"
+	"go/parser"
+	"go/token"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	// The generator reuses the parent package's query-spec parser so the
@@ -33,15 +38,10 @@ import (
 	ikuaiapi "github.com/zy84338719/ikuai-api"
 )
 
-// V4Endpoint is a copy of the runtime type used purely for codegen.
-// It is never imported by the generated code.
-type V4Endpoint struct {
-	Group, Name, Path string
-	Methods           []string
-	Load              bool
-	Action            string
-	Query             string
-}
+// V4Endpoint aliases the runtime type. Codegen reads the catalog through
+// go/ast into this exact type, so a new field upstream can never drift away
+// from what the generator sees.
+type V4Endpoint = ikuaiapi.V4Endpoint
 
 const (
 	catalogFile = "v4_catalog.go"
@@ -78,7 +78,7 @@ func main() {
 		if err := renderGroup(buf, g, eps); err != nil {
 			log.Fatalf("render %s: %v", g, err)
 		}
-		if err := os.WriteFile(fp, buf.Bytes(), 0o644); err != nil {
+		if err := writeFormatted(fp, buf.Bytes()); err != nil {
 			log.Fatalf("write %s: %v", fp, err)
 		}
 		seen[g] = struct{}{}
@@ -104,59 +104,166 @@ func main() {
 // The trailing Load / Action are optional. Load marks monitoring load
 // endpoints (datetype/start_time/end_time/math). Action marks
 // :start/:stop/:restart/:sync/:restore/:check endpoints.
-var (
-	// entryRe captures the full composite literal (up to the closing
-	// "}," at end of line) so we can scan for the optional Load and
-	// Action fields inside the whole entry rather than just the part
-	// matched by epRe.
-	entryRe  = regexp.MustCompile(`\{[^{}]*Group:\s*"([^"]+)"[^{}]*Name:\s*"([^"]+)"[^{}]*Path:\s*"([^"]+)"[^{}]*Methods:\s*\[\]string\{([^}]*)\}[^{}]*\}`)
-	loadRe   = regexp.MustCompile(`Load:\s*true`)
-	actionRe = regexp.MustCompile(`Action:\s*"([^"]+)"`)
-	queryRe  = regexp.MustCompile(`Query:\s*"([^"]*)"`)
-)
-
+// parseCatalog reads the V4EndpointCatalog composite literal out of the
+// catalog file with go/parser + go/ast — a typed read, not a text scrape.
+// Every key of every entry is matched explicitly, so adding a field to
+// V4Endpoint cannot silently bypass the generator: the field either gets a
+// KeyValueExpr here or the generator sees it as unset, and the
+// generated-code CI gate fails loudly when the catalog and the generated
+// service layer disagree.
 func parseCatalog(file string) ([]V4Endpoint, error) {
 	src, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
-	matches := entryRe.FindAllStringSubmatchIndex(string(src), -1)
-	catalog := make([]V4Endpoint, 0, len(matches))
-	for _, m := range matches {
-		ep := V4Endpoint{
-			Group: string(matches_get(string(src), m, 1)),
-			Name:  string(matches_get(string(src), m, 2)),
-			Path:  string(matches_get(string(src), m, 3)),
-		}
-		methods := string(matches_get(string(src), m, 4))
-		for _, ms := range strings.Split(methods, ",") {
-			s := strings.TrimSpace(ms)
-			s = strings.TrimPrefix(s, `"`)
-			s = strings.TrimSuffix(s, `"`)
-			if s != "" {
-				ep.Methods = append(ep.Methods, s)
-			}
-		}
-		// Scan the entire entry for the optional flags.
-		entry := string(src[m[0]:m[1]])
-		if loadRe.MatchString(entry) {
-			ep.Load = true
-		}
-		if am := actionRe.FindStringSubmatch(entry); am != nil {
-			ep.Action = am[1]
-		}
-		if qm := queryRe.FindStringSubmatch(entry); qm != nil {
-			ep.Query = qm[1]
-		}
-		catalog = append(catalog, ep)
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, file, src, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	catalog, err := catalogFromAST(f)
+	if err != nil {
+		return nil, err
+	}
+	if len(catalog) == 0 {
+		return nil, fmt.Errorf("%s: no %s literal found", file, catalogVarName)
 	}
 	return catalog, nil
 }
 
-// matches_get returns the capture group n as a string from a regex
-// match with byte indices.
-func matches_get(src string, m []int, n int) []byte {
-	return []byte(src[m[2*n]:m[2*n+1]])
+// catalogVarName is the package-level variable codegen parses.
+const catalogVarName = "V4EndpointCatalog"
+
+// catalogFromAST locates `var V4EndpointCatalog = []V4Endpoint{...}` and
+// decodes each entry field by key.
+func catalogFromAST(f *ast.File) ([]V4Endpoint, error) {
+	var catalog []V4Endpoint
+	found := false
+
+	for _, decl := range f.Decls {
+		gen, ok := decl.(*ast.GenDecl)
+		if !ok || gen.Tok != token.VAR {
+			continue
+		}
+		for _, spec := range gen.Specs {
+			vs, ok := spec.(*ast.ValueSpec)
+			if !ok || len(vs.Names) != 1 || vs.Names[0].Name != catalogVarName {
+				continue
+			}
+			if len(vs.Values) != 1 {
+				return nil, fmt.Errorf("%s must have exactly one value", catalogVarName)
+			}
+			found = true
+			lit, ok := vs.Values[0].(*ast.CompositeLit)
+			if !ok {
+				return nil, fmt.Errorf("%s is not a composite literal", catalogVarName)
+			}
+			for _, elt := range lit.Elts {
+				entry, ok := elt.(*ast.CompositeLit)
+				if !ok {
+					return nil, fmt.Errorf("%s: non-literal entry", catalogVarName)
+				}
+				ep, err := decodeEndpoint(entry)
+				if err != nil {
+					return nil, err
+				}
+				catalog = append(catalog, ep)
+			}
+		}
+	}
+	if !found {
+		return nil, fmt.Errorf("decl %s not found", catalogVarName)
+	}
+	return catalog, nil
+}
+
+// decodeEndpoint maps one composite-literal entry onto V4Endpoint by key.
+// Unknown keys are rejected loudly instead of being ignored.
+func decodeEndpoint(lit *ast.CompositeLit) (V4Endpoint, error) {
+	var ep V4Endpoint
+	seen := map[string]bool{}
+	for _, elt := range lit.Elts {
+		kv, ok := elt.(*ast.KeyValueExpr)
+		if !ok {
+			return ep, fmt.Errorf("%s entry: positional element is not supported", catalogVarName)
+		}
+		key, ok := kv.Key.(*ast.Ident)
+		if !ok {
+			return ep, fmt.Errorf("%s entry: non-identifier key", catalogVarName)
+		}
+		if seen[key.Name] {
+			return ep, fmt.Errorf("%s entry: duplicate key %q", catalogVarName, key.Name)
+		}
+		seen[key.Name] = true
+		switch key.Name {
+		case "Group", "Name", "Path", "Action", "Query":
+			v, ok := litString(kv.Value)
+			if !ok {
+				return ep, fmt.Errorf("%s entry: %s must be a string literal", catalogVarName, key.Name)
+			}
+			switch key.Name {
+			case "Group":
+				ep.Group = v
+			case "Name":
+				ep.Name = v
+			case "Path":
+				ep.Path = v
+			case "Action":
+				ep.Action = v
+			case "Query":
+				ep.Query = v
+			}
+		case "Methods":
+			methods, err := stringSliceLit(kv.Value)
+			if err != nil {
+				return ep, fmt.Errorf("%s entry: Methods: %w", catalogVarName, err)
+			}
+			ep.Methods = methods
+		case "Load":
+			id, ok := kv.Value.(*ast.Ident)
+			if !ok || id.Name != "true" {
+				return ep, fmt.Errorf("%s entry: Load must be true (omit the key for false)", catalogVarName)
+			}
+			ep.Load = true
+		default:
+			return ep, fmt.Errorf("%s entry: unknown key %q — extend decodeEndpoint", catalogVarName, key.Name)
+		}
+	}
+	if ep.Group == "" || ep.Name == "" || ep.Path == "" || len(ep.Methods) == 0 {
+		return ep, fmt.Errorf("%s entry %q: Group/Name/Path/Methods are required", catalogVarName, ep.Name)
+	}
+	return ep, nil
+}
+
+// litString decodes a quoted string literal.
+func litString(e ast.Expr) (string, bool) {
+	bl, ok := e.(*ast.BasicLit)
+	if !ok || bl.Kind != token.STRING {
+		return "", false
+	}
+	v, err := strconv.Unquote(bl.Value)
+	if err != nil {
+		return "", false
+	}
+	return v, true
+}
+
+// stringSliceLit decodes a []string composite literal.
+func stringSliceLit(e ast.Expr) ([]string, error) {
+	lit, ok := e.(*ast.CompositeLit)
+	if !ok {
+		return nil, fmt.Errorf("expected a []string literal")
+	}
+	out := make([]string, 0, len(lit.Elts))
+	for _, elt := range lit.Elts {
+		v, ok := litString(elt)
+		if !ok {
+			return nil, fmt.Errorf("method entries must be string literals")
+		}
+		out = append(out, v)
+	}
+	return out, nil
 }
 
 // toGoName converts a kebab-case catalog name (e.g. "app-protocols-load")
@@ -1200,5 +1307,18 @@ func (a *APIClient) %[1]s() *%[1]sService { return a.svc%[1]s }
 	fmt.Fprintln(buf, "\treturn uv.Encode()")
 	fmt.Fprintln(buf, "}")
 
-	return os.WriteFile(file, buf.Bytes(), 0o644)
+	return writeFormatted(file, buf.Bytes())
+}
+
+// writeFormatted gofmts the generated source before writing it. Emitting
+// already-formatted code keeps the generated-code CI gate a strict no-op —
+// without it, the first `gofmt` pass after generation shows up as a diff.
+func writeFormatted(file string, src []byte) error {
+	formatted, err := format.Source(src)
+	if err != nil {
+		// A generator bug produced invalid Go; write nothing so the failure
+		// is loud instead of shipping a broken file.
+		return fmt.Errorf("format generated source for %s: %w", file, err)
+	}
+	return os.WriteFile(file, formatted, 0o644)
 }
