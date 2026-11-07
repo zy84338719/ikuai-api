@@ -1,5 +1,78 @@
 # Changelog
 
+## v1.3.3 — 2026-11-08
+
+Dependency refresh onto the current oekit releases, plus release-hygiene
+fixes that had been sitting in the tree since v1.3.2 shipped.
+
+### Changed
+
+- **Dependencies**: `oekit/pkg` v0.28.0 → v0.37.1, `oekit/logx` v0.7.1 →
+  v0.8.6, and the transitive `oekit/core` v0.9.2 → v0.13.1. No API change on
+  any path this SDK uses; the full suite (including `-race`) is green.
+
+### Fixed
+
+- **The version constant now matches the release it ships in.** v1.3.2 was
+  tagged without bumping `SDKVersion`, so the released binary reported
+  "1.3.1" while the tag said v1.3.2. The constant is corrected here, and the
+  v1.3.2 section below documents what that release actually contained.
+
+- **`codegen/main.go` import ordering** was not gofmt-clean. The CI
+  formatting gate only covers the generated `service/` tree, so the drift in
+  the generator itself went unnoticed.
+
+## v1.3.2 — 2026-10-26
+
+Two structural batches from the deep architecture audit. No public API
+change: every exported symbol keeps its signature and semantics.
+
+### Changed
+
+- **`client.go` split by concern.** The file had grown to 692 lines and 14
+  responsibilities. It is now four files with one job each:
+
+  - `envelope.go` — `SanitizeNil` plus the response-envelope contract
+    (code-ok predicate, `data`/`results`/`rowid` precedence). The wire
+    protocol now lives in one place instead of being interleaved with
+    transport code.
+  - `retry.go` — `doWithRetry` / `shouldRetry` / `backoffDelay` /
+    one-sided jitter / `parseRetryAfter` and the retry constants.
+  - `dryrun.go` — one `dryRunPreview` implementation replacing three
+    hand-rolled preview maps in `Do`/`Get`/`doPayload` that could drift
+    apart.
+  - `client.go` keeps construction, options, the verb methods, header/URL
+    wiring, and the logging/metrics plumbing.
+
+  `FormatQuery` keeps its signature for compatibility but now delegates to a
+  package function; the receiver was unused.
+
+- **The generator parses the catalog with `go/ast` instead of regex
+  scraping.** `parseCatalog` uses `go/parser` and decodes each entry
+  field-by-field, so unknown or duplicate keys now fail loudly instead of
+  being silently dropped. The old `[^{}]*` pattern could not see nested
+  literals and hard-coded field order.
+
+- **The generator aliases the runtime endpoint type** instead of keeping a
+  hand-copied `V4Endpoint` struct, so a field added upstream can never drift
+  from the generator's view of it.
+
+- **Generated output is now gofmt'd by the generator itself**, which turns the
+  generated-code CI gate into a strict no-op instead of a formatting diff
+  after every regeneration.
+
+### Fixed
+
+- **Dry-run with a nil output pointer** could attempt to unmarshal into a nil
+  destination. The unified `dryRunPreview` path returns the preview without
+  touching the output value.
+
+### Verification
+
+Regenerating three times produced a byte-identical `service/` tree (diff =
+0); the ast-parsed catalog produced the same service layer as the regex one
+after gofmt. The full test suite and an example dry-run smoke test are
+green.
 ## v1.3.1 — 2026-10-26
 
 Dependency refresh plus one behavioural fix found while aligning with the

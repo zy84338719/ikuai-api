@@ -1,7 +1,7 @@
 # AGENTS.md — ikuai-api
 
 > Go SDK for the iKuai v4.0 REST API (routers running iKuai OS 4.x).
-> 当前版本：`v1.2.0` · module：`github.com/zy84338719/ikuai-api`
+> 当前版本：`v1.3.3` · module：`github.com/zy84338719/ikuai-api`
 
 本仓遵循 [oekit](https://oekit.github.io) 的工程规范：分层契约、错误处理红线、SDK 包日志规则、生命周期签名、零外部依赖门禁。
 
