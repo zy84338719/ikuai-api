@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oekit/logx"
 	oekerrors "github.com/oekit/pkg/errors"
 	"github.com/oekit/pkg/httpjson"
 	"github.com/oekit/pkg/mathx"
@@ -51,7 +52,7 @@ func (c *Client) doWithRetry(ctx context.Context, method, fullURL string, body a
 		}
 		c.logCtx(ctx, LogLevelWarn, "retrying request",
 			"attempt", attempt+1, "max_attempts", c.retryMax,
-			"delay", delay.String(), "err", err)
+			"delay", delay.String(), logx.ErrKey, err)
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()

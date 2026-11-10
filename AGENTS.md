@@ -30,6 +30,8 @@
 - 包级 logger **必须** `logx.Delegating("ikuai-api")` 懒解析（见 `logger.go`）。
   禁止 `logx.Default()`、`logx.WithService` 在包级声明——service name 属于消费方，且 init 期求值看不到 main 里的 `SetDefault`。
 - kv 结构化风格为默认；`Ctx*` 方法自动携带 trace_id；禁止 printf 风格。
+- 错误字段名统一用 `logx.ErrKey`（值 "err"），禁止手写 `"err"` / `"error"` 字面量——
+  oekit 与 oagentkit 两矩阵落同一 Loki/ES，字段名分裂会让查询侧被迫 OR 双写。
 - `SetLogLevel` 控制本 SDK 事件的级别下限。
 
 ### 并发安全
