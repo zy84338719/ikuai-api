@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- **Dependencies**: `oekit/pkg` v0.41.0 → v0.46.0, `oekit/logx` v0.8.12 →
+  v0.10.0, and the transitive `oekit/core` v0.13.5 → v0.14.2. No API change
+  on any path this SDK uses; the full suite (including `-race`) is green,
+  the zero-third-party dependency gate passes and `make generate` shows no
+  drift.
+  - The two upstream BREAKING changes in this range were checked against
+    this SDK and do not touch it: `pkg` v0.45.0 removed `errors.Errorf`
+    (this SDK only uses `fmt.Errorf` and `pkg/errors.Wrap`), and `logx`
+    v0.10.0 turned `BaseLogger.Level` into an `AtomicLevel` (this SDK never
+    touches `.Level`; it gates levels through its own `SetLogLevel`).
+  - The `go` directive moves 1.24.0 → 1.26.0, the floor both dependencies
+    now require.
+
 ## v1.3.3 — 2026-11-08
 
 Dependency refresh onto the current oekit releases, plus release-hygiene

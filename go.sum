@@ -1,4 +1,4 @@
-github.com/oekit/logx v0.8.12 h1:cs/SRKTm9lSvOS303dSnx7o4yUdZEU7PTD8mnMIKHvM=
-github.com/oekit/logx v0.8.12/go.mod h1:wtwtaqbwKro1hjTgkmnVr1xTdk1h/gNiHDsebW2oQEA=
-github.com/oekit/pkg v0.41.0 h1:IsIHwG7q8YL6soDMjyOMzuJRr61v2CTsu4+0thR+/W8=
-github.com/oekit/pkg v0.41.0/go.mod h1:sVeOtmG1sLY2aSnzFIbUAF2Qoh7G8R5vnWtWmLCv8NM=
+github.com/oekit/logx v0.10.0 h1:swoa1h9oLMdoH6LVjHaTYFIlVSxwRlfV0lBMNmKFfLI=
+github.com/oekit/logx v0.10.0/go.mod h1:hGifsM8pfOb8cR4KSmJE2j2oy3Q9KLEwKcfAgj+M/yY=
+github.com/oekit/pkg v0.46.0 h1:/c8p9EH2RdJgFPNjp1QQWc8jSU0zGS85MotwS7R6D6M=
+github.com/oekit/pkg v0.46.0/go.mod h1:Cr6sJpBX2a0gAIgLa32+NY69h/UZtuN6L1ZdXtP9upo=
