@@ -2,6 +2,54 @@
 
 ## Unreleased
 
+## v1.3.4 — 2026-11-14
+
+Three defensive-fix batches from the deep audit. No public API change:
+every exported symbol keeps its signature and semantics. The one
+behavioural narrowing — `APIError.RetryAfter` is now captured from 429
+responses only — is called out under Fixed.
+
+### Fixed
+
+- **Response bodies are read through a 64MiB cap.** `check` used an
+  unbounded `io.ReadAll`, so a hostile or broken endpoint could grow the
+  process heap at will (oekit's `httpjson` caps the same read at 64MiB —
+  "异常服务端刷屏防内存放大" — and treats an unbounded read as a defect).
+  The read now probes one byte past the cap, fails fast with an explicit
+  `response body exceeds 67108864 bytes` error instead of parsing a
+  truncated body, and — same shape as `httpjson`'s 200-rune DoJSON
+  summary — raw bodies entering error messages are summarized to 200
+  runes plus the original byte count, so an error page can no longer
+  ride wholesale into every log line that prints the error. A body that
+  lands exactly on the cap still parses normally (guard-rail test).
+
+- **Retry-After overflow no longer produces a bogus retry hint.** The local
+  `parseRetryAfter` multiplied unbounded delta-seconds into
+  `time.Duration`; `Retry-After: 18446744074` (~584 years) wrapped to
+  ~290ms, which passed the "≤5min is trusted" gate in
+  `httpjson.SelectRetryDelay` and was honoured verbatim — the client
+  retried immediately for a hint that said "come back in 584 years".
+  Capture now goes through `httpjson.RetryAfterTransport` (the upstream
+  single source, overflow-safe since `pkg` v0.44.0): a fresh
+  `httpjson` sink is installed per attempt in `doOnce`, the transport
+  writes the parsed hint into it, and `check` reads it back. The hand
+  parser is deleted. Note the narrowing: `APIError.RetryAfter` is now
+  populated from **429** responses only (the transport's capture scope);
+  previously any ≥400 status was parsed from the header. Regression
+  tests cover the overflow value, HTTP-date, and unparseable forms.
+
+- **CJK table columns no longer drift.** `displayWidth` counted runes,
+  so `主网关` measured 3 while a terminal renders it across 6 columns,
+  and `text/tabwriter` measured the same way — every column after a
+  Chinese cell shifted left. `displayWidth` now returns terminal
+  columns (fullwidth CJK two, combining marks and controls zero), and
+  `arrayTable`/`keyValue` align through a local `writeRows` instead of
+  `tabwriter` (same shape: two-space gutter, no trailing padding).
+  `list` keeps `tabwriter` — it has no tab-separated columns to align.
+  Regression tests assert both tables' columns start at the same
+  terminal column, with a referee width independent of the
+  implementation.
+
 ### Changed
 
 - **Dependencies**: `oekit/pkg` v0.41.0 → v0.46.0, `oekit/logx` v0.8.12 →
