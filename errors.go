@@ -41,7 +41,8 @@ type APIError struct {
 	// supplies them.
 	Details []APIErrorDetail
 	// RetryAfter, when non-zero, carries a server-advised back-off hint
-	// (parsed from the HTTP Retry-After header, typically on 429/503).
+	// (captured from the HTTP Retry-After header on 429 responses by
+	// httpjson.RetryAfterTransport; see RetryAfterTransport in retry.go).
 	RetryAfter time.Duration
 
 	// cause holds the underlying error until the BizError is built.

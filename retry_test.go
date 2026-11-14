@@ -204,21 +204,27 @@ func TestRetryAfterHeaderParsed(t *testing.T) {
 	}
 }
 
-func TestParseRetryAfter(t *testing.T) {
-	tests := []struct {
-		in   string
-		want time.Duration
-	}{
-		{"", 0},
-		{"0", 0},
-		{"-1", 0},
-		{"3", 3 * time.Second},
-		{"garbage", 0},
-	}
-	for _, tt := range tests {
-		got := parseRetryAfter(tt.in)
-		if got != tt.want {
-			t.Errorf("parseRetryAfter(%q) = %v, want %v", tt.in, got, tt.want)
+// TestRetryAfterUnparseableIgnored replaces the old parseRetryAfter unit
+// test (the parser now lives in httpjson): through the HTTP path, absent,
+// garbage and negative Retry-After values must surface as no hint at all.
+func TestRetryAfterUnparseableIgnored(t *testing.T) {
+	for _, v := range []string{"", "garbage", "-1"} {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if v != "" {
+				w.Header().Set("Retry-After", v)
+			}
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = w.Write([]byte(`{"code":0,"message":"slow down"}`))
+		}))
+		c, _ := NewClient(srv.URL, WithRetry(1))
+		_, err := c.Get(context.Background(), "/x", nil)
+		srv.Close()
+		var apiErr *APIError
+		if !errors.As(err, &apiErr) {
+			t.Fatalf("Retry-After %q: expected *APIError, got %T", v, err)
+		}
+		if apiErr.RetryAfter != 0 {
+			t.Errorf("Retry-After %q: RetryAfter = %v, want 0", v, apiErr.RetryAfter)
 		}
 	}
 }
@@ -292,5 +298,59 @@ func TestRetryAfterClampedByOekitRule(t *testing.T) {
 	// And a hint inside the trusted window still wins.
 	if got := httpjson.SelectRetryDelay(local, 3*time.Second); got != 3*time.Second {
 		t.Errorf("SelectRetryDelay(local=%v, hint=3s) = %v, want hint", local, got)
+	}
+}
+
+// TestRetryAfterOverflowRejected locks the overflow guard on the capture path:
+// a delta-seconds value that wraps time.Duration when multiplied by time.Second
+// must not surface as a tiny positive hint. A wrapped value (e.g. 584 years
+// becoming ~290ms) passes the "≤ MaxServerRetryAfter is trusted" gate and gets
+// honoured as-is — the client waits a fraction of a second for a hint that said
+// "come back in 584 years" (oekit httpjson #343, same class here).
+func TestRetryAfterOverflowRejected(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Retry-After", "18446744074") // ~584y; *time.Second wraps to ~290ms
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte(`{"code":0,"message":"slow down"}`))
+	}))
+	defer srv.Close()
+
+	c, _ := NewClient(srv.URL, WithRetry(1)) // no retry; inspect the raw error
+	_, err := c.Get(context.Background(), "/x", nil)
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.RetryAfter != 0 {
+		t.Errorf("RetryAfter = %v (%d ns), want 0: an unrepresentable hint must not wrap into a small positive value",
+			apiErr.RetryAfter, int64(apiErr.RetryAfter))
+	}
+	// Why the parse layer has to reject it: a wrapped positive hint below the
+	// trust ceiling is honoured verbatim by SelectRetryDelay.
+	if apiErr.RetryAfter > 0 && apiErr.RetryAfter <= httpjson.MaxServerRetryAfter {
+		t.Errorf("wrapped hint %v passes the ≤%v trust gate and would be honoured",
+			apiErr.RetryAfter, httpjson.MaxServerRetryAfter)
+	}
+}
+
+// TestRetryAfterHTTPDateParsed keeps the HTTP-date form of Retry-After working
+// after the capture path moves to httpjson.RetryAfterTransport: a 429 carrying
+// an absolute date must still surface as a positive, bounded hint.
+func TestRetryAfterHTTPDateParsed(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Retry-After", time.Now().Add(30*time.Second).UTC().Format(http.TimeFormat))
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte(`{"code":0,"message":"slow down"}`))
+	}))
+	defer srv.Close()
+
+	c, _ := NewClient(srv.URL, WithRetry(1))
+	_, err := c.Get(context.Background(), "/x", nil)
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.RetryAfter <= 0 || apiErr.RetryAfter > 35*time.Second {
+		t.Errorf("RetryAfter = %v, want (0, 35s] from an HTTP-date 30s in the future", apiErr.RetryAfter)
 	}
 }

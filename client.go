@@ -16,6 +16,7 @@ import (
 
 	"github.com/oekit/logx"
 	oekerrors "github.com/oekit/pkg/errors"
+	"github.com/oekit/pkg/httpjson"
 )
 
 // V4APIBase is the canonical root for all iKuai v4 REST endpoints.
@@ -181,6 +182,13 @@ func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
 	}
 	for _, opt := range opts {
 		opt(c)
+	}
+	// Wrap after options so WithHTTPClient/WithInsecureSkipVerify see the
+	// caller's raw transport: Retry-After capture belongs to the retry engine
+	// and must sit outermost. See retryAfterTransport for the Close
+	// forwarding this wrapper preserves.
+	c.HTTPClient.Transport = retryAfterTransport{
+		RetryAfterTransport: httpjson.RetryAfterTransport{Base: c.HTTPClient.Transport},
 	}
 	return c, nil
 }
@@ -382,6 +390,11 @@ func (c *Client) doOnce(ctx context.Context, method, fullURL string, body any) (
 		reqCtx, cancel = context.WithTimeout(ctx, c.timeout)
 		defer cancel()
 	}
+	// Fresh Retry-After sink per attempt: RetryAfterTransport writes the 429
+	// hint into it during Do, check reads it back for the typed error, and a
+	// new holder each attempt keeps a stale hint from leaking onto a later
+	// failure of a different kind (httpjson's gate is the caller's job).
+	reqCtx = httpjson.WithRetryAfterSink(reqCtx)
 	req, err := http.NewRequestWithContext(reqCtx, method, fullURL, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, NewError("build request: "+err.Error(), WithCause(err))
@@ -397,7 +410,7 @@ func (c *Client) doOnce(ctx context.Context, method, fullURL string, body any) (
 		return nil, &NetworkError{Message: "request failed", Cause: err}
 	}
 	defer func() { _ = resp.Body.Close() }()
-	payload, err := c.check(resp)
+	payload, err := c.check(resp, httpjson.RetryAfterFrom(reqCtx))
 	c.recordMetrics(time.Since(start), err != nil)
 	return payload, err
 }

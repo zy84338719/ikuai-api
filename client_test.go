@@ -291,3 +291,134 @@ func TestReadBodyClosed(t *testing.T) {
 		t.Fatal("transport nil")
 	}
 }
+
+// streamOf serves an endless run of one byte so a test can push any body
+// size through a handler without allocating it.
+type streamOf byte
+
+func (s streamOf) Read(p []byte) (int, error) {
+	for i := range p {
+		p[i] = byte(s)
+	}
+	return len(p), nil
+}
+
+// TestResponseBodyBounded: a response past the cap must fail with an
+// explicit size error instead of being buffered without bound. An
+// unbounded io.ReadAll hands a hostile or broken endpoint a lever on this
+// process's heap — oekit/pkg/httpjson caps reads at 64MiB for exactly
+// this reason ("异常服务端刷屏防内存放大").
+func TestResponseBodyBounded(t *testing.T) {
+	bodySize := int64(maxResponseBody) + 1 // one byte past the cap
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.CopyN(w, streamOf('x'), bodySize)
+	}))
+	defer srv.Close()
+
+	c, _ := NewClient(srv.URL, WithRetry(1)) // one attempt: re-reading an oversized body only re-allocates it
+	_, err := c.Get(context.Background(), "/x", nil)
+	if err == nil {
+		t.Fatal("expected an error for an oversized response body")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T: %v", err, err)
+	}
+	if !strings.Contains(apiErr.Message, "exceeds") {
+		m := apiErr.Message
+		if len(m) > 160 {
+			m = m[:160] + "..."
+		}
+		t.Errorf("want an explicit body-size error, got %q — the read must stop at the cap instead of buffering the whole body", m)
+	}
+}
+
+// TestResponseBodyExactlyAtLimit is the guard-rail for an off-by-one in the
+// cap: a body that lands exactly on the cap is not "over" it. The read has
+// to probe one byte past the cap to tell the two apart (same trick as
+// httpjson.DoRaw). It passes before and after the fix; it exists to catch
+// a `len >= cap` mistake.
+func TestResponseBodyExactlyAtLimit(t *testing.T) {
+	bodySize := int64(maxResponseBody) // exactly at the cap
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.CopyN(w, streamOf('x'), bodySize)
+	}))
+	defer srv.Close()
+
+	c, _ := NewClient(srv.URL, WithRetry(1))
+	_, err := c.Get(context.Background(), "/x", nil)
+	if err == nil {
+		t.Fatal("expected the non-JSON error for a capped-but-oversized-looking body")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T: %v", err, err)
+	}
+	if strings.Contains(apiErr.Message, "exceeds") {
+		t.Errorf("a body exactly at the cap must not be rejected as oversized: %s", apiErr.Message)
+	}
+}
+
+// TestNonJSONBodySummarized: the raw body may enter the error message only
+// as a bounded, rune-safe summary. Copying it wholesale puts an entire
+// error page (or a 64MiB payload) into the error and every log line that
+// carries it — httpjson's DoJSON takes a 200-rune summary for the same
+// reason.
+func TestNonJSONBodySummarized(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, strings.Repeat("x", 4096))
+	}))
+	defer srv.Close()
+
+	c, _ := NewClient(srv.URL, WithRetry(1))
+	_, err := c.Get(context.Background(), "/x", nil)
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T: %v", err, err)
+	}
+	if n := len(apiErr.Message); n > 300 {
+		t.Errorf("Message is %d bytes; want a bounded summary, got prefix %q", n, truncMsg(apiErr.Message, 120))
+	}
+	if !strings.Contains(apiErr.Message, "4096") {
+		t.Errorf("summary should state the original size so truncation stays observable, got %q", truncMsg(apiErr.Message, 120))
+	}
+}
+
+// TestHTTPErrorBodySummarized applies the same bound to the status-error
+// path: a plain-text 400 page with no envelope message falls back to the
+// raw body, which must be summarized too.
+func TestHTTPErrorBodySummarized(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = io.WriteString(w, strings.Repeat("x", 4096))
+	}))
+	defer srv.Close()
+
+	c, _ := NewClient(srv.URL, WithRetry(1)) // 400 is not retryable, one attempt
+	_, err := c.Get(context.Background(), "/x", nil)
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected *APIError, got %T: %v", err, err)
+	}
+	if n := len(apiErr.Message); n > 300 {
+		t.Errorf("Message is %d bytes; want a bounded summary, got prefix %q", n, truncMsg(apiErr.Message, 120))
+	}
+	if !strings.Contains(apiErr.Message, "4096") {
+		t.Errorf("summary should state the original size, got %q", truncMsg(apiErr.Message, 120))
+	}
+}
+
+// truncMsg is a test-side preview helper: bounded output for failures, so
+// a runaway Message can never flood the test log.
+func truncMsg(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "..."
+}

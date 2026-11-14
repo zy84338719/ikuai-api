@@ -8,8 +8,6 @@ import (
 	"encoding/json"
 	"math"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/oekit/logx"
@@ -43,7 +41,7 @@ func (c *Client) doWithRetry(ctx context.Context, method, fullURL string, body a
 			break
 		}
 		delay := backoffDelay(attempt, c.retryBase, c.retryMaxD)
-		// Honour a server-advised Retry-After (429/503), clamped by the oekit
+		// Honour a server-advised Retry-After (429), clamped by the oekit
 		// rule: a hint is trusted only when it is ≤ MaxServerRetryAfter (5min)
 		// or shorter than our own curve — a pathological header can't park a
 		// client for hours and a retry storm can't resynchronise.
@@ -118,23 +116,24 @@ var retryJitter = mathx.NewUnstable(retryJitterDeviation)
 // retryJitterDeviation is the fraction added to the baseline at most.
 const retryJitterDeviation = 0.25
 
-// parseRetryAfter parses an HTTP Retry-After header value, which may be either
-// a delta-seconds integer or an HTTP-date. Returns 0 when the header is absent
-// or unparseable.
-func parseRetryAfter(v string) time.Duration {
-	v = strings.TrimSpace(v)
-	if v == "" {
-		return 0
+// retryAfterTransport installs httpjson.RetryAfterTransport in front of the
+// client's transport so a 429's Retry-After is captured into the per-request
+// ctx sink. Parsing lives in httpjson (the upstream single source), which
+// rejects delta-seconds values that would wrap time.Duration — the local
+// copy of that parser did not, and a wrapped ~290ms hint passed the
+// "≤5min is trusted" gate (see TestRetryAfterOverflowRejected).
+//
+// It also forwards CloseIdleConnections so Client.Close still reaches the
+// base transport through the wrapper.
+type retryAfterTransport struct {
+	httpjson.RetryAfterTransport
+}
+
+// CloseIdleConnections forwards to the wrapped transport when it supports
+// closing idle connections; otherwise it is a no-op, matching what
+// Client.Close did before this wrapper existed.
+func (t retryAfterTransport) CloseIdleConnections() {
+	if c, ok := t.Base.(interface{ CloseIdleConnections() }); ok {
+		c.CloseIdleConnections()
 	}
-	// Integer seconds form.
-	if n, err := strconv.Atoi(v); err == nil && n > 0 {
-		return time.Duration(n) * time.Second
-	}
-	// HTTP-date form.
-	if t, err := http.ParseTime(v); err == nil {
-		if d := time.Until(t); d > 0 {
-			return d
-		}
-	}
-	return 0
 }

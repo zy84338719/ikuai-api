@@ -216,3 +216,108 @@ func TestTermWidthDropsTrailingColumns(t *testing.T) {
 		t.Errorf("a wide terminal should keep every column:\n%s", buf.String())
 	}
 }
+
+// termCols measures what a terminal actually renders: fullwidth CJK
+// characters take two columns. It is deliberately independent of
+// displayWidth — the alignment tests need a referee that is not the
+// implementation under test (using displayWidth made both sides count
+// runes, and the two errors cancelled out).
+func termCols(s string) int {
+	w := 0
+	for _, r := range s {
+		if (r >= 0x1100 && r <= 0x115F) ||
+			(r >= 0x2E80 && r <= 0xA4CF && r != 0x303F) ||
+			(r >= 0xAC00 && r <= 0xD7A3) ||
+			(r >= 0xF900 && r <= 0xFAFF) ||
+			(r >= 0xFF01 && r <= 0xFF60) ||
+			(r >= 0xFFE0 && r <= 0xFFE6) ||
+			(r >= 0x20000 && r <= 0x3FFFD) {
+			w += 2
+			continue
+		}
+		w++
+	}
+	return w
+}
+
+// TestDisplayWidthCJK locks the width contract: East-Asian fullwidth
+// characters occupy two terminal columns, not one. Counting runes made
+// 主网关 measure 3 while the terminal renders it across 6 columns.
+func TestDisplayWidthCJK(t *testing.T) {
+	cases := map[string]int{
+		"":            0,
+		"gw0":         3,
+		"主网关":         6,
+		"备用":          4,
+		"192.168.1.1": 11,
+		"全角Ａ":         6, // 全角 forms are wide too
+	}
+	for in, want := range cases {
+		if got := displayWidth(in); got != want {
+			t.Errorf("displayWidth(%q) = %d, want %d", in, got, want)
+		}
+	}
+}
+
+// TestTableCJKAlignment runs the real render path (arrayTable) and asserts
+// every row's IP cell starts at the same terminal column. tabwriter and the
+// old rune-counting displayWidth both measured CJK cells one column per
+// character, so rows with Chinese descriptions shifted the columns after
+// them (26 vs 25 columns in the probe that found this).
+func TestTableCJKAlignment(t *testing.T) {
+	var buf bytes.Buffer
+	items := []any{
+		map[string]any{"name": "gw0", "desc": "主网关", "ip": "192.168.1.1"},
+		map[string]any{"name": "gw1", "desc": "备用", "ip": "10.0.0.1"},
+	}
+	r := New(&buf, FormatTable)
+	if err := r.Value(items); err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("want header + 2 rows, got %d:\n%s", len(lines), buf.String())
+	}
+	termCol := func(line, cell string) int {
+		t.Helper()
+		i := strings.Index(line, cell)
+		if i < 0 {
+			t.Fatalf("cell %q missing from line %q", cell, line)
+		}
+		return termCols(line[:i])
+	}
+	colA := termCol(lines[1], "192.168.1.1")
+	colB := termCol(lines[2], "10.0.0.1")
+	if colA != colB {
+		t.Errorf("IP column starts at terminal column %d vs %d (misaligned):\n%s",
+			colA, colB, buf.String())
+	}
+}
+
+// TestKeyValueCJKAlignment covers the second alignment path: a Chinese key
+// must count as two columns per character when padding the value column.
+func TestKeyValueCJKAlignment(t *testing.T) {
+	var buf bytes.Buffer
+	r := New(&buf, FormatTable)
+	if err := r.Value(map[string]any{"网关名": "主网关", "a": "x"}); err != nil {
+		t.Fatalf("render: %v", err)
+	}
+	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("want 2 rows, got %d:\n%s", len(lines), buf.String())
+	}
+	termCol := func(line, cell string) int {
+		t.Helper()
+		i := strings.Index(line, cell)
+		if i < 0 {
+			t.Fatalf("cell %q missing from line %q", cell, line)
+		}
+		return termCols(line[:i])
+	}
+	colA := termCol(lines[0], "x")
+	colB := termCol(lines[1], "主网关")
+	if colA != colB {
+		t.Errorf("value column starts at terminal column %d vs %d (misaligned):\n%s",
+			colA, colB, buf.String())
+	}
+}

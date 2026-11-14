@@ -226,17 +226,17 @@ func (r *Renderer) arrayTable(items []any) error {
 		headers[i] = HeaderName(k)
 	}
 
-	tw := tabwriter.NewWriter(r.w, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(tw, strings.Join(headers, "\t"))
+	rows := make([][]string, 0, len(items)+1)
+	rows = append(rows, headers)
 	for _, item := range items {
 		obj, _ := item.(map[string]any)
 		cells := make([]string, len(keys))
 		for i, k := range keys {
 			cells[i] = Cell(obj[k])
 		}
-		fmt.Fprintln(tw, strings.Join(cells, "\t"))
+		rows = append(rows, cells)
 	}
-	return tw.Flush()
+	return writeRows(r.w, rows)
 }
 
 func (r *Renderer) list(items []any) error {
@@ -256,11 +256,11 @@ func (r *Renderer) keyValue(title string, obj map[string]any) error {
 	if title != "" {
 		fmt.Fprintf(r.w, "== %s ==\n", strings.ToUpper(HeaderName(title)))
 	}
-	tw := tabwriter.NewWriter(r.w, 0, 0, 2, ' ', 0)
+	rows := make([][]string, 0, len(keys))
 	for _, k := range keys {
-		fmt.Fprintf(tw, "%s\t%s\n", HeaderName(k), Cell(obj[k]))
+		rows = append(rows, []string{HeaderName(k), Cell(obj[k])})
 	}
-	return tw.Flush()
+	return writeRows(r.w, rows)
 }
 
 // Cell renders one value for a table. The nested structures the firmware
@@ -562,9 +562,151 @@ func sanitizeCell(s string) string {
 	return strings.ReplaceAll(s, "\n", "\\n")
 }
 
-// displayWidth counts runes rather than bytes. It is a close approximation
-// for CJK text, which the standard library cannot measure exactly, and it
-// never splits a multi-byte character.
+// writeRows writes rows left-aligned in display columns: two spaces between
+// columns, no trailing padding after the last one — the same shape
+// text/tabwriter produced with minwidth 0, padding 2, but measured in
+// terminal columns. tabwriter counts runes, so a CJK cell pushed every
+// column after it out of alignment; arrayTable and keyValue use this
+// instead. (list keeps tabwriter: it has no tab-separated columns to align.)
+//
+// A cell may span lines (selector flattening); its width is that of its
+// widest physical line, mirroring columnWidths.
+func writeRows(w io.Writer, rows [][]string) error {
+	cols := 0
+	for _, row := range rows {
+		if len(row) > cols {
+			cols = len(row)
+		}
+	}
+	widths := make([]int, cols)
+	for _, row := range rows {
+		for i, cell := range row {
+			for _, line := range strings.Split(cell, "\n") {
+				if wd := displayWidth(line); wd > widths[i] {
+					widths[i] = wd
+				}
+			}
+		}
+	}
+	var b strings.Builder
+	for _, row := range rows {
+		for i, cell := range row {
+			if i > 0 {
+				b.WriteString("  ")
+			}
+			b.WriteString(cell)
+			if i < len(row)-1 {
+				// Pad from the cell's last physical line: earlier lines of a
+				// multi-line cell already ended with their own newline.
+				last := cell
+				if nl := strings.LastIndexByte(cell, '\n'); nl >= 0 {
+					last = cell[nl+1:]
+				}
+				if pad := widths[i] - displayWidth(last); pad > 0 {
+					b.WriteString(strings.Repeat(" ", pad))
+				}
+			}
+		}
+		b.WriteByte('\n')
+	}
+	_, err := io.WriteString(w, b.String())
+	return err
+}
+
+// displayWidth estimates how many terminal columns a string occupies.
+// East-Asian fullwidth characters (CJK ideographs, kana, hangul, fullwidth
+// forms) take two columns each; combining marks and control characters take
+// none; everything else takes one. Counting runes instead — the old
+// implementation — misaligned every table with Chinese content: 主网关 is
+// 3 runes but renders across 6 columns, so every column after it drifted
+// left by one per CJK character (and text/tabwriter measured the same way,
+// which is why the alignment tests need their own referee).
+//
+// The tables below cover what router output actually contains (interface
+// names, comments and descriptions in CJK); they are not a full East Asian
+// Width database. Same zero-dependency approach as oekit/pkg/cli's width
+// table — go-runewidth would break this repo's one-require rule.
 func displayWidth(s string) int {
-	return len([]rune(s))
+	w := 0
+	for _, r := range s {
+		w += runeWidth(r)
+	}
+	return w
+}
+
+// runeWidth returns the terminal column count of a single rune.
+func runeWidth(r rune) int {
+	switch {
+	case r < 0x20 || (r >= 0x7F && r < 0xA0): // C0/C1 control characters
+		return 0
+	case inRanges(r, zeroWidthRanges[:]):
+		return 0
+	case inRanges(r, wideRanges[:]):
+		return 2
+	}
+	return 1
+}
+
+// inRanges reports whether r falls inside a lo,hi-pair table sorted by lo.
+func inRanges(r rune, table []uint32) bool {
+	if r < 0 {
+		return false
+	}
+	v := uint32(r)
+	lo, hi := 0, len(table)/2-1
+	for lo <= hi {
+		mid := (lo + hi) / 2
+		start, end := table[mid*2], table[mid*2+1]
+		switch {
+		case v < start:
+			hi = mid - 1
+		case v > end:
+			lo = mid + 1
+		default:
+			return true
+		}
+	}
+	return false
+}
+
+// wideRanges: two-column code points (East Asian Width W/F), lo,hi pairs
+// sorted by lo.
+var wideRanges = [...]uint32{
+	0x1100, 0x115F, // Hangul Jamo initial consonants
+	0x2E80, 0x303E, // CJK radicals, kana, CJK symbols (incl. U+3000 ideographic space)
+	0x3041, 0x33FF, // kana, CJK compatibility, enclosed CJK letters
+	0x3400, 0x4DBF, // CJK extension A
+	0x4E00, 0x9FFF, // CJK unified ideographs
+	0xA000, 0xA4CF, // Yi
+	0xA960, 0xA97C, // Hangul Jamo extended-A
+	0xAC00, 0xD7A3, // Hangul syllables
+	0xF900, 0xFAFF, // CJK compatibility ideographs
+	0xFE10, 0xFE19, // vertical forms
+	0xFE30, 0xFE4F, // CJK compatibility forms
+	0xFF01, 0xFF60, // fullwidth ASCII variants
+	0xFFE0, 0xFFE6, // fullwidth symbols
+	0x1F300, 0x1F64F, // emoji blocks
+	0x1F680, 0x1F6FF,
+	0x1F900, 0x1F9FF,
+	0x20000, 0x3FFFD, // CJK extension B and beyond
+}
+
+// zeroWidthRanges: code points that occupy no column (combining marks,
+// format characters, variation selectors), lo,hi pairs sorted by lo.
+var zeroWidthRanges = [...]uint32{
+	0x0300, 0x036F, // combining diacritical marks
+	0x0483, 0x0489,
+	0x0591, 0x05BD, // Hebrew points
+	0x0610, 0x061A, // Arabic marks
+	0x064B, 0x065F,
+	0x0E31, 0x0E31, // Thai
+	0x1AB0, 0x1AFF, // combining diacriticals extended
+	0x1DC0, 0x1DFF, // combining diacriticals supplement
+	0x200B, 0x200F, // zero-width space / directional marks
+	0x2060, 0x206F,
+	0x20D0, 0x20F0, // combining marks for symbols
+	0xFE00, 0xFE0F, // variation selectors
+	0xFE20, 0xFE2F, // combining half marks
+	0x1D167, 0x1D169,
+	0xE0100, 0xE01EF, // variation selectors supplement
 }

@@ -6,8 +6,10 @@ package ikuaiapi
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 // SanitizeNil replaces bare `nil` tokens in JSON value positions with
@@ -72,20 +74,42 @@ type envelope struct {
 // check inspects the HTTP response, normalizes the body, and returns the
 // payload callers should use (Data preferred, then Results, then a
 // synthetic envelope carrying RowID/message for create-style endpoints).
-func (c *Client) check(resp *http.Response) (json.RawMessage, error) {
-	raw, err := io.ReadAll(resp.Body)
+// maxResponseBody caps how much of a response is read into memory. iKuai
+// responses are kilobytes; anything near this ceiling is a hostile or
+// broken endpoint, and an unbounded io.ReadAll hands a remote party a
+// lever on this process's heap. Same ceiling and rationale as
+// oekit/pkg/httpjson's maxBody ("异常服务端刷屏防内存放大").
+const maxResponseBody = 64 << 20
+
+// retryAfter carries the server-advised back-off hint captured by
+// RetryAfterTransport for this response (0 when absent/unparseable).
+func (c *Client) check(resp *http.Response, retryAfter time.Duration) (json.RawMessage, error) {
+	// Read one byte past the cap so a body landing exactly on the cap is
+	// not mistaken for one over it (the probe byte is dropped by the
+	// length check below — same trick as httpjson.DoRaw).
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBody+1))
 	if err != nil {
 		return nil, NewError("read response body: "+err.Error(), WithHTTPStatus(resp.StatusCode), WithCause(err))
+	}
+	if len(raw) > maxResponseBody {
+		// Fail fast instead of parsing a truncated body: half a JSON
+		// document surfaces as a baffling "non-JSON response". The
+		// connection is dropped unread (deferred Close above) — this is
+		// the exceptional path, not worth draining for reuse.
+		return nil, NewError(
+			fmt.Sprintf("response body exceeds %d bytes", maxResponseBody),
+			WithHTTPStatus(resp.StatusCode),
+		)
 	}
 	body := SanitizeNil(raw)
 
 	if resp.StatusCode >= 400 {
-		return nil, httpStatusError(resp, body)
+		return nil, httpStatusError(resp, body, retryAfter)
 	}
 
 	var env envelope
 	if err := json.Unmarshal(body, &env); err != nil {
-		return nil, NewError("non-JSON response: "+string(body), WithHTTPStatus(resp.StatusCode))
+		return nil, NewError("non-JSON response: "+summarizeBody(body), WithHTTPStatus(resp.StatusCode))
 	}
 
 	if !envelopeCodeOK(env.Code) {
@@ -100,8 +124,8 @@ func (c *Client) check(resp *http.Response) (json.RawMessage, error) {
 
 // httpStatusError builds the typed error for a non-2xx response, preferring
 // the envelope's message/code/details over the raw body.
-func httpStatusError(resp *http.Response, body []byte) error {
-	msg := string(body)
+func httpStatusError(resp *http.Response, body []byte, retryAfter time.Duration) error {
+	msg := summarizeBody(body)
 	var env envelope
 	_ = json.Unmarshal(body, &env)
 	if env.Message != "" {
@@ -115,8 +139,27 @@ func httpStatusError(resp *http.Response, body []byte) error {
 		WithHTTPStatus(resp.StatusCode),
 		WithCode(env.Code),
 		WithDetails(detailsEnv.Details),
-		WithRetryAfter(parseRetryAfter(resp.Header.Get("Retry-After"))),
+		WithRetryAfter(retryAfter),
 	)
+}
+
+// summarizeBody bounds how much of a raw response body can enter an error
+// message: at most 200 runes (cut on a rune boundary, so a multi-byte
+// character is never split) followed by the original size, which keeps the
+// truncation observable. A whole body here would ride along into every log
+// line that prints the error — httpjson's DoJSON keeps a 200-rune summary
+// for the same reason. An empty body stays empty: " (0 bytes)" would be
+// noise where the caller expects no message at all.
+func summarizeBody(body []byte) string {
+	if len(body) == 0 {
+		return ""
+	}
+	const summaryRunes = 200
+	runes := []rune(string(body))
+	if len(runes) <= summaryRunes {
+		return fmt.Sprintf("%s (%d bytes)", string(runes), len(body))
+	}
+	return fmt.Sprintf("%s… (%d bytes)", string(runes[:summaryRunes]), len(body))
 }
 
 // envelopeError builds the typed error for a 2xx response whose business
