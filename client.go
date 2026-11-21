@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/oekit/logx"
+	"github.com/oekit/pkg/contextx"
 	oekerrors "github.com/oekit/pkg/errors"
 	"github.com/oekit/pkg/httpjson"
 )
@@ -204,6 +205,9 @@ func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
 // the process can exit promptly. To bound a request, pass a context with a
 // deadline to the call itself.
 func (c *Client) Close(ctx context.Context) error {
+	// nil-ctx entry guard: ctx.Err is read below, so Close(nil) would panic
+	// (contextx.OrBackground, oekit matrix contract).
+	ctx = contextx.OrBackground(ctx)
 	c.closeOnce.once.Do(func() {
 		if c.HTTPClient == nil {
 			return

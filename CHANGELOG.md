@@ -2,7 +2,25 @@
 
 ## Unreleased
 
+### Fixed
+
+- **A nil context no longer panics.** `Get`/`Post`/`Put`/`Patch`/`Delete`/
+  `Do` and `Close` dereferenced the ctx directly (`context.WithTimeout`
+  panicked with "cannot create context from nil parent"; `Close` panicked
+  on `ctx.Err()`), so a caller passing `nil` — an easy mistake whose panic
+  surfaced far from the call site — crashed the process. Entry points now
+  normalise through `contextx.OrBackground` (pkg#529, the oekit matrix
+  contract `nil_ctx_treated_as_background`): nil becomes
+  `context.Background()`, while cancelled or expired contexts pass through
+  untouched. Regression tests cover the request path and `Close`.
+
 ### Changed
+
+- **The retry back-off wait is now interruptible through
+  `timex.SleepContext`** (pkg#530/#550) instead of a hand-rolled
+  `select { ctx.Done / time.After }`: cancellation lands immediately rather
+  than after the full delay, and the timer is stopped on return instead of
+  ticking until it fires.
 
 - **Dependencies**: `oekit/pkg` v0.46.0 → v0.56.0, `oekit/logx` v0.10.0 →
   v0.12.1. No API change on any path this SDK uses; the full suite

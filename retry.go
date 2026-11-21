@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"github.com/oekit/logx"
+	"github.com/oekit/pkg/contextx"
 	oekerrors "github.com/oekit/pkg/errors"
 	"github.com/oekit/pkg/httpjson"
 	"github.com/oekit/pkg/mathx"
+	"github.com/oekit/pkg/timex"
 )
 
 // defaultRetryMax is the default maximum number of attempts (initial + retries).
@@ -28,6 +30,11 @@ const defaultRetryMaxDelay = 5 * time.Second
 // doWithRetry runs doOnce up to retryMax times, applying exponential
 // back-off with one-sided jitter on transient failures.
 func (c *Client) doWithRetry(ctx context.Context, method, fullURL string, body any) (json.RawMessage, error) {
+	// nil-ctx entry guard (oekit matrix contract nil_ctx_treated_as_background,
+	// contextx.OrBackground pkg#529): a nil ctx would otherwise panic deep in
+	// context.WithTimeout, far from the caller that passed it. Cancelled or
+	// expired contexts pass through untouched — only nil is replaced.
+	ctx = contextx.OrBackground(ctx)
 	idem := method == http.MethodGet || method == http.MethodHead ||
 		method == http.MethodOptions || method == http.MethodDelete
 	var lastErr error
@@ -51,10 +58,11 @@ func (c *Client) doWithRetry(ctx context.Context, method, fullURL string, body a
 		c.logCtx(ctx, LogLevelWarn, "retrying request",
 			"attempt", attempt+1, "max_attempts", c.retryMax,
 			"delay", delay.String(), logx.ErrKey, err)
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case <-time.After(delay):
+		// Interruptible back-off sleep: cancellation lands immediately
+		// instead of after the full delay, and the timer is stopped on
+		// return (time.After would keep ticking until it fires).
+		if err := timex.SleepContext(ctx, delay); err != nil {
+			return nil, err
 		}
 	}
 	return nil, lastErr
