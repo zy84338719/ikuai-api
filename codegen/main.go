@@ -937,15 +937,15 @@ func pathExpr(path string, params []string, bindLastToID bool) string {
 		if loc == nil {
 			break
 		}
-		b.WriteString(fmt.Sprintf("%q", rest[:loc[0]]))
+		fmt.Fprintf(&b, "%q", rest[:loc[0]])
 		variable := toGoParam(name)
 		if bindLastToID && i == len(params)-1 {
 			variable = "id"
 		}
-		b.WriteString(fmt.Sprintf(" + strconv.FormatInt(%s, 10) + ", variable))
+		fmt.Fprintf(&b, " + strconv.FormatInt(%s, 10) + ", variable)
 		rest = rest[loc[1]:]
 	}
-	b.WriteString(fmt.Sprintf("%q", rest))
+	fmt.Fprintf(&b, "%q", rest)
 	return b.String()
 }
 

@@ -156,15 +156,15 @@ func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
 	}()
 
 	if err := tmp.Chmod(perm); err != nil {
-		tmp.Close()
+		_ = tmp.Close() // best effort: the primary error wins
 		return err
 	}
 	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
+		_ = tmp.Close() // best effort: the primary error wins
 		return err
 	}
 	if err := tmp.Sync(); err != nil {
-		tmp.Close()
+		_ = tmp.Close() // best effort: the primary error wins
 		return err
 	}
 	if err := tmp.Close(); err != nil {
@@ -247,7 +247,7 @@ func NormalizeBaseURL(raw string) (normalized string, changed bool, err error) {
 		return "", false, oekerrors.New("ikuai session: router host must not contain whitespace")
 	}
 
-	candidate := input
+	var candidate string
 	switch {
 	case hasPrefixFold(input, "http://"):
 		candidate = "https://" + input[len("http://"):]

@@ -83,7 +83,9 @@ func TestNewClient(t *testing.T) {
 	if c.HTTPClient == nil {
 		t.Error("HTTPClient should be set")
 	}
-	c.Close(context.Background())
+	if err := c.Close(context.Background()); err != nil {
+		t.Errorf("Close: %v", err)
+	}
 }
 
 func TestNewClientRequiresBaseURL(t *testing.T) {
