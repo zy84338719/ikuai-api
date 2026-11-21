@@ -211,14 +211,11 @@ func (r *Renderer) arrayTable(items []any) error {
 		_, err := fmt.Fprintln(r.w, "(no data)")
 		return err
 	}
+	hidden := 0
 	if r.opts.TermWidth > 0 && len(keys) > 1 {
-		fit, hidden := fitColumns(keys, items, r.opts.TermWidth)
+		fit, h := fitColumns(keys, items, r.opts.TermWidth)
 		keys = fit
-		defer func() {
-			if hidden > 0 {
-				fmt.Fprintf(r.w, "(%d columns hidden, raise TermWidth or pass Columns to see all)\n", hidden)
-			}
-		}()
+		hidden = h
 	}
 
 	headers := make([]string, len(keys))
@@ -236,13 +233,27 @@ func (r *Renderer) arrayTable(items []any) error {
 		}
 		rows = append(rows, cells)
 	}
-	return writeRows(r.w, rows)
+	err := writeRows(r.w, rows)
+	// The hidden-columns note is best-effort relative to the table: report
+	// it only when the table itself went through, so the primary failure
+	// is never masked.
+	if hidden > 0 {
+		if _, ferr := fmt.Fprintf(r.w, "(%d columns hidden, raise TermWidth or pass Columns to see all)\n", hidden); ferr != nil && err == nil {
+			err = ferr
+		}
+	}
+	return err
 }
 
 func (r *Renderer) list(items []any) error {
 	tw := tabwriter.NewWriter(r.w, 0, 0, 2, ' ', 0)
 	for _, v := range items {
-		fmt.Fprintf(tw, "%s\n", Cell(v))
+		// tabwriter buffers and its Write is infallible today; check
+		// anyway so the error can never be silently dropped if that
+		// ever changes.
+		if _, err := fmt.Fprintf(tw, "%s\n", Cell(v)); err != nil {
+			return err
+		}
 	}
 	return tw.Flush()
 }
@@ -254,7 +265,9 @@ func (r *Renderer) keyValue(title string, obj map[string]any) error {
 	}
 	sort.Strings(keys)
 	if title != "" {
-		fmt.Fprintf(r.w, "== %s ==\n", strings.ToUpper(HeaderName(title)))
+		if _, err := fmt.Fprintf(r.w, "== %s ==\n", strings.ToUpper(HeaderName(title))); err != nil {
+			return err
+		}
 	}
 	rows := make([][]string, 0, len(keys))
 	for _, k := range keys {

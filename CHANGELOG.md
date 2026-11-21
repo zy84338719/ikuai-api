@@ -32,6 +32,15 @@
   validates after the option loop and returns the new sentinel
   `ErrNilHTTPClient` (oekit constructor-time fail-fast, pkg#356 style).
 
+- **Renderer write errors are no longer swallowed.** The key-value header
+  line and the "columns hidden" footer (written from a deferred
+  `Fprintf`) dropped their write errors, so a broken pipe could produce a
+  truncated table together with a nil error. Both now propagate — the
+  footer keeps the table's own error primary — and the list loop checks
+  its writes too (tabwriter is infallible today, so that branch is
+  defensive). Regression tests drive a writer that fails on exactly one
+  named line.
+
 ### Changed
 
 - **The retry back-off wait is now interruptible through

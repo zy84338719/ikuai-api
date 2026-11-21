@@ -3,6 +3,7 @@ package output
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 )
@@ -319,5 +320,49 @@ func TestKeyValueCJKAlignment(t *testing.T) {
 	if colA != colB {
 		t.Errorf("value column starts at terminal column %d vs %d (misaligned):\n%s",
 			colA, colB, buf.String())
+	}
+}
+
+// errSink is a writer that fails.
+var errSink = errors.New("sink broken")
+
+// errWriter fails exactly the failAt-th write (1-based), then succeeds —
+// a broken pipe that surfaces on one specific line while the rest of the
+// output lands.
+type errWriter struct {
+	failAt int
+	seen   int
+	buf    bytes.Buffer
+}
+
+func (w *errWriter) Write(p []byte) (int, error) {
+	w.seen++
+	if w.seen == w.failAt {
+		return 0, errSink
+	}
+	return w.buf.Write(p)
+}
+
+// TestKeyValueSurfacesHeaderWriteError: keyValue 把表头行的写错误吞了——
+// writer 只在第一次写（表头）失败、后续成功时，函数仍返回 nil，调用方
+// 无从得知半份输出。
+func TestKeyValueSurfacesHeaderWriteError(t *testing.T) {
+	w := &errWriter{failAt: 1}
+	r := New(w, FormatTable)
+	if err := r.keyValue("name", map[string]any{"a": "b"}); err == nil {
+		t.Fatal("header write error must surface, got nil")
+	}
+}
+
+// TestArrayTableSurfacesFooterWriteError: 列宽放不下时的 footer 提示行
+// 在 defer 里 Fprintf 且错误被静默丢弃——写序是 先表格后 footer，
+// writer 只在第二次写（footer）失败时，函数仍返回 nil。
+func TestArrayTableSurfacesFooterWriteError(t *testing.T) {
+	w := &errWriter{failAt: 2}
+	r := New(w, FormatTable)
+	r.opts = RenderOptions{TermWidth: 10}
+	items := []any{map[string]any{"name": "gw", "description": "x"}}
+	if err := r.arrayTable(items); err == nil {
+		t.Fatal("footer write error must surface, got nil")
 	}
 }
