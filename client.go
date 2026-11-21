@@ -184,6 +184,12 @@ func NewClient(baseURL string, opts ...ClientOption) (*Client, error) {
 	for _, opt := range opts {
 		opt(c)
 	}
+	// Fail fast on WithHTTPClient(nil): the option replaces the default
+	// wholesale, and the wrap below would otherwise nil-deref deep in the
+	// constructor, far from the option that caused it.
+	if c.HTTPClient == nil {
+		return nil, ErrNilHTTPClient
+	}
 	// Wrap after options so WithHTTPClient/WithInsecureSkipVerify see the
 	// caller's raw transport: Retry-After capture belongs to the retry engine
 	// and must sit outermost. See retryAfterTransport for the Close

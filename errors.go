@@ -361,6 +361,12 @@ var ErrInvalidToken = oekerrors.New("ikuaiapi: invalid token")
 // URL, which is the one value with no sensible default.
 var ErrNotConfigured = oekerrors.New("ikuaiapi: baseURL is required")
 
+// ErrNilHTTPClient reports WithHTTPClient(nil): the option replaces the
+// default client wholesale, so a nil value would leave the constructor with
+// nothing to wrap. Failing fast at construction beats a nil-pointer panic
+// on the first request.
+var ErrNilHTTPClient = oekerrors.New("ikuaiapi: WithHTTPClient(nil)")
+
 // Sentinel errors for the SDK's own pre-flight validation. Router-side
 // failures always come back as *APIError.
 var (
