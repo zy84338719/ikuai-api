@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+### Changed
+
+- **Dependencies**: `oekit/pkg` v0.46.0 → v0.56.0, `oekit/logx` v0.10.0 →
+  v0.12.1. No API change on any path this SDK uses; the full suite
+  (including `-race`) is green, the zero-third-party dependency gate passes
+  and `make generate` shows no drift.
+  - The BREAKING changes in this range were checked against this SDK and do
+    not touch it: `pkg` v0.48.0 finally removed the deprecated
+    `errors.Errorf` shim (this SDK uses `fmt.Errorf` and
+    `pkg/errors.Wrap`/`Newf` only), and `logx` v0.11.0 deleted its shutdown
+    compat layer (this SDK shuts down through its own `Close`).
+  - `pkg` v0.56.0's `encoding` re-baselining (plain entries decode to
+    `float64`, stdlib-shaped) does not apply: this SDK decodes through
+    stdlib `encoding/json` directly, never `pkg/encoding`.
+  - Upstream fixes riding along: `httpjson` exponential-backoff overflow
+    guard (`>=` criterion, pkg#549) and Retry-After handling already used
+    via `RetryAfterTransport`; `logx` `Delegating` level-generation cache
+    key (logx#238) means `SetLogLevel` after `logx.Delegating` can no longer
+    be filtered out by a stale cached level.
+
 ## v1.3.4 — 2026-11-14
 
 Three defensive-fix batches from the deep audit. No public API change:

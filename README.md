@@ -42,7 +42,7 @@ opts)` instead of hand-assembling a query string that quietly does nothing.
 go get github.com/zy84338719/ikuai-api
 ```
 
-Requires Go 1.24+. The only dependencies are `github.com/oekit/logx` and
+Requires Go 1.26+. The only dependencies are `github.com/oekit/logx` and
 `github.com/oekit/pkg` — `make zero-dep` fails the build if a third-party
 require ever appears.
 
