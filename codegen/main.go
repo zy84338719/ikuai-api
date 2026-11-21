@@ -969,12 +969,10 @@ func renderCRUD(buf *bytes.Buffer, groupTitle string, ep V4Endpoint, name, _ str
 	params := pathParams(ep.Path)
 	idInPath := idSegmentParam(ep.Path)
 	parents := parentParams(ep.Path)
-	// parentArgs are the leading path parameters carried by every method.
-	var parentArgs []string
+	// parentDecl is the leading parameter list carried by every method.
 	var parentDecl []string
 	for _, p := range parents {
 		g := toGoParam(p)
-		parentArgs = append(parentArgs, g)
 		parentDecl = append(parentDecl, g+" int64")
 	}
 	parentDeclStr := strings.Join(parentDecl, ", ")

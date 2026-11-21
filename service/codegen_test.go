@@ -151,16 +151,3 @@ func TestCatalogGroupingConsistent(t *testing.T) {
 		}
 	}
 }
-
-func bodyToString(r *http.Request) string {
-	buf := make([]byte, 0, 1024)
-	tmp := make([]byte, 512)
-	for {
-		n, err := r.Body.Read(tmp)
-		buf = append(buf, tmp[:n]...)
-		if err != nil {
-			break
-		}
-	}
-	return string(buf)
-}

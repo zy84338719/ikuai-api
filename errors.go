@@ -416,17 +416,6 @@ func isAPIError(err error) (*APIError, bool) {
 	return nil, false
 }
 
-func isNetworkError(err error) (*NetworkError, bool) {
-	if err == nil {
-		return nil, false
-	}
-	var e *NetworkError
-	if oekerrors.As(err, &e) {
-		return e, true
-	}
-	return nil, false
-}
-
 // clientCloseOnce guards Close against concurrent and repeated calls, so a
 // double Close in a deferred chain is harmless.
 type closeOnce struct {
