@@ -14,6 +14,24 @@
   `context.Background()`, while cancelled or expired contexts pass through
   untouched. Regression tests cover the request path and `Close`.
 
+- **`SetLogLevel` now actually filters.** It only wrote `minLevel`, and
+  the sole reader `enabled()` was never wired into the log exit `logCtx`,
+  so the public API was a silent no-op: the level floor promised in
+  `doc.go` never applied and every event reached the backend regardless
+  (a `warn` default floor still emitted `debug` events). `logCtx` now
+  gates each event through `enabled()` — default floor stays `warn`,
+  `LogLevelNone` silences even errors — and `minLevel` becomes an atomic
+  word, because once the gate sits on the request path `SetLogLevel`
+  writes from the caller's goroutine while every request goroutine reads
+  it. Regression tests cover both the floor semantics and the race.
+
+- **`WithHTTPClient(nil)` fails fast at construction.** The option
+  replaces the default client wholesale, and `NewClient` then
+  dereferenced `c.HTTPClient.Transport` — a nil-pointer panic deep in the
+  constructor, far from the option that caused it. The constructor now
+  validates after the option loop and returns the new sentinel
+  `ErrNilHTTPClient` (oekit constructor-time fail-fast, pkg#356 style).
+
 ### Changed
 
 - **The retry back-off wait is now interruptible through

@@ -1,6 +1,10 @@
 package ikuaiapi
 
-import "github.com/oekit/logx"
+import (
+	"sync/atomic"
+
+	"github.com/oekit/logx"
+)
 
 // LogLevel selects the severity of an SDK event.
 type LogLevel int
@@ -38,12 +42,15 @@ func (l LogLevel) String() string {
 
 // minLevel is the floor for the SDK's own events. Lower levels are
 // dropped before they reach the backend, so a chatty SDK never costs a
-// caller log volume they did not ask for.
-var minLevel = LogLevelWarn
+// caller log volume they did not ask for. Atomic: SetLogLevel writes from
+// the caller's goroutine while logCtx reads it on every request goroutine.
+var minLevel atomic.Int64
+
+func init() { minLevel.Store(int64(LogLevelWarn)) }
 
 // SetLogLevel sets the floor for the SDK's own events. The global log
 // backend still applies on top of this.
-func SetLogLevel(l LogLevel) { minLevel = l }
+func SetLogLevel(l LogLevel) { minLevel.Store(int64(l)) }
 
 // log returns the package-level logger.
 //
@@ -57,4 +64,7 @@ func log() logx.Logger { return logx.Delegating("ikuai-api") }
 
 // enabled reports whether an event at the given level should be emitted at
 // all.
-func enabled(level LogLevel) bool { return level >= minLevel && minLevel != LogLevelNone }
+func enabled(level LogLevel) bool {
+	m := LogLevel(minLevel.Load())
+	return level >= m && m != LogLevelNone
+}

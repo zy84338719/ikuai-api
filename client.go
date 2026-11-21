@@ -263,6 +263,9 @@ func (c *Client) fullURL(p string) (string, error) {
 // so logx can attach a trace id, and falling back to the package logger when
 // no per-client logger is attached.
 func (c *Client) logCtx(ctx context.Context, level LogLevel, msg string, kv ...any) {
+	if !enabled(level) {
+		return
+	}
 	l := c.slogger
 	if l == nil {
 		l = log()
