@@ -94,6 +94,17 @@ make zero-dep    # 依赖门禁：只允许 github.com/oekit/*
 
 - legacy 大写方言与 `/auth/online-users` 的 mixed 方言无法在本机验证：`downstream`/`cameras`/`switch`
   都是空表，两种拼写返回同样的空结果，区分不出来。仍按已记录的契约生成。
+- `switch`/`downstream` 的查询字段（本仓 `device` vs ikuai-cli 的 `KEYWORDS`）分歧已深挖定案，
+  **维持本仓现状，不改契约**。证据链（2026-11 三轮真机 + 两份官方 OpenAPI 导出交叉）：
+  ① 两份独立真机 OpenAPI 导出（iKuai-Console 97 份、ikuai-doc 98 份，固件 4.0.222）一致显示
+  三端点官方参数是 `filter/key/pattern`（paged 方言），`device` 只是 `key` 允许的**字段名之一**
+  （cameras 的 key 不含 device），`KEYWORDS` 在两仓全部 spec 中**零出现**；
+  ② 4.0.110 真机上三端点的过滤参数（filter/key/pattern/FINDS/FILTER1/order_by）全部静默未接线，
+  空表 + 参数无效 ⇒ 真机 API 层无法裁决；`limit=abc`→500 与 `TYPE=bogus`→2007 均为框架级行为，
+  不能当端点方言证据；`'` 引号被全局 2005 拦截，无法构造 LIKE 探针；
+  ③ ikuai-cli 的 `KEYWORDS` 是代码分支副产物（`if use=="downstream"{device}else{KEYWORDS}`），
+  且光杆 `KEYWORDS` 在 clients 上实测无效（需配 `FINDS`）——其写法不构成反证。
+  即：**死端点上的不可裁决分歧，实际影响趋零**；将来若该端点复活并有数据，按 ① 的 key 字段名复核。
 - `/vpn/ikev2/services` 在被验证的固件上 404，属于功能缺失而非路径错误。
 
 
