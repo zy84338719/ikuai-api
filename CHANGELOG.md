@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v1.3.5 — 2026-11-25
+
+Four fixes from the nil-context / constructor / log-gate audit plus
+renderer error propagation, a dependency refresh onto oekit pkg v0.56.0 /
+logx v0.12.1, and release hygiene: SDKVersion now tracks the shipped tag
+(it had been left at 1.3.3 through the v1.3.4 tag). No public API change.
+
 ### Fixed
 
 - **A nil context no longer panics.** `Get`/`Post`/`Put`/`Patch`/`Delete`/
@@ -66,6 +73,15 @@
     via `RetryAfterTransport`; `logx` `Delegating` level-generation cache
     key (logx#238) means `SetLogLevel` after `logx.Delegating` can no longer
     be filtered out by a stale cached level.
+
+### Docs
+
+- **The `switch`/`downstream` query-field divergence is settled in
+  `AGENTS.md`.** This SDK sends `device`; ikuai-cli sends `KEYWORDS`.
+  Two independent on-device OpenAPI exports (4.0.222) agree the official
+  parameters are `filter/key/pattern`, `KEYWORDS` appears in none of
+  them, and 4.0.110 wires no filter at all on these endpoints — the
+  contract keeps `device`.
 
 ## v1.3.4 — 2026-11-14
 
